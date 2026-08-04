@@ -1,0 +1,14 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import WorkoutLogger from '../../components/react/WorkoutLogger/WorkoutLogger';
+import { getCollection } from 'astro:content';
+
+const exerciseEntries = await getCollection('exercises');
+const exercises = exerciseEntries
+  .map((e) => ({ id: e.id, name: e.data.name, muscleGroup: e.data.muscleGroup }))
+  .sort((a, b) => a.name.localeCompare(b.name));
+---
+<BaseLayout title="Registrar entrenamiento">
+  <h1 class="text-2xl font-bold mb-4">Registrar entrenamiento</h1>
+  <WorkoutLogger client:load exercises={exercises} />
+</BaseLayout>
