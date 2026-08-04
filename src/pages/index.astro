@@ -1,12 +1,19 @@
 ---
-import '../styles/global.css';
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const base = import.meta.env.BASE_URL;
 ---
-<html lang="es">
-  <head>
-    <meta charset="utf-8" />
-    <title>SelfGains</title>
-  </head>
-  <body>
-    <p class="text-blue-600 font-bold">SelfGains</p>
-  </body>
-</html>
+<BaseLayout title="Inicio">
+  <h1 class="text-3xl font-bold mb-4">SelfGains</h1>
+  <p class="mb-6">
+    Aprende a entrenar, construye un mejor tú y registra cada entrenamiento en un solo lugar.
+  </p>
+  <div class="flex gap-4">
+    <a href={`${base}registro/nuevo/`} class="bg-blue-600 text-white rounded px-4 py-2">
+      Registrar entrenamiento
+    </a>
+    <a href={`${base}progreso/`} class="border rounded px-4 py-2">
+      Ver progreso
+    </a>
+  </div>
+</BaseLayout>
