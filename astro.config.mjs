@@ -3,7 +3,7 @@ import react from '@astrojs/react';
 import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
-  site: 'https://pamme-ruiz98.github.io',
+  site: 'https://Pamela-ruiz9.github.io',
   base: '/SelfGains/',
   output: 'static',
   integrations: [react()],

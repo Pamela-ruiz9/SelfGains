@@ -27,7 +27,7 @@ peso, RPE) con historial simple.
 1. Clona el repo e instala dependencias:
 
    ```bash
-   git clone https://github.com/pamme-ruiz98/SelfGains.git
+   git clone https://github.com/Pamela-ruiz9/SelfGains.git
    cd SelfGains
    npm install
    ```
@@ -55,7 +55,7 @@ peso, RPE) con historial simple.
 
 Cada push a `main` corre `.github/workflows/deploy.yml`, que construye el
 sitio y lo publica en GitHub Pages
-(`https://pamme-ruiz98.github.io/SelfGains/`). El workflow necesita las
+(`https://Pamela-ruiz9.github.io/SelfGains/`). El workflow necesita las
 variables de repositorio `PUBLIC_SUPABASE_URL` y `PUBLIC_SUPABASE_ANON_KEY`
 configuradas en Settings → Secrets and variables → Actions → Variables.
 
