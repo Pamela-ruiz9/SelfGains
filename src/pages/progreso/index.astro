@@ -1,0 +1,8 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ProgressList from '../../components/react/ProgressList/ProgressList';
+---
+<BaseLayout title="Progreso">
+  <h1 class="text-2xl font-bold mb-4">Tu historial</h1>
+  <ProgressList client:load />
+</BaseLayout>
