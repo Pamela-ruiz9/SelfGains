@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Edges } from '@react-three/drei';
 
@@ -25,10 +25,13 @@ interface StaticPartDef {
 
 const STATIC_PARTS: StaticPartDef[] = [
   { position: [0, 1.55, 0], geometry: { type: 'sphere', args: [0.22] } },
+  { position: [0, 1.3, 0], geometry: { type: 'box', args: [0.18, 0.16, 0.18] } },
   { position: [0, 0.85, 0], geometry: { type: 'box', args: [0.34, 0.75, 0.22] } },
+  { position: [0.28, 1.13, 0], geometry: { type: 'sphere', args: [0.13] } },
+  { position: [-0.28, 1.13, 0], geometry: { type: 'sphere', args: [0.13] } },
   { position: [0, 0.15, 0], geometry: { type: 'box', args: [0.4, 0.28, 0.24] } },
-  { position: [0.2, -1.05, 0.08], geometry: { type: 'box', args: [0.14, 0.08, 0.28] } },
-  { position: [-0.2, -1.05, 0.08], geometry: { type: 'box', args: [0.14, 0.08, 0.28] } },
+  { position: [0.2, -0.98, 0.08], geometry: { type: 'box', args: [0.14, 0.08, 0.28] } },
+  { position: [-0.2, -0.98, 0.08], geometry: { type: 'box', args: [0.14, 0.08, 0.28] } },
 ];
 
 function mirror(
@@ -49,12 +52,12 @@ const MUSCLE_PARTS: MusclePartDef[] = [
   { muscleId: 'dorsales', position: [0, 0.82, -0.18], geometry: { type: 'box', args: [0.46, 0.4, 0.14] } },
   { muscleId: 'trapecio', position: [0, 1.2, -0.14], geometry: { type: 'box', args: [0.34, 0.16, 0.16] } },
   { muscleId: 'abdomen', position: [0, 0.55, 0.16], geometry: { type: 'box', args: [0.36, 0.3, 0.12] } },
-  ...mirror('deltoide-frontal', 0.58, 1.15, 0.14, { type: 'sphere', args: [0.12] }),
-  ...mirror('deltoide-lateral', 0.68, 1.15, 0, { type: 'sphere', args: [0.12] }),
-  ...mirror('deltoide-posterior', 0.58, 1.15, -0.14, { type: 'sphere', args: [0.12] }),
-  ...mirror('biceps', 0.64, 0.82, 0.1, { type: 'capsule', args: [0.09, 0.32] }),
-  ...mirror('triceps', 0.64, 0.82, -0.1, { type: 'capsule', args: [0.09, 0.32] }),
-  ...mirror('antebrazo', 0.64, 0.42, 0, { type: 'capsule', args: [0.075, 0.36] }),
+  ...mirror('deltoide-frontal', 0.43, 1.15, 0.156, { type: 'sphere', args: [0.08] }),
+  ...mirror('deltoide-lateral', 0.52, 1.15, 0, { type: 'sphere', args: [0.08] }),
+  ...mirror('deltoide-posterior', 0.43, 1.15, -0.156, { type: 'sphere', args: [0.08] }),
+  ...mirror('biceps', 0.44, 0.82, 0.1, { type: 'capsule', args: [0.09, 0.32] }),
+  ...mirror('triceps', 0.44, 0.82, -0.1, { type: 'capsule', args: [0.09, 0.32] }),
+  ...mirror('antebrazo', 0.44, 0.42, 0, { type: 'capsule', args: [0.075, 0.36] }),
   ...mirror('cuadriceps', 0.22, -0.05, 0.12, { type: 'capsule', args: [0.14, 0.5] }),
   ...mirror('isquiotibiales', 0.22, -0.05, -0.12, { type: 'capsule', args: [0.13, 0.5] }),
   ...mirror('gluteos', 0.2, 0.18, -0.16, { type: 'sphere', args: [0.16] }),
@@ -74,7 +77,12 @@ function PartMesh({ geometry }: { geometry: PartGeometry }) {
 
 function StaticMesh({ part }: { part: StaticPartDef }) {
   return (
-    <mesh position={part.position}>
+    <mesh
+      position={part.position}
+      onPointerOver={(e) => e.stopPropagation()}
+      onPointerOut={(e) => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
+    >
       <PartMesh geometry={part.geometry} />
       <meshStandardMaterial color={COLOR_STATIC} flatShading />
       <Edges color={COLOR_EDGE} />
@@ -132,7 +140,19 @@ function hasWebGL(): boolean {
 
 export default function MuscleBody({ selectedMuscle, onSelectMuscle }: MuscleBodyProps) {
   const [hoveredMuscle, setHoveredMuscle] = useState<string | null>(null);
-  const webglAvailable = useMemo(() => hasWebGL(), []);
+  const [webglAvailable, setWebglAvailable] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    setWebglAvailable(hasWebGL());
+  }, []);
+
+  if (webglAvailable === null) {
+    return (
+      <div className="card-brutal flex h-[420px] items-center justify-center text-center">
+        <p className="font-mono text-sm text-paper-dim">Cargando...</p>
+      </div>
+    );
+  }
 
   if (!webglAvailable) {
     return (
