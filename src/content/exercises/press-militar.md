@@ -1,6 +1,6 @@
 ---
 name: Press militar
-muscleGroup: Hombros
+muscles: [deltoide-frontal, triceps]
 equipment: Barra
 ---
 

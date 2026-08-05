@@ -1,6 +1,6 @@
 ---
 name: Curl de bíceps con mancuernas
-muscleGroup: Brazos
+muscles: [biceps, antebrazo]
 equipment: Mancuernas
 ---
 

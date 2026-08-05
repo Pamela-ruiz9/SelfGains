@@ -5,7 +5,7 @@ const exercises = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/exercises' }),
   schema: z.object({
     name: z.string(),
-    muscleGroup: z.string(),
+    muscles: z.array(z.string()),
     equipment: z.string(),
     videoUrl: z.string().url().optional(),
   }),

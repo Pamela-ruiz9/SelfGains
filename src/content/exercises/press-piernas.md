@@ -1,6 +1,6 @@
 ---
 name: Press de piernas
-muscleGroup: Piernas
+muscles: [cuadriceps, gluteos]
 equipment: Máquina
 ---
 

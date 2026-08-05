@@ -1,6 +1,6 @@
 ---
 name: Extensión de tríceps en polea
-muscleGroup: Brazos
+muscles: [triceps]
 equipment: Polea
 ---
 

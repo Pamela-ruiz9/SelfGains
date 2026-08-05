@@ -1,6 +1,6 @@
 ---
 name: Remo con barra
-muscleGroup: Espalda
+muscles: [dorsales, trapecio, biceps]
 equipment: Barra
 ---
 

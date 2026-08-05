@@ -1,6 +1,6 @@
 ---
 name: Elevaciones laterales
-muscleGroup: Hombros
+muscles: [deltoide-lateral]
 equipment: Mancuernas
 ---
 

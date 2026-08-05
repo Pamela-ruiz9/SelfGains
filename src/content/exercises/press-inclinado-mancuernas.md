@@ -1,6 +1,6 @@
 ---
 name: Press inclinado con mancuernas
-muscleGroup: Pecho
+muscles: [pecho, deltoide-frontal, triceps]
 equipment: Mancuernas
 ---
 

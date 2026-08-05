@@ -1,6 +1,6 @@
 ---
 name: Hip thrust
-muscleGroup: Piernas y glúteos
+muscles: [gluteos, isquiotibiales]
 equipment: Barra
 ---
 

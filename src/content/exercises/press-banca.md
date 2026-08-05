@@ -1,6 +1,6 @@
 ---
 name: Press de banca
-muscleGroup: Pecho
+muscles: [pecho, triceps]
 equipment: Barra
 ---
 

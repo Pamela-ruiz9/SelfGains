@@ -1,6 +1,6 @@
 ---
 name: Face pull
-muscleGroup: Espalda y hombros
+muscles: [deltoide-posterior, trapecio]
 equipment: Polea
 ---
 

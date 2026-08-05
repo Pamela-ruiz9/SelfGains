@@ -1,6 +1,6 @@
 ---
 name: Plancha abdominal
-muscleGroup: Core
+muscles: [abdomen]
 equipment: Peso corporal
 ---
 

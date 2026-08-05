@@ -1,6 +1,6 @@
 ---
 name: Zancadas
-muscleGroup: Piernas
+muscles: [cuadriceps, gluteos]
 equipment: Mancuernas
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: Sentadilla con barra
-muscleGroup: Piernas
+muscles: [cuadriceps, gluteos]
 equipment: Barra
 ---
 

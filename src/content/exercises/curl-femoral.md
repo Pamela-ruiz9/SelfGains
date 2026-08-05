@@ -1,6 +1,6 @@
 ---
 name: Curl femoral
-muscleGroup: Piernas
+muscles: [isquiotibiales]
 equipment: Máquina
 ---
 

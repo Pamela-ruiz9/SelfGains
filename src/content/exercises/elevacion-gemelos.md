@@ -1,6 +1,6 @@
 ---
 name: Elevación de gemelos de pie
-muscleGroup: Piernas
+muscles: [gemelos]
 equipment: Máquina o barra
 ---
 

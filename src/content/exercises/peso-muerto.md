@@ -1,6 +1,6 @@
 ---
 name: Peso muerto
-muscleGroup: Piernas y espalda
+muscles: [isquiotibiales, gluteos, dorsales]
 equipment: Barra
 ---
 

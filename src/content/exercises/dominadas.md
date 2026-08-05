@@ -1,6 +1,6 @@
 ---
 name: Dominadas
-muscleGroup: Espalda
+muscles: [dorsales, biceps, antebrazo]
 equipment: Barra de dominadas
 ---
 

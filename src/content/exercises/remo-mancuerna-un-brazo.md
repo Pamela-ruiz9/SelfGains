@@ -1,6 +1,6 @@
 ---
 name: Remo con mancuerna a un brazo
-muscleGroup: Espalda
+muscles: [dorsales, biceps]
 equipment: Mancuerna
 ---
 
