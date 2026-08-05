@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, RoundedBox, Edges } from '@react-three/drei';
+import { OrbitControls, RoundedBox, Edges, Html } from '@react-three/drei';
 import { DoubleSide, Vector2 } from 'three';
+import { muscleLabel } from '../../../lib/muscles';
 
 interface MuscleBodyProps {
   selectedMuscle: string | null;
@@ -11,6 +12,7 @@ interface MuscleBodyProps {
 type PartGeometry =
   | { type: 'box'; args: [number, number, number]; radius?: number }
   | { type: 'sphere'; args: [number] }
+  | { type: 'ellipsoid'; args: [number, number, number] }
   | { type: 'capsule'; args: [number, number] }
   | { type: 'cylinder'; args: [number, number, number] };
 
@@ -75,39 +77,40 @@ function mirror(
   ];
 }
 
-// Thin, raised overlays on top of the skin above — read as muscle definition
-// rather than separate volumes. antebrazo/gemelos are single-muscle limb
-// segments, so they ARE the limb (no separate skin cylinder underneath).
+// Shallow, mostly-embedded overlays on top of the skin above — only a soft
+// bump pokes out, so they read as muscle definition on one continuous body
+// rather than separate volumes glued on. antebrazo/gemelos are single-muscle
+// limb segments, so they ARE the limb (no separate skin cylinder underneath).
 const MUSCLE_PARTS: MusclePartDef[] = [
   {
     muscleId: 'pecho',
-    position: [0, 1.06, 0.175],
-    geometry: { type: 'box', args: [0.3, 0.2, 0.08], radius: 0.06 },
+    position: [0, 1.06, 0.1],
+    geometry: { type: 'ellipsoid', args: [0.16, 0.11, 0.085] },
   },
   {
     muscleId: 'dorsales',
-    position: [0, 0.92, -0.155],
-    geometry: { type: 'box', args: [0.32, 0.28, 0.07], radius: 0.08 },
+    position: [0, 0.92, -0.1],
+    geometry: { type: 'ellipsoid', args: [0.17, 0.15, 0.075] },
   },
   {
     muscleId: 'trapecio',
-    position: [0, 1.3, -0.1],
-    geometry: { type: 'box', args: [0.24, 0.12, 0.08], radius: 0.05 },
+    position: [0, 1.3, -0.06],
+    geometry: { type: 'ellipsoid', args: [0.13, 0.07, 0.08] },
   },
   {
     muscleId: 'abdomen',
-    position: [0, 0.75, 0.125],
-    geometry: { type: 'box', args: [0.22, 0.26, 0.06], radius: 0.05 },
+    position: [0, 0.75, 0.09],
+    geometry: { type: 'ellipsoid', args: [0.12, 0.14, 0.06] },
   },
-  ...mirror('deltoide-frontal', 0.2, 1.3, 0.1, { type: 'sphere', args: [0.075] }),
-  ...mirror('deltoide-lateral', 0.27, 1.27, 0, { type: 'sphere', args: [0.08] }),
-  ...mirror('deltoide-posterior', 0.2, 1.24, -0.1, { type: 'sphere', args: [0.075] }),
-  ...mirror('biceps', 0.255, 1.03, 0.075, { type: 'capsule', args: [0.065, 0.2] }),
-  ...mirror('triceps', 0.245, 1.03, -0.08, { type: 'capsule', args: [0.065, 0.2] }),
+  ...mirror('deltoide-frontal', 0.2, 1.3, 0.075, { type: 'sphere', args: [0.072] }),
+  ...mirror('deltoide-lateral', 0.255, 1.27, 0, { type: 'sphere', args: [0.078] }),
+  ...mirror('deltoide-posterior', 0.2, 1.24, -0.075, { type: 'sphere', args: [0.072] }),
+  ...mirror('biceps', 0.245, 1.03, 0.045, { type: 'capsule', args: [0.06, 0.2] }),
+  ...mirror('triceps', 0.24, 1.03, -0.045, { type: 'capsule', args: [0.06, 0.2] }),
   ...mirror('antebrazo', 0.25, 0.68, 0, { type: 'cylinder', args: [0.072, 0.052, 0.36] }),
-  ...mirror('cuadriceps', 0.155, -0.025, 0.09, { type: 'capsule', args: [0.11, 0.44] }),
-  ...mirror('isquiotibiales', 0.145, -0.025, -0.09, { type: 'capsule', args: [0.1, 0.44] }),
-  ...mirror('gluteos', 0.15, 0.32, -0.15, { type: 'sphere', args: [0.15] }),
+  ...mirror('cuadriceps', 0.15, -0.025, 0.06, { type: 'capsule', args: [0.095, 0.44] }),
+  ...mirror('isquiotibiales', 0.14, -0.025, -0.06, { type: 'capsule', args: [0.09, 0.44] }),
+  ...mirror('gluteos', 0.15, 0.32, -0.11, { type: 'sphere', args: [0.125] }),
   ...mirror('gemelos', 0.14, -0.65, -0.015, { type: 'cylinder', args: [0.105, 0.07, 0.6] }),
 ];
 
@@ -126,6 +129,9 @@ function PartMesh({ geometry }: { geometry: PartGeometry }) {
   if (geometry.type === 'sphere') {
     return <sphereGeometry args={[geometry.args[0], ...SPHERE_SEGMENTS]} />;
   }
+  if (geometry.type === 'ellipsoid') {
+    return <sphereGeometry args={[1, ...SPHERE_SEGMENTS]} />;
+  }
   if (geometry.type === 'cylinder') {
     return (
       <cylinderGeometry
@@ -134,6 +140,19 @@ function PartMesh({ geometry }: { geometry: PartGeometry }) {
     );
   }
   return <capsuleGeometry args={[geometry.args[0], geometry.args[1], ...CAPSULE_SEGMENTS]} />;
+}
+
+function partScale(geometry: PartGeometry): [number, number, number] {
+  return geometry.type === 'ellipsoid' ? geometry.args : [1, 1, 1];
+}
+
+// Rough "how far this bump pokes out" so the hover label floats just above it.
+function labelOffset(geometry: PartGeometry): number {
+  if (geometry.type === 'ellipsoid') return geometry.args[1] + 0.05;
+  if (geometry.type === 'sphere') return geometry.args[0] + 0.05;
+  if (geometry.type === 'capsule') return geometry.args[0] + geometry.args[1] / 2 + 0.05;
+  if (geometry.type === 'cylinder') return geometry.args[2] / 2 + 0.05;
+  return geometry.args[1] / 2 + 0.05;
 }
 
 function TorsoMesh() {
@@ -186,15 +205,27 @@ function StaticMesh({ part }: { part: StaticPartDef }) {
   );
 }
 
+function MuscleLabel({ muscleId, offset }: { muscleId: string; offset: number }) {
+  return (
+    <Html position={[0, offset, 0]} center zIndexRange={[100, 0]}>
+      <div className="pointer-events-none whitespace-nowrap border border-acid bg-ink px-2 py-1 font-mono text-xs uppercase tracking-[0.15em] text-acid">
+        {muscleLabel(muscleId)}
+      </div>
+    </Html>
+  );
+}
+
 function MuscleMesh({
   part,
   active,
+  hovered,
   onHover,
   onUnhover,
   onClick,
 }: {
   part: MusclePartDef;
   active: boolean;
+  hovered: boolean;
   onHover: () => void;
   onUnhover: () => void;
   onClick: () => void;
@@ -227,16 +258,20 @@ function MuscleMesh({
       >
         <meshStandardMaterial color={color} roughness={0.55} metalness={0.05} />
         {active && <Edges color={COLOR_ACTIVE} />}
+        {hovered && <MuscleLabel muscleId={part.muscleId} offset={h / 2 + 0.05} />}
       </RoundedBox>
     );
   }
 
   return (
-    <mesh position={part.position} {...handlers}>
-      <PartMesh geometry={part.geometry} />
-      <meshStandardMaterial color={color} roughness={0.55} metalness={0.05} />
-      {active && <Edges color={COLOR_ACTIVE} />}
-    </mesh>
+    <group position={part.position} {...handlers}>
+      <mesh scale={partScale(part.geometry)}>
+        <PartMesh geometry={part.geometry} />
+        <meshStandardMaterial color={color} roughness={0.55} metalness={0.05} />
+        {active && <Edges color={COLOR_ACTIVE} />}
+      </mesh>
+      {hovered && <MuscleLabel muscleId={part.muscleId} offset={labelOffset(part.geometry)} />}
+    </group>
   );
 }
 
@@ -295,6 +330,7 @@ export default function MuscleBody({ selectedMuscle, onSelectMuscle }: MuscleBod
             key={i}
             part={part}
             active={part.muscleId === selectedMuscle || part.muscleId === hoveredMuscle}
+            hovered={part.muscleId === hoveredMuscle}
             onHover={() => setHoveredMuscle(part.muscleId)}
             onUnhover={() => setHoveredMuscle((prev) => (prev === part.muscleId ? null : prev))}
             onClick={() => onSelectMuscle(part.muscleId)}
