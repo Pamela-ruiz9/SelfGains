@@ -1,6 +1,6 @@
 ---
 name: Sentadilla con barra
-muscles: [cuadriceps, gluteos]
+muscles: [cuadriceps, gluteos, aductores]
 equipment: Barra
 ---
 

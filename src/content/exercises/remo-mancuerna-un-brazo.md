@@ -1,6 +1,6 @@
 ---
 name: Remo con mancuerna a un brazo
-muscles: [dorsales, biceps]
+muscles: [dorsales, biceps, deltoide-posterior]
 equipment: Mancuerna
 ---
 

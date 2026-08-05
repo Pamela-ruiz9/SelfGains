@@ -1,6 +1,6 @@
 ---
 name: Peso muerto
-muscles: [isquiotibiales, gluteos, dorsales]
+muscles: [isquiotibiales, gluteos, dorsales, lumbares]
 equipment: Barra
 ---
 

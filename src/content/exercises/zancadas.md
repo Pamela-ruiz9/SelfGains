@@ -1,6 +1,6 @@
 ---
 name: Zancadas
-muscles: [cuadriceps, gluteos]
+muscles: [cuadriceps, gluteos, aductores]
 equipment: Mancuernas
 ---
 

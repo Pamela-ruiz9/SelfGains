@@ -1,6 +1,6 @@
 ---
 name: Remo con barra
-muscles: [dorsales, trapecio, biceps]
+muscles: [dorsales, trapecio, biceps, deltoide-posterior]
 equipment: Barra
 ---
 

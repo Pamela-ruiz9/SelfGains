@@ -1,6 +1,6 @@
 ---
 name: Plancha abdominal
-muscles: [abdomen]
+muscles: [abdomen, oblicuos]
 equipment: Peso corporal
 ---
 
