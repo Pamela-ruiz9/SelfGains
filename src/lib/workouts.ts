@@ -57,6 +57,7 @@ export async function getSetsForWorkout(workoutId: string): Promise<WorkoutSet[]
     .from('workout_sets')
     .select('*')
     .eq('workout_id', workoutId)
+    .order('exercise_id', { ascending: true })
     .order('set_number', { ascending: true });
 
   if (error) throw error;
