@@ -148,7 +148,7 @@ export default function MuscleBody({ selectedMuscle, onSelectMuscle }: MuscleBod
 
   if (webglAvailable === null) {
     return (
-      <div className="card-brutal flex h-[420px] items-center justify-center text-center">
+      <div className="card-brutal flex h-[420px] items-center justify-center text-center sm:h-[520px]">
         <p className="font-mono text-sm text-paper-dim">Cargando...</p>
       </div>
     );
@@ -156,7 +156,7 @@ export default function MuscleBody({ selectedMuscle, onSelectMuscle }: MuscleBod
 
   if (!webglAvailable) {
     return (
-      <div className="card-brutal flex h-[420px] items-center justify-center text-center">
+      <div className="card-brutal flex h-[420px] items-center justify-center text-center sm:h-[520px]">
         <p className="font-mono text-sm text-paper-dim">
           Tu navegador no soporta WebGL, así que no se puede mostrar el cuerpo 3D. Puedes
           seguir usando el resto de SelfGains con normalidad.
