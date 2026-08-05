@@ -7,7 +7,11 @@ interface WorkoutWithSets extends Workout {
   sets: WorkoutSet[];
 }
 
-export default function ProgressList() {
+interface Props {
+  exerciseNames: Record<string, string>;
+}
+
+export default function ProgressList({ exerciseNames }: Props) {
   const [authChecked, setAuthChecked] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [workouts, setWorkouts] = useState<WorkoutWithSets[]>([]);
@@ -65,7 +69,7 @@ export default function ProgressList() {
           <ul className="mt-2 flex flex-col gap-1">
             {w.sets.map((s) => (
               <li key={s.id}>
-                {s.exercise_id} — serie {s.set_number}: {s.reps} reps x {s.weight} kg
+                {exerciseNames[s.exercise_id] ?? s.exercise_id} — serie {s.set_number}: {s.reps} reps x {s.weight} kg
                 {s.rpe !== null ? ` (RPE ${s.rpe})` : ''}
               </li>
             ))}

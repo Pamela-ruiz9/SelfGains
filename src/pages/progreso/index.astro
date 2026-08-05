@@ -1,8 +1,12 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import ProgressList from '../../components/react/ProgressList/ProgressList';
+import { getCollection } from 'astro:content';
+
+const exerciseEntries = await getCollection('exercises');
+const exerciseNames = Object.fromEntries(exerciseEntries.map((e) => [e.id, e.data.name]));
 ---
 <BaseLayout title="Progreso">
   <h1 class="text-2xl font-bold mb-4">Tu historial</h1>
-  <ProgressList client:load />
+  <ProgressList client:load exerciseNames={exerciseNames} />
 </BaseLayout>
