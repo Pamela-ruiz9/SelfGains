@@ -20,6 +20,8 @@ peso, RPE) con historial simple.
   navegador — no hay backend propio
 - Biblioteca de ejercicios y planes predefinidos como Astro Content
   Collections (Markdown versionado en el repo)
+- [Three.js](https://threejs.org) + [React Three Fiber](https://r3f.docs.pmnd.rs)
+  + [drei](https://github.com/pmndrs/drei) para el explorador muscular 3D
 - Desplegado en GitHub Pages vía GitHub Actions
 
 ## Correr localmente
@@ -63,6 +65,9 @@ configuradas en Settings → Secrets and variables → Actions → Variables.
 
 - [x] Estructura base + registro de entrenamientos (auth, log de series,
       historial simple)
-- [ ] Planes predefinidos y biblioteca de ejercicios completa
+- [x] Explorador muscular 3D (`/ejercicios/`) — cuerpo rotable, click en un
+      músculo para ver qué ejercicios lo trabajan (detalle en
+      `docs/agents/muscle-explorer-3d-status.md`)
+- [ ] Planes predefinidos que referencien la taxonomía muscular
 - [ ] Sugerencia de progresión automática
 - [ ] Gráficas de progreso y cálculo de PRs
