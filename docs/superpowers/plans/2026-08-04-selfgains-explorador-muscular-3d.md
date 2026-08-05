@@ -163,8 +163,10 @@ Add these three lines to the `"dependencies"` object in `package.json` (alongsid
 ```json
     "three": "^0.170.0",
     "@react-three/fiber": "^9.0.0",
-    "@react-three/drei": "^9.0.0"
+    "@react-three/drei": "^10.0.0"
 ```
+
+(Note: `@react-three/drei`'s major version isn't aligned with `@react-three/fiber`'s — drei's 9.x line targets fiber v8, drei's 10.x line targets fiber v9. `^10.0.0` is the correct pairing for fiber v9 + React 19, confirmed via `npm view @react-three/drei@latest peerDependencies`.)
 
 - [ ] **Step 2: Install**
 
