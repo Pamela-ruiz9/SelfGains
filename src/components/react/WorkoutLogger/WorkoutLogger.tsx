@@ -47,6 +47,7 @@ export default function WorkoutLogger({ exercises }: Props) {
   function handleAddSet(e: FormEvent) {
     e.preventDefault();
     setError(null);
+    setSavedMessage(null);
 
     const repsNum = Number(reps);
     const weightNum = Number(weight);
@@ -89,7 +90,14 @@ export default function WorkoutLogger({ exercises }: Props) {
   }
 
   function handleRemoveSet(index: number) {
-    setLoggedSets((prev) => prev.filter((_, i) => i !== index));
+    setLoggedSets((prev) => {
+      const removed = prev[index];
+      const withoutRemoved = prev.filter((_, i) => i !== index);
+      let nextNumber = 1;
+      return withoutRemoved.map((s) =>
+        s.exerciseId === removed.exerciseId ? { ...s, setNumber: nextNumber++ } : s
+      );
+    });
   }
 
   async function handleSaveWorkout() {
@@ -98,6 +106,7 @@ export default function WorkoutLogger({ exercises }: Props) {
       return;
     }
     setError(null);
+    setSavedMessage(null);
     setSaving(true);
     try {
       const workout = await createWorkout(date);
