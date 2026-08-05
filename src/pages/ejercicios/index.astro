@@ -1,0 +1,21 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import MuscleExplorer from '../../components/react/MuscleExplorer/MuscleExplorer';
+import { getCollection } from 'astro:content';
+
+const exerciseEntries = await getCollection('exercises');
+const exercises = exerciseEntries
+  .map((e) => ({
+    id: e.id,
+    name: e.data.name,
+    equipment: e.data.equipment,
+    instructions: e.body?.trim() ?? '',
+    muscles: e.data.muscles,
+  }))
+  .sort((a, b) => a.name.localeCompare(b.name));
+---
+<BaseLayout title="Ejercicios">
+  <p class="label-brutal mb-3 text-acid">Explora por músculo</p>
+  <h1 class="mb-8 font-display text-5xl text-paper sm:text-6xl">EJERCICIOS</h1>
+  <MuscleExplorer client:load exercises={exercises} />
+</BaseLayout>

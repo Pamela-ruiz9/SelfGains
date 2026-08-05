@@ -2,10 +2,15 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import WorkoutLogger from '../../components/react/WorkoutLogger/WorkoutLogger';
 import { getCollection } from 'astro:content';
+import { muscleLabel } from '../../lib/muscles';
 
 const exerciseEntries = await getCollection('exercises');
 const exercises = exerciseEntries
-  .map((e) => ({ id: e.id, name: e.data.name, muscleGroup: e.data.muscleGroup }))
+  .map((e) => ({
+    id: e.id,
+    name: e.data.name,
+    muscleGroup: e.data.muscles.map((m) => muscleLabel(m)).join(', '),
+  }))
   .sort((a, b) => a.name.localeCompare(b.name));
 ---
 <BaseLayout title="Registrar entrenamiento">
