@@ -45,4 +45,4 @@ create policy "Users can manage sets of their own workouts"
 
 create index idx_workout_sets_workout_id on workout_sets(workout_id);
 
-alter table workout_sets add constraint unique_set_number_per_workout unique(workout_id, set_number);
+alter table workout_sets add constraint unique_set_number_per_workout unique(workout_id, exercise_id, set_number);
