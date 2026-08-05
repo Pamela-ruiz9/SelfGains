@@ -5,9 +5,13 @@ import LoginForm from '../components/react/Auth/LoginForm';
 const base = import.meta.env.BASE_URL;
 ---
 <BaseLayout title="Iniciar sesión">
-  <h1 class="text-2xl font-bold mb-4">Iniciar sesión</h1>
+  <p class="label-brutal mb-3 text-acid">Bienvenido de vuelta</p>
+  <h1 class="mb-8 font-display text-5xl text-paper sm:text-6xl">INICIAR SESIÓN</h1>
   <LoginForm client:load />
-  <p class="mt-4 text-sm">
-    ¿No tienes cuenta? <a href={`${base}registro-cuenta/`} class="text-blue-600 underline">Crea una</a>
+  <p class="mt-6 font-mono text-sm text-paper-dim">
+    ¿No tienes cuenta?
+    <a href={`${base}registro-cuenta/`} class="text-acid underline underline-offset-4 hover:text-paper">
+      Crea una
+    </a>
   </p>
 </BaseLayout>

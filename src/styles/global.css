@@ -1,1 +1,104 @@
 @import "tailwindcss";
+
+@theme {
+  --font-display: "Bebas Neue", "Arial Narrow", sans-serif;
+  --font-body: "Archivo", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", monospace;
+
+  --color-ink: #0c0c0a;
+  --color-surface: #17160f;
+  --color-surface-raised: #201e16;
+  --color-paper: #f4f1e4;
+  --color-paper-dim: #8c8a7c;
+  --color-acid: #d7ff3f;
+  --color-acid-dim: #9fbf2a;
+  --color-blood: #ff5a36;
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: var(--color-ink);
+    color: var(--color-paper);
+    font-family: var(--font-body);
+    background-image: radial-gradient(
+        circle at 15% -10%,
+        rgb(215 255 63 / 0.1),
+        transparent 40%
+      ),
+      radial-gradient(circle at 100% 0%, rgb(255 90 54 / 0.08), transparent 35%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+    background-repeat: no-repeat, no-repeat, repeat;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    letter-spacing: 0.01em;
+  }
+
+  ::selection {
+    background: var(--color-acid);
+    color: var(--color-ink);
+  }
+}
+
+@layer components {
+  .label-brutal {
+    @apply font-mono text-xs uppercase tracking-[0.2em] text-paper-dim;
+  }
+
+  .btn-brutal {
+    @apply inline-flex items-center justify-center gap-2 border-2 border-paper bg-acid px-6 py-3
+      font-display text-xl uppercase tracking-wide text-ink
+      shadow-[5px_5px_0_0_#f4f1e4] transition-transform duration-150
+      hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[7px_7px_0_0_#f4f1e4]
+      active:translate-x-0 active:translate-y-0 active:shadow-none
+      disabled:pointer-events-none disabled:opacity-40;
+  }
+
+  .btn-brutal-outline {
+    @apply inline-flex items-center justify-center gap-2 border-2 border-paper bg-transparent px-6 py-3
+      font-display text-xl uppercase tracking-wide text-paper
+      shadow-[5px_5px_0_0_#d7ff3f] transition-transform duration-150
+      hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[7px_7px_0_0_#d7ff3f]
+      active:translate-x-0 active:translate-y-0 active:shadow-none
+      disabled:pointer-events-none disabled:opacity-40;
+  }
+
+  .btn-brutal-sm {
+    @apply inline-flex items-center justify-center border-2 border-paper bg-surface-raised px-4 py-2
+      font-display text-base uppercase tracking-wide text-paper transition-colors duration-150
+      hover:bg-acid hover:text-ink disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-surface-raised disabled:hover:text-paper;
+  }
+
+  .card-brutal {
+    @apply border-2 border-paper-dim/40 bg-surface p-5;
+  }
+
+  .input-brutal {
+    @apply w-full border-2 border-paper-dim/50 bg-surface px-3 py-2 font-mono text-paper
+      placeholder:text-paper-dim/60 focus:border-acid focus:outline-none disabled:opacity-40;
+  }
+}
+
+@layer utilities {
+  @keyframes reveal-up {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .reveal {
+    animation: reveal-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+}

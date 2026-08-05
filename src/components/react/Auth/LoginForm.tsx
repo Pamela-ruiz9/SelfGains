@@ -21,9 +21,9 @@ export default function LoginForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4 max-w-sm">
-      <label className="flex flex-col gap-1">
-        <span>Email</span>
+    <form onSubmit={handleSubmit} className="flex max-w-sm flex-col gap-5">
+      <label className="flex flex-col gap-2">
+        <span className="label-brutal">Email</span>
         <input
           type="email"
           value={email}
@@ -31,11 +31,11 @@ export default function LoginForm() {
           required
           autoComplete="email"
           disabled={loading}
-          className="border rounded px-3 py-2"
+          className="input-brutal"
         />
       </label>
-      <label className="flex flex-col gap-1">
-        <span>Contraseña</span>
+      <label className="flex flex-col gap-2">
+        <span className="label-brutal">Contraseña</span>
         <input
           type="password"
           value={password}
@@ -44,15 +44,11 @@ export default function LoginForm() {
           minLength={6}
           autoComplete="current-password"
           disabled={loading}
-          className="border rounded px-3 py-2"
+          className="input-brutal"
         />
       </label>
-      {error && <p className="text-red-600 text-sm">{error}</p>}
-      <button
-        type="submit"
-        disabled={loading}
-        className="bg-blue-600 text-white rounded px-4 py-2 disabled:opacity-50"
-      >
+      {error && <p className="border-l-2 border-blood pl-3 font-mono text-sm text-blood">{error}</p>}
+      <button type="submit" disabled={loading} className="btn-brutal">
         {loading ? 'Entrando...' : 'Entrar'}
       </button>
     </form>

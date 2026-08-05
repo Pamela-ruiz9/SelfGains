@@ -2,18 +2,64 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 
 const base = import.meta.env.BASE_URL;
+
+const pillars = [
+  {
+    n: '01',
+    title: 'Aprender a entrenar',
+    body: 'Guías y planes predefinidos para principiantes. Sin adivinar qué hacer en el gimnasio.',
+  },
+  {
+    n: '02',
+    title: 'Construir un mejor yo',
+    body: 'Progreso general, hábitos, motivación. El entrenamiento como parte de algo más grande.',
+  },
+  {
+    n: '03',
+    title: 'Registro de entrenamientos',
+    body: 'Series, reps, peso, progresión, PRs. Datos reales de lo que de verdad levantaste.',
+  },
+];
 ---
 <BaseLayout title="Inicio">
-  <h1 class="text-3xl font-bold mb-4">SelfGains</h1>
-  <p class="mb-6">
-    Aprende a entrenar, construye un mejor tú y registra cada entrenamiento en un solo lugar.
-  </p>
-  <div class="flex gap-4">
-    <a href={`${base}registro/nuevo/`} class="bg-blue-600 text-white rounded px-4 py-2">
-      Registrar entrenamiento
-    </a>
-    <a href={`${base}progreso/`} class="border rounded px-4 py-2">
-      Ver progreso
-    </a>
-  </div>
+  <section class="border-b-2 border-paper-dim/30 pb-12">
+    <p class="reveal label-brutal mb-4 text-acid">Entrena. Registra. Progresa.</p>
+    <h1
+      class="reveal font-display text-6xl leading-[0.95] text-paper sm:text-8xl"
+      style="animation-delay: 60ms"
+    >
+      TU MEJOR<br />
+      VERSIÓN,<br />
+      <span class="text-acid">SERIE</span> POR <span class="text-acid">SERIE</span>.
+    </h1>
+    <p
+      class="reveal mt-6 max-w-xl font-body text-lg text-paper-dim"
+      style="animation-delay: 140ms"
+    >
+      SelfGains combina guías para principiantes, seguimiento de hábitos y un
+      cuaderno de entrenamiento real — series, reps, peso y RPE — en un solo
+      lugar.
+    </p>
+    <div class="reveal mt-8 flex flex-wrap gap-4" style="animation-delay: 200ms">
+      <a href={`${base}registro/nuevo/`} class="btn-brutal">
+        Registrar entrenamiento
+      </a>
+      <a href={`${base}progreso/`} class="btn-brutal-outline"> Ver progreso </a>
+    </div>
+  </section>
+
+  <section class="mt-12 grid gap-px overflow-hidden border-2 border-paper-dim/30 sm:grid-cols-3">
+    {
+      pillars.map((p, i) => (
+        <div
+          class="reveal border-paper-dim/30 bg-surface p-6 sm:border-l-2 sm:first:border-l-0"
+          style={`animation-delay: ${260 + i * 90}ms`}
+        >
+          <span class="font-mono text-sm text-acid">{p.n}</span>
+          <h2 class="mt-2 font-display text-2xl tracking-wide text-paper">{p.title}</h2>
+          <p class="mt-2 font-body text-sm text-paper-dim">{p.body}</p>
+        </div>
+      ))
+    }
+  </section>
 </BaseLayout>

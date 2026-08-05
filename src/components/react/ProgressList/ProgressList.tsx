@@ -41,13 +41,18 @@ export default function ProgressList({ exerciseNames }: Props) {
     });
   }, []);
 
-  if (!authChecked || loading) return <p>Cargando...</p>;
+  if (!authChecked || loading) {
+    return <p className="font-mono text-sm text-paper-dim">Cargando...</p>;
+  }
 
   if (!isLoggedIn) {
     return (
-      <p>
+      <p className="font-mono text-sm text-paper-dim">
         Debes{' '}
-        <a href={`${import.meta.env.BASE_URL}login/`} className="text-blue-600 underline">
+        <a
+          href={`${import.meta.env.BASE_URL}login/`}
+          className="text-acid underline underline-offset-4 hover:text-paper"
+        >
           iniciar sesión
         </a>{' '}
         para ver tu historial.
@@ -55,22 +60,31 @@ export default function ProgressList({ exerciseNames }: Props) {
     );
   }
 
-  if (error) return <p className="text-red-600 text-sm">{error}</p>;
+  if (error) {
+    return <p className="border-l-2 border-blood pl-3 font-mono text-sm text-blood">{error}</p>;
+  }
 
   if (workouts.length === 0) {
-    return <p>Todavía no tienes entrenamientos registrados.</p>;
+    return (
+      <p className="font-mono text-sm text-paper-dim">
+        Todavía no tienes entrenamientos registrados.
+      </p>
+    );
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5">
       {workouts.map((w) => (
-        <div key={w.id} className="border rounded p-4">
-          <h2 className="font-bold">{w.date}</h2>
-          <ul className="mt-2 flex flex-col gap-1">
+        <div key={w.id} className="card-brutal">
+          <h2 className="font-display text-2xl tracking-wide text-acid">{w.date}</h2>
+          <ul className="mt-3 flex flex-col divide-y divide-paper-dim/20 font-mono text-sm">
             {w.sets.map((s) => (
-              <li key={s.id}>
-                {exerciseNames[s.exercise_id] ?? s.exercise_id} — serie {s.set_number}: {s.reps} reps x {s.weight} kg
-                {s.rpe !== null ? ` (RPE ${s.rpe})` : ''}
+              <li key={s.id} className="flex flex-wrap items-baseline gap-x-2 py-2">
+                <span className="font-body text-paper">{exerciseNames[s.exercise_id] ?? s.exercise_id}</span>
+                <span className="text-paper-dim">
+                  — serie {s.set_number}: {s.reps} reps x {s.weight} kg
+                  {s.rpe !== null ? ` (RPE ${s.rpe})` : ''}
+                </span>
               </li>
             ))}
           </ul>

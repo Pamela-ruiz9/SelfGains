@@ -7,6 +7,7 @@ const exerciseEntries = await getCollection('exercises');
 const exerciseNames = Object.fromEntries(exerciseEntries.map((e) => [e.id, e.data.name]));
 ---
 <BaseLayout title="Progreso">
-  <h1 class="text-2xl font-bold mb-4">Tu historial</h1>
+  <p class="label-brutal mb-3 text-acid">Tu bitácora</p>
+  <h1 class="mb-8 font-display text-5xl text-paper sm:text-6xl">HISTORIAL</h1>
   <ProgressList client:load exerciseNames={exerciseNames} />
 </BaseLayout>

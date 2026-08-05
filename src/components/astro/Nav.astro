@@ -1,9 +1,39 @@
 ---
 const base = import.meta.env.BASE_URL;
+const path = Astro.url.pathname;
+
+const links = [
+  { href: `${base}registro/nuevo/`, label: "Registrar" },
+  { href: `${base}progreso/`, label: "Progreso" },
+  { href: `${base}login/`, label: "Login" },
+];
+
+function isActive(href: string) {
+  return path === href || (href !== base && path.startsWith(href));
+}
 ---
-<nav class="bg-gray-900 text-white px-4 py-3 flex gap-4">
-  <a href={base}>SelfGains</a>
-  <a href={`${base}registro/nuevo/`}>Registrar</a>
-  <a href={`${base}progreso/`}>Progreso</a>
-  <a href={`${base}login/`}>Login</a>
-</nav>
+<header class="sticky top-0 z-50 border-b-2 border-paper bg-ink/95 backdrop-blur">
+  <nav class="mx-auto flex max-w-5xl items-center justify-between px-4 py-4 sm:px-6">
+    <a href={base} class="group flex items-baseline gap-1">
+      <span class="font-display text-3xl tracking-wide text-paper">SELF</span>
+      <span class="font-display text-3xl tracking-wide text-acid">GAINS</span>
+    </a>
+    <div class="flex items-center gap-1 font-mono text-xs uppercase tracking-[0.15em] sm:gap-2 sm:text-sm">
+      {
+        links.map((link) => (
+          <a
+            href={link.href}
+            class:list={[
+              "border-2 px-3 py-2 transition-colors duration-150",
+              isActive(link.href)
+                ? "border-acid bg-acid text-ink"
+                : "border-transparent text-paper hover:border-paper-dim/50 hover:text-acid",
+            ]}
+          >
+            {link.label}
+          </a>
+        ))
+      }
+    </div>
+  </nav>
+</header>

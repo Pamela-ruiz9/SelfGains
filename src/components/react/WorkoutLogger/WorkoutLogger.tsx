@@ -123,14 +123,17 @@ export default function WorkoutLogger({ exercises }: Props) {
   }
 
   if (!authChecked) {
-    return <p>Cargando...</p>;
+    return <p className="font-mono text-sm text-paper-dim">Cargando...</p>;
   }
 
   if (!isLoggedIn) {
     return (
-      <p>
+      <p className="font-mono text-sm text-paper-dim">
         Debes{' '}
-        <a href={`${import.meta.env.BASE_URL}login/`} className="text-blue-600 underline">
+        <a
+          href={`${import.meta.env.BASE_URL}login/`}
+          className="text-acid underline underline-offset-4 hover:text-paper"
+        >
           iniciar sesión
         </a>{' '}
         para registrar un entrenamiento.
@@ -139,24 +142,25 @@ export default function WorkoutLogger({ exercises }: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-6 max-w-lg">
-      <label className="flex flex-col gap-1">
-        <span>Fecha</span>
+    <div className="flex max-w-2xl flex-col gap-8">
+      <label className="flex max-w-xs flex-col gap-2">
+        <span className="label-brutal">Fecha</span>
         <input
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          className="border rounded px-3 py-2"
+          className="input-brutal"
         />
       </label>
 
-      <form onSubmit={handleAddSet} className="flex flex-col gap-3 border rounded p-4">
-        <label className="flex flex-col gap-1">
-          <span>Ejercicio</span>
+      <form onSubmit={handleAddSet} className="card-brutal flex flex-col gap-4">
+        <p className="label-brutal text-acid">Agregar serie</p>
+        <label className="flex flex-col gap-2">
+          <span className="label-brutal">Ejercicio</span>
           <select
             value={exerciseId}
             onChange={(e) => setExerciseId(e.target.value)}
-            className="border rounded px-3 py-2"
+            className="input-brutal"
           >
             {exercises.map((ex) => (
               <option key={ex.id} value={ex.id}>
@@ -165,20 +169,20 @@ export default function WorkoutLogger({ exercises }: Props) {
             ))}
           </select>
         </label>
-        <div className="flex gap-3">
-          <label className="flex flex-col gap-1 flex-1">
-            <span>Reps</span>
+        <div className="grid grid-cols-3 gap-3">
+          <label className="flex flex-col gap-2">
+            <span className="label-brutal">Reps</span>
             <input
               type="number"
               value={reps}
               onChange={(e) => setReps(e.target.value)}
               min={1}
               required
-              className="border rounded px-3 py-2"
+              className="input-brutal"
             />
           </label>
-          <label className="flex flex-col gap-1 flex-1">
-            <span>Peso (kg)</span>
+          <label className="flex flex-col gap-2">
+            <span className="label-brutal">Peso (kg)</span>
             <input
               type="number"
               value={weight}
@@ -186,11 +190,11 @@ export default function WorkoutLogger({ exercises }: Props) {
               min={0}
               step="0.5"
               required
-              className="border rounded px-3 py-2"
+              className="input-brutal"
             />
           </label>
-          <label className="flex flex-col gap-1 flex-1">
-            <span>RPE (opcional)</span>
+          <label className="flex flex-col gap-2">
+            <span className="label-brutal">RPE</span>
             <input
               type="number"
               value={rpe}
@@ -198,58 +202,62 @@ export default function WorkoutLogger({ exercises }: Props) {
               min={0}
               max={10}
               step="0.5"
-              className="border rounded px-3 py-2"
+              className="input-brutal"
             />
           </label>
         </div>
-        <button type="submit" className="bg-gray-800 text-white rounded px-4 py-2 self-start">
-          Agregar serie
+        <button type="submit" className="btn-brutal-sm self-start">
+          + Agregar serie
         </button>
       </form>
 
       {loggedSets.length > 0 && (
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr>
-              <th className="border-b py-1">Ejercicio</th>
-              <th className="border-b py-1">Serie</th>
-              <th className="border-b py-1">Reps</th>
-              <th className="border-b py-1">Peso</th>
-              <th className="border-b py-1">RPE</th>
-              <th className="border-b py-1"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {loggedSets.map((s, i) => (
-              <tr key={i}>
-                <td className="py-1">{s.exerciseName}</td>
-                <td className="py-1">{s.setNumber}</td>
-                <td className="py-1">{s.reps}</td>
-                <td className="py-1">{s.weight}</td>
-                <td className="py-1">{s.rpe ?? '-'}</td>
-                <td className="py-1">
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveSet(i)}
-                    className="text-red-600 text-sm"
-                  >
-                    Quitar
-                  </button>
-                </td>
+        <div className="overflow-x-auto border-2 border-paper-dim/30">
+          <table className="w-full min-w-[480px] text-left font-mono text-sm">
+            <thead>
+              <tr className="border-b-2 border-acid text-xs uppercase tracking-[0.15em] text-paper-dim">
+                <th className="px-3 py-2 font-normal">Ejercicio</th>
+                <th className="px-3 py-2 font-normal">Serie</th>
+                <th className="px-3 py-2 font-normal">Reps</th>
+                <th className="px-3 py-2 font-normal">Peso</th>
+                <th className="px-3 py-2 font-normal">RPE</th>
+                <th className="px-3 py-2"></th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {loggedSets.map((s, i) => (
+                <tr key={i} className="border-b border-paper-dim/20">
+                  <td className="px-3 py-2 font-body text-paper">{s.exerciseName}</td>
+                  <td className="px-3 py-2 text-acid">{s.setNumber}</td>
+                  <td className="px-3 py-2">{s.reps}</td>
+                  <td className="px-3 py-2">{s.weight}</td>
+                  <td className="px-3 py-2">{s.rpe ?? '—'}</td>
+                  <td className="px-3 py-2">
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveSet(i)}
+                      className="text-blood hover:text-paper"
+                    >
+                      Quitar
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
 
-      {error && <p className="text-red-600 text-sm">{error}</p>}
-      {savedMessage && <p className="text-green-600 text-sm">{savedMessage}</p>}
+      {error && <p className="border-l-2 border-blood pl-3 font-mono text-sm text-blood">{error}</p>}
+      {savedMessage && (
+        <p className="border-l-2 border-acid pl-3 font-mono text-sm text-acid">{savedMessage}</p>
+      )}
 
       <button
         type="button"
         onClick={handleSaveWorkout}
         disabled={saving}
-        className="bg-blue-600 text-white rounded px-4 py-2 disabled:opacity-50 self-start"
+        className="btn-brutal self-start"
       >
         {saving ? 'Guardando...' : 'Guardar entrenamiento'}
       </button>

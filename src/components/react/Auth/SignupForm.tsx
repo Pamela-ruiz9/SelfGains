@@ -23,20 +23,25 @@ export default function SignupForm() {
 
   if (done) {
     return (
-      <p>
-        Cuenta creada. Revisa tu correo para confirmar la cuenta y luego{' '}
-        <a href={`${import.meta.env.BASE_URL}login/`} className="text-blue-600 underline">
-          inicia sesión
-        </a>
-        .
-      </p>
+      <div className="card-brutal max-w-sm border-acid">
+        <p className="font-mono text-sm text-paper">
+          Cuenta creada. Revisa tu correo para confirmar la cuenta y luego{' '}
+          <a
+            href={`${import.meta.env.BASE_URL}login/`}
+            className="text-acid underline underline-offset-4 hover:text-paper"
+          >
+            inicia sesión
+          </a>
+          .
+        </p>
+      </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4 max-w-sm">
-      <label className="flex flex-col gap-1">
-        <span>Email</span>
+    <form onSubmit={handleSubmit} className="flex max-w-sm flex-col gap-5">
+      <label className="flex flex-col gap-2">
+        <span className="label-brutal">Email</span>
         <input
           type="email"
           value={email}
@@ -44,11 +49,11 @@ export default function SignupForm() {
           required
           autoComplete="email"
           disabled={loading}
-          className="border rounded px-3 py-2"
+          className="input-brutal"
         />
       </label>
-      <label className="flex flex-col gap-1">
-        <span>Contraseña</span>
+      <label className="flex flex-col gap-2">
+        <span className="label-brutal">Contraseña</span>
         <input
           type="password"
           value={password}
@@ -57,15 +62,11 @@ export default function SignupForm() {
           minLength={6}
           autoComplete="new-password"
           disabled={loading}
-          className="border rounded px-3 py-2"
+          className="input-brutal"
         />
       </label>
-      {error && <p className="text-red-600 text-sm">{error}</p>}
-      <button
-        type="submit"
-        disabled={loading}
-        className="bg-blue-600 text-white rounded px-4 py-2 disabled:opacity-50"
-      >
+      {error && <p className="border-l-2 border-blood pl-3 font-mono text-sm text-blood">{error}</p>}
+      <button type="submit" disabled={loading} className="btn-brutal">
         {loading ? 'Creando cuenta...' : 'Crear cuenta'}
       </button>
     </form>

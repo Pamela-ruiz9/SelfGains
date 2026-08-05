@@ -9,6 +9,7 @@ const exercises = exerciseEntries
   .sort((a, b) => a.name.localeCompare(b.name));
 ---
 <BaseLayout title="Registrar entrenamiento">
-  <h1 class="text-2xl font-bold mb-4">Registrar entrenamiento</h1>
+  <p class="label-brutal mb-3 text-acid">Sesión de hoy</p>
+  <h1 class="mb-8 font-display text-5xl text-paper sm:text-6xl">REGISTRAR ENTRENAMIENTO</h1>
   <WorkoutLogger client:load exercises={exercises} />
 </BaseLayout>
