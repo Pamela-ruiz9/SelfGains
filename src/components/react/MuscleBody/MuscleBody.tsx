@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, RoundedBox, Edges } from '@react-three/drei';
+import { DoubleSide, Vector2 } from 'three';
 
 interface MuscleBodyProps {
   selectedMuscle: string | null;
@@ -10,7 +11,8 @@ interface MuscleBodyProps {
 type PartGeometry =
   | { type: 'box'; args: [number, number, number]; radius?: number }
   | { type: 'sphere'; args: [number] }
-  | { type: 'capsule'; args: [number, number] };
+  | { type: 'capsule'; args: [number, number] }
+  | { type: 'cylinder'; args: [number, number, number] };
 
 interface MusclePartDef {
   muscleId: string;
@@ -23,32 +25,41 @@ interface StaticPartDef {
   geometry: PartGeometry;
 }
 
+// (radius, y) pairs, hip to neck — revolved around Y to form a continuous torso,
+// then flattened front-to-back so the cross-section reads as human, not circular.
+const TORSO_PROFILE: [number, number][] = [
+  [0.15, 0.3],
+  [0.205, 0.42],
+  [0.195, 0.55],
+  [0.15, 0.7],
+  [0.14, 0.8],
+  [0.165, 0.9],
+  [0.215, 1.02],
+  [0.205, 1.14],
+  [0.155, 1.24],
+  [0.1, 1.32],
+  [0.075, 1.4],
+];
+const TORSO_DEPTH_SCALE = 0.68;
+
+// Continuous "skin" — head, torso, and the limb segments that are a single
+// muscle-free base (shoulder caps, upper arms, elbows, thighs, knees, hands, feet).
 const STATIC_PARTS: StaticPartDef[] = [
-  // head
-  { position: [0, 1.58, 0], geometry: { type: 'sphere', args: [0.16] } },
-  // neck
-  { position: [0, 1.4, 0], geometry: { type: 'capsule', args: [0.075, 0.04] } },
-  // chest block (wide)
-  { position: [0, 1.14, 0], geometry: { type: 'box', args: [0.42, 0.34, 0.26], radius: 0.1 } },
-  // waist (narrower, tapered)
-  { position: [0, 0.82, 0], geometry: { type: 'box', args: [0.32, 0.28, 0.22], radius: 0.09 } },
-  // hips / pelvis (wide again)
-  { position: [0, 0.5, 0], geometry: { type: 'box', args: [0.4, 0.3, 0.24], radius: 0.1 } },
-  // shoulder joints
-  { position: [0.29, 1.26, 0], geometry: { type: 'sphere', args: [0.12] } },
-  { position: [-0.29, 1.26, 0], geometry: { type: 'sphere', args: [0.12] } },
-  // elbows
-  { position: [0.4, 0.85, 0], geometry: { type: 'sphere', args: [0.075] } },
-  { position: [-0.4, 0.85, 0], geometry: { type: 'sphere', args: [0.075] } },
-  // hands
-  { position: [0.42, 0.28, 0], geometry: { type: 'box', args: [0.09, 0.15, 0.06], radius: 0.03 } },
-  { position: [-0.42, 0.28, 0], geometry: { type: 'box', args: [0.09, 0.15, 0.06], radius: 0.03 } },
-  // knees
-  { position: [0.22, -0.42, 0.02], geometry: { type: 'sphere', args: [0.1] } },
-  { position: [-0.22, -0.42, 0.02], geometry: { type: 'sphere', args: [0.1] } },
-  // feet
-  { position: [0.22, -1.28, 0.09], geometry: { type: 'box', args: [0.14, 0.09, 0.3], radius: 0.04 } },
-  { position: [-0.22, -1.28, 0.09], geometry: { type: 'box', args: [0.14, 0.09, 0.3], radius: 0.04 } },
+  { position: [0, 1.56, 0], geometry: { type: 'sphere', args: [0.145] } },
+  { position: [0.19, 1.27, 0], geometry: { type: 'sphere', args: [0.115] } },
+  { position: [-0.19, 1.27, 0], geometry: { type: 'sphere', args: [0.115] } },
+  { position: [0.235, 1.03, 0], geometry: { type: 'cylinder', args: [0.1, 0.072, 0.34] } },
+  { position: [-0.235, 1.03, 0], geometry: { type: 'cylinder', args: [0.1, 0.072, 0.34] } },
+  { position: [0.245, 0.86, 0], geometry: { type: 'sphere', args: [0.072] } },
+  { position: [-0.245, 0.86, 0], geometry: { type: 'sphere', args: [0.072] } },
+  { position: [0.255, 0.4, 0], geometry: { type: 'box', args: [0.09, 0.14, 0.06], radius: 0.025 } },
+  { position: [-0.255, 0.4, 0], geometry: { type: 'box', args: [0.09, 0.14, 0.06], radius: 0.025 } },
+  { position: [0.135, -0.025, 0.02], geometry: { type: 'cylinder', args: [0.155, 0.11, 0.65] } },
+  { position: [-0.135, -0.025, 0.02], geometry: { type: 'cylinder', args: [0.155, 0.11, 0.65] } },
+  { position: [0.135, -0.35, 0.04], geometry: { type: 'sphere', args: [0.105] } },
+  { position: [-0.135, -0.35, 0.04], geometry: { type: 'sphere', args: [0.105] } },
+  { position: [0.15, -1.0, 0.08], geometry: { type: 'box', args: [0.13, 0.09, 0.28], radius: 0.035 } },
+  { position: [-0.15, -1.0, 0.08], geometry: { type: 'box', args: [0.13, 0.09, 0.28], radius: 0.035 } },
 ];
 
 function mirror(
@@ -64,37 +75,40 @@ function mirror(
   ];
 }
 
+// Thin, raised overlays on top of the skin above — read as muscle definition
+// rather than separate volumes. antebrazo/gemelos are single-muscle limb
+// segments, so they ARE the limb (no separate skin cylinder underneath).
 const MUSCLE_PARTS: MusclePartDef[] = [
   {
     muscleId: 'pecho',
-    position: [0, 1.16, 0.18],
-    geometry: { type: 'box', args: [0.36, 0.24, 0.16], radius: 0.09 },
+    position: [0, 1.06, 0.175],
+    geometry: { type: 'box', args: [0.3, 0.2, 0.08], radius: 0.06 },
   },
   {
     muscleId: 'dorsales',
-    position: [0, 0.98, -0.16],
-    geometry: { type: 'box', args: [0.38, 0.36, 0.15], radius: 0.1 },
+    position: [0, 0.92, -0.155],
+    geometry: { type: 'box', args: [0.32, 0.28, 0.07], radius: 0.08 },
   },
   {
     muscleId: 'trapecio',
-    position: [0, 1.34, -0.12],
-    geometry: { type: 'box', args: [0.3, 0.14, 0.16], radius: 0.06 },
+    position: [0, 1.3, -0.1],
+    geometry: { type: 'box', args: [0.24, 0.12, 0.08], radius: 0.05 },
   },
   {
     muscleId: 'abdomen',
-    position: [0, 0.82, 0.16],
-    geometry: { type: 'box', args: [0.26, 0.3, 0.1], radius: 0.06 },
+    position: [0, 0.75, 0.125],
+    geometry: { type: 'box', args: [0.22, 0.26, 0.06], radius: 0.05 },
   },
-  ...mirror('deltoide-frontal', 0.29, 1.28, 0.13, { type: 'sphere', args: [0.105] }),
-  ...mirror('deltoide-lateral', 0.36, 1.26, 0, { type: 'sphere', args: [0.105] }),
-  ...mirror('deltoide-posterior', 0.29, 1.26, -0.13, { type: 'sphere', args: [0.105] }),
-  ...mirror('biceps', 0.4, 1.06, 0.075, { type: 'capsule', args: [0.075, 0.3] }),
-  ...mirror('triceps', 0.4, 1.06, -0.075, { type: 'capsule', args: [0.075, 0.3] }),
-  ...mirror('antebrazo', 0.41, 0.58, 0, { type: 'capsule', args: [0.065, 0.36] }),
-  ...mirror('cuadriceps', 0.22, 0.08, 0.1, { type: 'capsule', args: [0.15, 0.62] }),
-  ...mirror('isquiotibiales', 0.22, 0.08, -0.1, { type: 'capsule', args: [0.14, 0.62] }),
-  ...mirror('gluteos', 0.2, 0.4, -0.16, { type: 'sphere', args: [0.17] }),
-  ...mirror('gemelos', 0.22, -0.82, -0.02, { type: 'capsule', args: [0.115, 0.6] }),
+  ...mirror('deltoide-frontal', 0.2, 1.3, 0.1, { type: 'sphere', args: [0.075] }),
+  ...mirror('deltoide-lateral', 0.27, 1.27, 0, { type: 'sphere', args: [0.08] }),
+  ...mirror('deltoide-posterior', 0.2, 1.24, -0.1, { type: 'sphere', args: [0.075] }),
+  ...mirror('biceps', 0.255, 1.03, 0.075, { type: 'capsule', args: [0.065, 0.2] }),
+  ...mirror('triceps', 0.245, 1.03, -0.08, { type: 'capsule', args: [0.065, 0.2] }),
+  ...mirror('antebrazo', 0.25, 0.68, 0, { type: 'cylinder', args: [0.072, 0.052, 0.36] }),
+  ...mirror('cuadriceps', 0.155, -0.025, 0.09, { type: 'capsule', args: [0.11, 0.44] }),
+  ...mirror('isquiotibiales', 0.145, -0.025, -0.09, { type: 'capsule', args: [0.1, 0.44] }),
+  ...mirror('gluteos', 0.15, 0.32, -0.15, { type: 'sphere', args: [0.15] }),
+  ...mirror('gemelos', 0.14, -0.65, -0.015, { type: 'cylinder', args: [0.105, 0.07, 0.6] }),
 ];
 
 const COLOR_STATIC = '#3a3520';
@@ -103,6 +117,7 @@ const COLOR_ACTIVE = '#d7ff3f';
 
 const SPHERE_SEGMENTS: [number, number] = [24, 20];
 const CAPSULE_SEGMENTS: [number, number] = [10, 18];
+const CYLINDER_SEGMENTS = 18;
 
 function PartMesh({ geometry }: { geometry: PartGeometry }) {
   if (geometry.type === 'box') {
@@ -111,8 +126,33 @@ function PartMesh({ geometry }: { geometry: PartGeometry }) {
   if (geometry.type === 'sphere') {
     return <sphereGeometry args={[geometry.args[0], ...SPHERE_SEGMENTS]} />;
   }
+  if (geometry.type === 'cylinder') {
+    return (
+      <cylinderGeometry
+        args={[geometry.args[0], geometry.args[1], geometry.args[2], CYLINDER_SEGMENTS]}
+      />
+    );
+  }
+  return <capsuleGeometry args={[geometry.args[0], geometry.args[1], ...CAPSULE_SEGMENTS]} />;
+}
+
+function TorsoMesh() {
+  const points = useMemo(() => TORSO_PROFILE.map(([r, y]) => new Vector2(r, y)), []);
   return (
-    <capsuleGeometry args={[geometry.args[0], geometry.args[1], ...CAPSULE_SEGMENTS]} />
+    <mesh
+      scale={[1, 1, TORSO_DEPTH_SCALE]}
+      onPointerOver={(e) => e.stopPropagation()}
+      onPointerOut={(e) => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <latheGeometry args={[points, 24]} />
+      <meshStandardMaterial
+        color={COLOR_STATIC}
+        roughness={0.65}
+        metalness={0.05}
+        side={DoubleSide}
+      />
+    </mesh>
   );
 }
 
@@ -246,6 +286,7 @@ export default function MuscleBody({ selectedMuscle, onSelectMuscle }: MuscleBod
         <directionalLight position={[3, 4, 4]} intensity={1.4} color="#fff4e0" />
         <directionalLight position={[-3, 1, -3]} intensity={0.5} color="#8fb8ff" />
         <directionalLight position={[0, -2, 2]} intensity={0.3} />
+        <TorsoMesh />
         {STATIC_PARTS.map((part, i) => (
           <StaticMesh key={i} part={part} />
         ))}
