@@ -14,8 +14,11 @@ export const MUSCLES: Muscle[] = [
   { id: 'triceps', label: 'Tríceps' },
   { id: 'antebrazo', label: 'Antebrazo' },
   { id: 'abdomen', label: 'Abdomen' },
+  { id: 'oblicuos', label: 'Oblicuos' },
+  { id: 'lumbares', label: 'Lumbares' },
   { id: 'cuadriceps', label: 'Cuádriceps' },
   { id: 'isquiotibiales', label: 'Isquiotibiales' },
+  { id: 'aductores', label: 'Aductores' },
   { id: 'gluteos', label: 'Glúteos' },
   { id: 'gemelos', label: 'Gemelos' },
 ];
