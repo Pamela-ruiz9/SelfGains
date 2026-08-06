@@ -68,6 +68,6 @@ configuradas en Settings → Secrets and variables → Actions → Variables.
 - [x] Explorador muscular 3D (`/ejercicios/`) — cuerpo rotable, click en un
       músculo para ver qué ejercicios lo trabajan (detalle en
       `docs/agents/muscle-explorer-3d-status.md`)
-- [ ] Planes predefinidos que referencien la taxonomía muscular
+- [x] Planes predefinidos que referencien la taxonomía muscular
 - [ ] Sugerencia de progresión automática
 - [ ] Gráficas de progreso y cálculo de PRs
