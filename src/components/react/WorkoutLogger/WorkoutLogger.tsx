@@ -1,11 +1,18 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { supabase } from '../../../lib/supabase';
 import { createWorkout, addSet } from '../../../lib/workouts';
+import { getActiveRoutine, getRoutineById } from '../../../lib/routines';
+import { getTodayWeekday, type RoutineDays } from '../../../lib/weekdays';
 
 interface ExerciseOption {
   id: string;
   name: string;
   muscleGroup: string;
+}
+
+interface PredefinedRoutine {
+  id: string;
+  days: RoutineDays;
 }
 
 interface LoggedSet {
@@ -19,14 +26,143 @@ interface LoggedSet {
 
 interface Props {
   exercises: ExerciseOption[];
+  plans: PredefinedRoutine[];
 }
 
-export default function WorkoutLogger({ exercises }: Props) {
+interface ParsedSet {
+  reps: number;
+  weight: number;
+  rpe: number | null;
+}
+
+function parseSetInput(reps: string, weight: string, rpe: string): ParsedSet | { error: string } {
+  const repsNum = Number(reps);
+  const weightNum = Number(weight);
+  const rpeNum = rpe === '' ? null : Number(rpe);
+
+  if (!Number.isFinite(repsNum) || repsNum <= 0) {
+    return { error: 'Las repeticiones deben ser un número mayor a 0.' };
+  }
+  if (!Number.isFinite(weightNum) || weightNum < 0) {
+    return { error: 'El peso debe ser un número válido.' };
+  }
+  if (rpeNum !== null && (!Number.isFinite(rpeNum) || rpeNum < 0 || rpeNum > 10)) {
+    return { error: 'El RPE debe ser un número entre 0 y 10.' };
+  }
+  return { reps: repsNum, weight: weightNum, rpe: rpeNum };
+}
+
+function SetFields({
+  reps,
+  weight,
+  rpe,
+  onRepsChange,
+  onWeightChange,
+  onRpeChange,
+}: {
+  reps: string;
+  weight: string;
+  rpe: string;
+  onRepsChange: (v: string) => void;
+  onWeightChange: (v: string) => void;
+  onRpeChange: (v: string) => void;
+}) {
+  return (
+    <div className="grid grid-cols-3 gap-3">
+      <label className="flex flex-col gap-2">
+        <span className="label-brutal">Reps</span>
+        <input
+          type="number"
+          value={reps}
+          onChange={(e) => onRepsChange(e.target.value)}
+          min={1}
+          required
+          className="input-brutal"
+        />
+      </label>
+      <label className="flex flex-col gap-2">
+        <span className="label-brutal">Peso (kg)</span>
+        <input
+          type="number"
+          value={weight}
+          onChange={(e) => onWeightChange(e.target.value)}
+          min={0}
+          step="0.5"
+          required
+          className="input-brutal"
+        />
+      </label>
+      <label className="flex flex-col gap-2">
+        <span className="label-brutal">RPE</span>
+        <input
+          type="number"
+          value={rpe}
+          onChange={(e) => onRpeChange(e.target.value)}
+          min={0}
+          max={10}
+          step="0.5"
+          className="input-brutal"
+        />
+      </label>
+    </div>
+  );
+}
+
+function RoutineExerciseCard({
+  exerciseId,
+  exerciseName,
+  onAddSet,
+}: {
+  exerciseId: string;
+  exerciseName: string;
+  onAddSet: (exerciseId: string, exerciseName: string, parsed: ParsedSet) => void;
+}) {
+  const [reps, setReps] = useState('');
+  const [weight, setWeight] = useState('');
+  const [rpe, setRpe] = useState('');
+  const [error, setError] = useState<string | null>(null);
+
+  function handleAdd(e: FormEvent) {
+    e.preventDefault();
+    const parsed = parseSetInput(reps, weight, rpe);
+    if ('error' in parsed) {
+      setError(parsed.error);
+      return;
+    }
+    setError(null);
+    onAddSet(exerciseId, exerciseName, parsed);
+    setReps('');
+    setWeight('');
+    setRpe('');
+  }
+
+  return (
+    <form onSubmit={handleAdd} className="card-brutal flex flex-col gap-3">
+      <p className="font-display text-xl text-paper">{exerciseName}</p>
+      <SetFields
+        reps={reps}
+        weight={weight}
+        rpe={rpe}
+        onRepsChange={setReps}
+        onWeightChange={setWeight}
+        onRpeChange={setRpe}
+      />
+      {error && <p className="font-mono text-xs text-blood">{error}</p>}
+      <button type="submit" className="btn-brutal-sm self-start">
+        + Agregar serie
+      </button>
+    </form>
+  );
+}
+
+export default function WorkoutLogger({ exercises, plans }: Props) {
   const [authChecked, setAuthChecked] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [loggedSets, setLoggedSets] = useState<LoggedSet[]>([]);
+  const [planId, setPlanId] = useState<string | undefined>(undefined);
+  const [todayExerciseIds, setTodayExerciseIds] = useState<string[]>([]);
 
   const [exerciseId, setExerciseId] = useState(exercises[0]?.id ?? '');
   const [reps, setReps] = useState('');
@@ -38,52 +174,52 @@ export default function WorkoutLogger({ exercises }: Props) {
   const [savedMessage, setSavedMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setIsLoggedIn(data.session !== null);
+    supabase.auth.getSession().then(async ({ data }) => {
+      const loggedIn = data.session !== null;
+      setIsLoggedIn(loggedIn);
       setAuthChecked(true);
+      if (!loggedIn) return;
+
+      const active = await getActiveRoutine();
+      if (!active) return;
+      setPlanId(active.routine_ref);
+
+      const today = getTodayWeekday();
+      if (active.source === 'predefined') {
+        const plan = plans.find((p) => p.id === active.routine_ref);
+        setTodayExerciseIds(plan?.days[today] ?? []);
+      } else {
+        const routine = await getRoutineById(active.routine_ref);
+        setTodayExerciseIds(routine?.days[today] ?? []);
+      }
     });
-  }, []);
+  }, [plans]);
+
+  function addLoggedSet(exId: string, exName: string, parsed: ParsedSet) {
+    const setNumber = loggedSets.filter((s) => s.exerciseId === exId).length + 1;
+    setLoggedSets((prev) => [
+      ...prev,
+      { exerciseId: exId, exerciseName: exName, setNumber, ...parsed },
+    ]);
+  }
 
   function handleAddSet(e: FormEvent) {
     e.preventDefault();
     setError(null);
     setSavedMessage(null);
 
-    const repsNum = Number(reps);
-    const weightNum = Number(weight);
-    const rpeNum = rpe === '' ? null : Number(rpe);
-
     if (!exerciseId) {
       setError('Elige un ejercicio.');
       return;
     }
-    if (!Number.isFinite(repsNum) || repsNum <= 0) {
-      setError('Las repeticiones deben ser un número mayor a 0.');
-      return;
-    }
-    if (!Number.isFinite(weightNum) || weightNum < 0) {
-      setError('El peso debe ser un número válido.');
-      return;
-    }
-    if (rpeNum !== null && (!Number.isFinite(rpeNum) || rpeNum < 0 || rpeNum > 10)) {
-      setError('El RPE debe ser un número entre 0 y 10.');
+    const parsed = parseSetInput(reps, weight, rpe);
+    if ('error' in parsed) {
+      setError(parsed.error);
       return;
     }
 
     const exercise = exercises.find((ex) => ex.id === exerciseId);
-    const setNumber = loggedSets.filter((s) => s.exerciseId === exerciseId).length + 1;
-
-    setLoggedSets((prev) => [
-      ...prev,
-      {
-        exerciseId,
-        exerciseName: exercise?.name ?? exerciseId,
-        setNumber,
-        reps: repsNum,
-        weight: weightNum,
-        rpe: rpeNum,
-      },
-    ]);
+    addLoggedSet(exerciseId, exercise?.name ?? exerciseId, parsed);
     setReps('');
     setWeight('');
     setRpe('');
@@ -109,7 +245,7 @@ export default function WorkoutLogger({ exercises }: Props) {
     setSavedMessage(null);
     setSaving(true);
     try {
-      const workout = await createWorkout(date);
+      const workout = await createWorkout(date, undefined, planId);
       for (const s of loggedSets) {
         await addSet(workout.id, s.exerciseId, s.setNumber, s.reps, s.weight, s.rpe ?? undefined);
       }
@@ -153,8 +289,27 @@ export default function WorkoutLogger({ exercises }: Props) {
         />
       </label>
 
+      {todayExerciseIds.length > 0 && (
+        <div className="flex flex-col gap-4">
+          <p className="label-brutal text-acid">Hoy toca</p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {todayExerciseIds.map((exId) => {
+              const exercise = exercises.find((ex) => ex.id === exId);
+              return (
+                <RoutineExerciseCard
+                  key={exId}
+                  exerciseId={exId}
+                  exerciseName={exercise?.name ?? exId}
+                  onAddSet={addLoggedSet}
+                />
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <form onSubmit={handleAddSet} className="card-brutal flex flex-col gap-4">
-        <p className="label-brutal text-acid">Agregar serie</p>
+        <p className="label-brutal text-acid">Agregar otro ejercicio</p>
         <label className="flex flex-col gap-2">
           <span className="label-brutal">Ejercicio</span>
           <select
@@ -169,43 +324,14 @@ export default function WorkoutLogger({ exercises }: Props) {
             ))}
           </select>
         </label>
-        <div className="grid grid-cols-3 gap-3">
-          <label className="flex flex-col gap-2">
-            <span className="label-brutal">Reps</span>
-            <input
-              type="number"
-              value={reps}
-              onChange={(e) => setReps(e.target.value)}
-              min={1}
-              required
-              className="input-brutal"
-            />
-          </label>
-          <label className="flex flex-col gap-2">
-            <span className="label-brutal">Peso (kg)</span>
-            <input
-              type="number"
-              value={weight}
-              onChange={(e) => setWeight(e.target.value)}
-              min={0}
-              step="0.5"
-              required
-              className="input-brutal"
-            />
-          </label>
-          <label className="flex flex-col gap-2">
-            <span className="label-brutal">RPE</span>
-            <input
-              type="number"
-              value={rpe}
-              onChange={(e) => setRpe(e.target.value)}
-              min={0}
-              max={10}
-              step="0.5"
-              className="input-brutal"
-            />
-          </label>
-        </div>
+        <SetFields
+          reps={reps}
+          weight={weight}
+          rpe={rpe}
+          onRepsChange={setReps}
+          onWeightChange={setWeight}
+          onRpeChange={setRpe}
+        />
         <button type="submit" className="btn-brutal-sm self-start">
           + Agregar serie
         </button>
