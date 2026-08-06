@@ -5,9 +5,14 @@ import { getCollection } from 'astro:content';
 
 const exerciseEntries = await getCollection('exercises');
 const exerciseNames = Object.fromEntries(exerciseEntries.map((e) => [e.id, e.data.name]));
+const exercises = exerciseEntries.map((e) => ({
+  id: e.id,
+  name: e.data.name,
+  muscle: e.data.muscles[0],
+}));
 ---
 <BaseLayout title="Progreso">
   <p class="label-brutal mb-3 text-acid">Tu bitácora</p>
   <h1 class="mb-8 font-display text-5xl text-paper sm:text-6xl">HISTORIAL</h1>
-  <ProgressList client:load exerciseNames={exerciseNames} />
+  <ProgressList client:load exerciseNames={exerciseNames} exercises={exercises} />
 </BaseLayout>

@@ -1,22 +1,33 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../../lib/supabase';
 import { getWorkoutsForCurrentUser, getSetsForWorkout } from '../../../lib/workouts';
-import type { Workout, WorkoutSet } from '../../../types/db';
+import {
+  calculatePRs,
+  groupPRsByMuscle,
+  progressForExercise,
+  type WorkoutWithSets,
+} from '../../../lib/prs';
+import PRGrid from './PRGrid';
+import ProgressChart from './ProgressChart';
 
-interface WorkoutWithSets extends Workout {
-  sets: WorkoutSet[];
+interface ExerciseInfo {
+  id: string;
+  name: string;
+  muscle: string;
 }
 
 interface Props {
   exerciseNames: Record<string, string>;
+  exercises: ExerciseInfo[];
 }
 
-export default function ProgressList({ exerciseNames }: Props) {
+export default function ProgressList({ exerciseNames, exercises }: Props) {
   const [authChecked, setAuthChecked] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [workouts, setWorkouts] = useState<WorkoutWithSets[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedExerciseId, setSelectedExerciseId] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
@@ -40,6 +51,15 @@ export default function ProgressList({ exerciseNames }: Props) {
       }
     });
   }, []);
+
+  const prs = calculatePRs(workouts);
+  const muscleGroups = groupPRsByMuscle(prs, exercises);
+
+  useEffect(() => {
+    if (selectedExerciseId === null && muscleGroups.length > 0) {
+      setSelectedExerciseId(muscleGroups[0].entries[0].exerciseId);
+    }
+  }, [muscleGroups.length, selectedExerciseId]);
 
   if (!authChecked || loading) {
     return <p className="font-mono text-sm text-paper-dim">Cargando...</p>;
@@ -73,23 +93,36 @@ export default function ProgressList({ exerciseNames }: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-5">
-      {workouts.map((w) => (
-        <div key={w.id} className="card-brutal">
-          <h2 className="font-display text-2xl tracking-wide text-acid">{w.date}</h2>
-          <ul className="mt-3 flex flex-col divide-y divide-paper-dim/20 font-mono text-sm">
-            {w.sets.map((s) => (
-              <li key={s.id} className="flex flex-wrap items-baseline gap-x-2 py-2">
-                <span className="font-body text-paper">{exerciseNames[s.exercise_id] ?? s.exercise_id}</span>
-                <span className="text-paper-dim">
-                  — serie {s.set_number}: {s.reps} reps x {s.weight} kg
-                  {s.rpe !== null ? ` (RPE ${s.rpe})` : ''}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ))}
+    <div className="flex flex-col gap-10">
+      <PRGrid prs={prs} exercises={exercises} onSelectExercise={setSelectedExerciseId} />
+      {selectedExerciseId && (
+        <ProgressChart
+          exerciseId={selectedExerciseId}
+          points={progressForExercise(workouts, selectedExerciseId)}
+          exercises={exercises}
+          onSelectExercise={setSelectedExerciseId}
+        />
+      )}
+      <div className="flex flex-col gap-5">
+        {workouts.map((w) => (
+          <div key={w.id} className="card-brutal">
+            <h2 className="font-display text-2xl tracking-wide text-acid">{w.date}</h2>
+            <ul className="mt-3 flex flex-col divide-y divide-paper-dim/20 font-mono text-sm">
+              {w.sets.map((s) => (
+                <li key={s.id} className="flex flex-wrap items-baseline gap-x-2 py-2">
+                  <span className="font-body text-paper">
+                    {exerciseNames[s.exercise_id] ?? s.exercise_id}
+                  </span>
+                  <span className="text-paper-dim">
+                    — serie {s.set_number}: {s.reps} reps x {s.weight} kg
+                    {s.rpe !== null ? ` (RPE ${s.rpe})` : ''}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
