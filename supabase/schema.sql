@@ -46,3 +46,34 @@ create policy "Users can manage sets of their own workouts"
 create index idx_workout_sets_workout_id on workout_sets(workout_id);
 
 alter table workout_sets add constraint unique_set_number_per_workout unique(workout_id, exercise_id, set_number);
+
+create table routines (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  name text not null,
+  days jsonb not null,
+  created_at timestamptz not null default now()
+);
+
+alter table routines enable row level security;
+
+create policy "Users can manage their own routines"
+  on routines for all
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+create table active_routines (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  source text not null check (source in ('predefined', 'custom')),
+  routine_ref text not null,
+  started_at date not null default current_date,
+  duration_weeks integer not null check (duration_weeks > 0),
+  created_at timestamptz not null default now()
+);
+
+alter table active_routines enable row level security;
+
+create policy "Users can manage their own active routine"
+  on active_routines for all
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);

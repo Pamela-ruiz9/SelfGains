@@ -1,3 +1,5 @@
+import type { RoutineDays } from '../lib/weekdays';
+
 export interface Workout {
   id: string;
   user_id: string;
@@ -15,5 +17,22 @@ export interface WorkoutSet {
   reps: number;
   weight: number;
   rpe: number | null;
+  created_at: string;
+}
+
+export interface Routine {
+  id: string;
+  user_id: string;
+  name: string;
+  days: RoutineDays;
+  created_at: string;
+}
+
+export interface ActiveRoutine {
+  user_id: string;
+  source: 'predefined' | 'custom';
+  routine_ref: string;
+  started_at: string;
+  duration_weeks: number;
   created_at: string;
 }
