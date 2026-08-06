@@ -18,12 +18,23 @@ const exercises = defineCollection({
   }),
 });
 
+const routineDay = z.array(z.string()).default([]);
+
 const plans = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/plans' }),
   schema: z.object({
     name: z.string(),
     goal: z.string(),
     level: z.string(),
+    days: z.object({
+      lunes: routineDay,
+      martes: routineDay,
+      miercoles: routineDay,
+      jueves: routineDay,
+      viernes: routineDay,
+      sabado: routineDay,
+      domingo: routineDay,
+    }),
   }),
 });
 
