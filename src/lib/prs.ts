@@ -60,8 +60,17 @@ export function progressForExercise(
     .sort((a, b) => a.date.localeCompare(b.date));
 }
 
+// A PR whose exercise_id isn't in the current exercise library (e.g. logged
+// against an exercise later renamed or removed from src/content/exercises/)
+// falls into this bucket instead of being silently dropped — muscleLabel()
+// has no entry for it either, so it displays as-is via that function's own
+// fallback.
+const UNKNOWN_MUSCLE = 'Otros';
+
 // Groups PRs by each exercise's primary muscle, in the same order as the
-// MUSCLES taxonomy, skipping muscles with no PRs.
+// MUSCLES taxonomy, skipping muscles with no PRs. Any PR that can't be
+// matched to a known exercise/muscle goes in a trailing "Otros" group rather
+// than disappearing.
 export function groupPRsByMuscle(
   prs: ExercisePR[],
   exercises: { id: string; muscle: string }[]
@@ -69,14 +78,17 @@ export function groupPRsByMuscle(
   const muscleByExerciseId = new Map(exercises.map((e) => [e.id, e.muscle]));
   const entriesByMuscle = new Map<string, ExercisePR[]>();
   for (const pr of prs) {
-    const muscle = muscleByExerciseId.get(pr.exerciseId);
-    if (!muscle) continue;
+    const muscle = muscleByExerciseId.get(pr.exerciseId) ?? UNKNOWN_MUSCLE;
     const list = entriesByMuscle.get(muscle) ?? [];
     list.push(pr);
     entriesByMuscle.set(muscle, list);
   }
-  return MUSCLES.filter((m) => entriesByMuscle.has(m.id)).map((m) => ({
+  const knownGroups = MUSCLES.filter((m) => entriesByMuscle.has(m.id)).map((m) => ({
     muscleId: m.id,
     entries: entriesByMuscle.get(m.id)!,
   }));
+  const unknownEntries = entriesByMuscle.get(UNKNOWN_MUSCLE);
+  return unknownEntries
+    ? [...knownGroups, { muscleId: UNKNOWN_MUSCLE, entries: unknownEntries }]
+    : knownGroups;
 }
