@@ -1,7 +1,11 @@
 import { supabase } from './supabase';
 import type { Workout, WorkoutSet } from '../types/db';
 
-export async function createWorkout(date: string, notes?: string): Promise<Workout> {
+export async function createWorkout(
+  date: string,
+  notes?: string,
+  planId?: string
+): Promise<Workout> {
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -9,7 +13,7 @@ export async function createWorkout(date: string, notes?: string): Promise<Worko
 
   const { data, error } = await supabase
     .from('workouts')
-    .insert({ user_id: user.id, date, notes: notes ?? null })
+    .insert({ user_id: user.id, date, notes: notes ?? null, plan_id: planId ?? null })
     .select()
     .single();
 
