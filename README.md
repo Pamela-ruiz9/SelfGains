@@ -70,4 +70,4 @@ configuradas en Settings → Secrets and variables → Actions → Variables.
       `docs/agents/muscle-explorer-3d-status.md`)
 - [x] Planes predefinidos que referencien la taxonomía muscular
 - [ ] Sugerencia de progresión automática
-- [ ] Gráficas de progreso y cálculo de PRs
+- [x] Gráficas de progreso y cálculo de PRs
