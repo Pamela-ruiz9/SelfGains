@@ -53,7 +53,8 @@ El primer resultado se veía como bloques/esferas flotando ("blockman"). Tres pa
 - **Micro caso límite de raycasting:** en el borde exacto donde dos regiones fusionadas *distintas* se tocan sin estar unionadas entre sí (ej. el borde superior de "pecho", muy cerca de la esfera de "shoulder-right"), un click justo en esa línea puede no togglear el músculo (el rayo resuelve al mesh vecino en vez de al bump). Clickeando el centro de cualquier bump (no su borde extremo) es 100% confiable — confirmado con barridos repetidos en los 14 músculos.
 - **Bundle más grande:** el chunk de `MuscleExplorer` pasó de ~900 KB a ~1.03 MB minificado (three.js + fiber + drei + three-bvh-csg + three-mesh-bvh), y `vite` sigue avisando de esto en cada build. No se hizo code-splitting.
 - Sin suite de tests automatizada (consistente con el resto del proyecto — no es un pendiente nuevo).
-- Fuera de alcance explícito desde el spec original, sigue sin tocarse: planes predefinidos que referencien la taxonomía, animación del modelo, consumo de `videoUrl`, filtrado combinado (músculo + equipo).
+- Fuera de alcance explícito desde el spec original, sigue sin tocarse: animación del modelo, consumo de `videoUrl`, filtrado combinado (músculo + equipo).
+- ~~Planes predefinidos que referencien la taxonomía~~ — implementado como la feature de Rutinas (2026-08-06), ver `docs/agents/rutinas-status.md`. No vive en este explorador, pero cierra ese pendiente del roadmap.
 
 ## Si se retoma
 
