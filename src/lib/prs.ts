@@ -1,5 +1,5 @@
 import { MUSCLES } from './muscles';
-import type { Workout, WorkoutSet } from '../types/db';
+import type { Workout, WorkoutSet, WorkoutSession } from '../types/db';
 
 export interface WorkoutWithSets extends Workout {
   sets: WorkoutSet[];
@@ -91,4 +91,106 @@ export function groupPRsByMuscle(
   return unknownEntries
     ? [...knownGroups, { muscleId: UNKNOWN_MUSCLE, entries: unknownEntries }]
     : knownGroups;
+}
+
+export interface WorkoutWithSessions extends Workout {
+  sessions: WorkoutSession[];
+}
+
+export interface CardioPR {
+  activityId: string;
+  paceMinPerKm: number;
+  date: string;
+}
+
+export interface CardioProgressPoint {
+  date: string;
+  paceMinPerKm: number;
+}
+
+export interface DisciplineGroup {
+  discipline: string;
+  entries: CardioPR[];
+}
+
+// For each activity_id, the fastest pace (lowest duration_min / distance_km)
+// ever logged. Sessions with no distance (combate) never produce a pace and
+// are skipped entirely — there's no "record" for a duration-only session.
+export function calculateCardioPRs(workouts: WorkoutWithSessions[]): CardioPR[] {
+  const prsByActivity = new Map<string, CardioPR>();
+  for (const workout of workouts) {
+    for (const session of workout.sessions) {
+      if (session.distance_km === null) continue;
+      const pace = session.duration_min / session.distance_km;
+      const current = prsByActivity.get(session.activity_id);
+      if (!current || pace < current.paceMinPerKm) {
+        prsByActivity.set(session.activity_id, {
+          activityId: session.activity_id,
+          paceMinPerKm: pace,
+          date: workout.date,
+        });
+      }
+    }
+  }
+  return Array.from(prsByActivity.values());
+}
+
+// For ONE activity_id, one point per date with that day's fastest pace,
+// sorted chronologically. Mirrors progressForExercise.
+export function progressForCardioActivity(
+  workouts: WorkoutWithSessions[],
+  activityId: string
+): CardioProgressPoint[] {
+  const bestPaceByDate = new Map<string, number>();
+  for (const workout of workouts) {
+    for (const session of workout.sessions) {
+      if (session.activity_id !== activityId || session.distance_km === null) continue;
+      const pace = session.duration_min / session.distance_km;
+      const current = bestPaceByDate.get(workout.date);
+      if (current === undefined || pace < current) {
+        bestPaceByDate.set(workout.date, pace);
+      }
+    }
+  }
+  return Array.from(bestPaceByDate.entries())
+    .map(([date, paceMinPerKm]) => ({ date, paceMinPerKm }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+}
+
+// A PR whose activity_id isn't in the current activities collection (e.g. an
+// activity later renamed or removed) falls into this bucket instead of
+// disappearing — same fallback as groupPRsByMuscle for gym.
+const UNKNOWN_DISCIPLINE = 'Otros';
+
+// Groups cardio PRs by discipline ('running' | 'natacion'), skipping
+// disciplines with no PRs. Combate never appears here (calculateCardioPRs
+// already excludes it).
+export function groupCardioPRsByDiscipline(
+  prs: CardioPR[],
+  activities: { id: string; discipline: string }[]
+): DisciplineGroup[] {
+  const disciplineByActivityId = new Map(activities.map((a) => [a.id, a.discipline]));
+  const entriesByDiscipline = new Map<string, CardioPR[]>();
+  for (const pr of prs) {
+    const discipline = disciplineByActivityId.get(pr.activityId) ?? UNKNOWN_DISCIPLINE;
+    const list = entriesByDiscipline.get(discipline) ?? [];
+    list.push(pr);
+    entriesByDiscipline.set(discipline, list);
+  }
+  const order = ['running', 'natacion'];
+  const knownGroups = order
+    .filter((d) => entriesByDiscipline.has(d))
+    .map((d) => ({ discipline: d, entries: entriesByDiscipline.get(d)! }));
+  const unknownEntries = entriesByDiscipline.get(UNKNOWN_DISCIPLINE);
+  return unknownEntries
+    ? [...knownGroups, { discipline: UNKNOWN_DISCIPLINE, entries: unknownEntries }]
+    : knownGroups;
+}
+
+// Formats a pace in minutes-per-km as "M:SS /km" (e.g. 5.5 -> "5:30 /km").
+export function formatPace(paceMinPerKm: number): string {
+  const totalSeconds = Math.round(paceMinPerKm * 60);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${seconds.toString().padStart(2, '0')} /km`;
 }
