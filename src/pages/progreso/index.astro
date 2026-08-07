@@ -5,6 +5,7 @@ import { getCollection } from 'astro:content';
 import { isGymActivity } from '../../lib/activities';
 
 const activityEntries = await getCollection('activities');
+
 const gymEntries = activityEntries.filter(isGymActivity);
 const exerciseNames = Object.fromEntries(gymEntries.map((e) => [e.id, e.data.name]));
 const exercises = gymEntries.map((e) => ({
@@ -12,9 +13,23 @@ const exercises = gymEntries.map((e) => ({
   name: e.data.name,
   muscle: e.data.muscles[0],
 }));
+
+const activities = activityEntries
+  .map((e) => ({
+    id: e.id,
+    name: e.data.name,
+    discipline: e.data.discipline,
+    metricType: e.data.metricType,
+  }))
+  .sort((a, b) => a.name.localeCompare(b.name));
 ---
 <BaseLayout title="Progreso">
   <p class="label-brutal mb-3 text-acid">Tu bitácora</p>
   <h1 class="mb-8 font-display text-5xl text-paper sm:text-6xl">HISTORIAL</h1>
-  <ProgressList client:load exerciseNames={exerciseNames} exercises={exercises} />
+  <ProgressList
+    client:load
+    exerciseNames={exerciseNames}
+    exercises={exercises}
+    activities={activities}
+  />
 </BaseLayout>
