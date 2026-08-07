@@ -78,6 +78,10 @@ function parseSessionInput(
   return { durationMin: durationNum, distanceKm: distanceNum };
 }
 
+function requiresDistance(activity: Pick<ActivityOption, 'discipline'>): boolean {
+  return activity.discipline !== 'combate';
+}
+
 function SetFields({
   reps,
   weight,
@@ -209,8 +213,7 @@ function RoutineActivityCard({
       setWeight('');
       setRpe('');
     } else {
-      const requiresDistance = activity.discipline !== 'combate';
-      const parsed = parseSessionInput(duration, distance, requiresDistance);
+      const parsed = parseSessionInput(duration, distance, requiresDistance(activity));
       if ('error' in parsed) {
         setError(parsed.error);
         return;
@@ -238,7 +241,7 @@ function RoutineActivityCard({
         <SessionFields
           duration={duration}
           distance={distance}
-          requiresDistance={activity.discipline !== 'combate'}
+          requiresDistance={requiresDistance(activity)}
           onDurationChange={setDuration}
           onDistanceChange={setDistance}
         />
@@ -333,8 +336,7 @@ export default function WorkoutLogger({ activities, plans }: Props) {
       setWeight('');
       setRpe('');
     } else {
-      const requiresDistance = selectedActivity.discipline !== 'combate';
-      const parsed = parseSessionInput(duration, distance, requiresDistance);
+      const parsed = parseSessionInput(duration, distance, requiresDistance(selectedActivity));
       if ('error' in parsed) {
         setError(parsed.error);
         return;
@@ -450,7 +452,7 @@ export default function WorkoutLogger({ activities, plans }: Props) {
           <SessionFields
             duration={duration}
             distance={distance}
-            requiresDistance={selectedActivity.discipline !== 'combate'}
+            requiresDistance={requiresDistance(selectedActivity)}
             onDurationChange={setDuration}
             onDistanceChange={setDistance}
           />
