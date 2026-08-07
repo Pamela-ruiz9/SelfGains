@@ -2,10 +2,12 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import WorkoutLogger from '../../components/react/WorkoutLogger/WorkoutLogger';
 import { getCollection } from 'astro:content';
+import { isGymActivity } from '../../lib/activities';
 import { muscleLabel } from '../../lib/muscles';
 
-const exerciseEntries = await getCollection('exercises');
-const exercises = exerciseEntries
+const activityEntries = await getCollection('activities');
+const exercises = activityEntries
+  .filter(isGymActivity)
   .map((e) => ({
     id: e.id,
     name: e.data.name,

@@ -2,10 +2,12 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import ProgressList from '../../components/react/ProgressList/ProgressList';
 import { getCollection } from 'astro:content';
+import { isGymActivity } from '../../lib/activities';
 
-const exerciseEntries = await getCollection('exercises');
-const exerciseNames = Object.fromEntries(exerciseEntries.map((e) => [e.id, e.data.name]));
-const exercises = exerciseEntries.map((e) => ({
+const activityEntries = await getCollection('activities');
+const gymEntries = activityEntries.filter(isGymActivity);
+const exerciseNames = Object.fromEntries(gymEntries.map((e) => [e.id, e.data.name]));
+const exercises = gymEntries.map((e) => ({
   id: e.id,
   name: e.data.name,
   muscle: e.data.muscles[0],

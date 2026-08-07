@@ -2,9 +2,11 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import MuscleExplorer from '../../components/react/MuscleExplorer/MuscleExplorer';
 import { getCollection } from 'astro:content';
+import { isGymActivity } from '../../lib/activities';
 
-const exerciseEntries = await getCollection('exercises');
-const exercises = exerciseEntries
+const activityEntries = await getCollection('activities');
+const exercises = activityEntries
+  .filter(isGymActivity)
   .map((e) => ({
     id: e.id,
     name: e.data.name,
