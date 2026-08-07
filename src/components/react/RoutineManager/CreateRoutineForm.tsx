@@ -1,14 +1,10 @@
 import { useState, type FormEvent } from 'react';
 import { WEEKDAYS, weekdayLabel, type RoutineDays } from '../../../lib/weekdays';
 import { createRoutine } from '../../../lib/routines';
-
-interface ExerciseOption {
-  id: string;
-  name: string;
-}
+import ActivityPicker, { type ActivityOption } from '../ActivityPicker/ActivityPicker';
 
 interface Props {
-  exercises: ExerciseOption[];
+  activities: ActivityOption[];
   onCreated: () => void;
 }
 
@@ -24,14 +20,66 @@ function emptyDays(): RoutineDays {
   };
 }
 
-export default function CreateRoutineForm({ exercises, onCreated }: Props) {
+function DayActivityPicker({
+  activities,
+  dayIds,
+  onAdd,
+  onRemove,
+}: {
+  activities: ActivityOption[];
+  dayIds: string[];
+  onAdd: (id: string) => void;
+  onRemove: (id: string) => void;
+}) {
+  const [selected, setSelected] = useState<ActivityOption | null>(null);
+  const activityById = new Map(activities.map((a) => [a.id, a]));
+
+  return (
+    <div className="flex flex-col gap-2">
+      <ActivityPicker activities={activities} onSelect={setSelected} />
+      <button
+        type="button"
+        onClick={() => selected && onAdd(selected.id)}
+        disabled={!selected}
+        className="btn-brutal-sm self-start"
+      >
+        + Agregar
+      </button>
+      {dayIds.length > 0 && (
+        <ul className="flex flex-col gap-1 font-mono text-sm">
+          {dayIds.map((id) => (
+            <li key={id} className="flex items-center justify-between gap-2 text-paper-dim">
+              <span>{activityById.get(id)?.name ?? id}</span>
+              <button
+                type="button"
+                onClick={() => onRemove(id)}
+                className="text-blood hover:text-paper"
+              >
+                Quitar
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+export default function CreateRoutineForm({ activities, onCreated }: Props) {
   const [name, setName] = useState('');
   const [days, setDays] = useState<RoutineDays>(emptyDays());
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  function handleDayChange(day: keyof RoutineDays, selected: string[]) {
-    setDays((prev) => ({ ...prev, [day]: selected }));
+  function handleAddToDay(day: keyof RoutineDays, id: string) {
+    setDays((prev) => {
+      if (prev[day].includes(id)) return prev;
+      return { ...prev, [day]: [...prev[day], id] };
+    });
+  }
+
+  function handleRemoveFromDay(day: keyof RoutineDays, id: string) {
+    setDays((prev) => ({ ...prev, [day]: prev[day].filter((existing) => existing !== id) }));
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -68,29 +116,17 @@ export default function CreateRoutineForm({ exercises, onCreated }: Props) {
           className="input-brutal"
         />
       </label>
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-6 sm:grid-cols-2">
         {WEEKDAYS.map((day) => (
-          <label key={day} className="flex flex-col gap-2">
+          <div key={day} className="flex flex-col gap-2">
             <span className="label-brutal">{weekdayLabel(day)}</span>
-            <select
-              multiple
-              value={days[day]}
-              onChange={(e) =>
-                handleDayChange(
-                  day,
-                  Array.from(e.target.selectedOptions).map((o) => o.value)
-                )
-              }
-              className="input-brutal"
-              size={4}
-            >
-              {exercises.map((ex) => (
-                <option key={ex.id} value={ex.id}>
-                  {ex.name}
-                </option>
-              ))}
-            </select>
-          </label>
+            <DayActivityPicker
+              activities={activities}
+              dayIds={days[day]}
+              onAdd={(id) => handleAddToDay(day, id)}
+              onRemove={(id) => handleRemoveFromDay(day, id)}
+            />
+          </div>
         ))}
       </div>
       {error && <p className="border-l-2 border-blood pl-3 font-mono text-sm text-blood">{error}</p>}

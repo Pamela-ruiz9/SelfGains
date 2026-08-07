@@ -9,6 +9,7 @@ import {
 } from '../../../lib/routines';
 import type { RoutineDays } from '../../../lib/weekdays';
 import type { ActiveRoutine, Routine } from '../../../types/db';
+import type { ActivityOption } from '../ActivityPicker/ActivityPicker';
 import RoutineList, { type RoutineOption } from './RoutineList';
 import CreateRoutineForm from './CreateRoutineForm';
 
@@ -20,17 +21,12 @@ interface PredefinedRoutine {
   days: RoutineDays;
 }
 
-interface ExerciseOption {
-  id: string;
-  name: string;
-}
-
 interface Props {
   predefinedRoutines: PredefinedRoutine[];
-  exercises: ExerciseOption[];
+  activities: ActivityOption[];
 }
 
-export default function RoutineManager({ predefinedRoutines, exercises }: Props) {
+export default function RoutineManager({ predefinedRoutines, activities }: Props) {
   const [authChecked, setAuthChecked] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
@@ -145,7 +141,7 @@ export default function RoutineManager({ predefinedRoutines, exercises }: Props)
         title="Predefinidas"
         source="predefined"
         routines={predefinedOptions}
-        exercises={exercises}
+        activities={activities}
         emptyMessage="No hay rutinas predefinidas todavía."
         onActivate={handleActivate}
       />
@@ -154,12 +150,12 @@ export default function RoutineManager({ predefinedRoutines, exercises }: Props)
         title="Mis rutinas"
         source="custom"
         routines={customOptions}
-        exercises={exercises}
+        activities={activities}
         emptyMessage="Todavía no creaste ninguna rutina propia."
         onActivate={handleActivate}
       />
 
-      <CreateRoutineForm exercises={exercises} onCreated={refresh} />
+      <CreateRoutineForm activities={activities} onCreated={refresh} />
     </div>
   );
 }

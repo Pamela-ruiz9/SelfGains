@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { WEEKDAYS, weekdayLabel, type RoutineDays } from '../../../lib/weekdays';
+import type { ActivityOption } from '../ActivityPicker/ActivityPicker';
 
 export interface RoutineOption {
   ref: string;
@@ -8,24 +9,19 @@ export interface RoutineOption {
   days: RoutineDays;
 }
 
-interface ExerciseOption {
-  id: string;
-  name: string;
-}
-
 interface RoutineListProps {
   title: string;
   source: 'predefined' | 'custom';
   routines: RoutineOption[];
-  exercises: ExerciseOption[];
+  activities: ActivityOption[];
   emptyMessage: string;
   onActivate: (source: 'predefined' | 'custom', ref: string, weeks: number) => void;
 }
 
-function daysSummary(days: RoutineDays, exercises: ExerciseOption[]): string {
+function daysSummary(days: RoutineDays, activities: ActivityOption[]): string {
   return WEEKDAYS.filter((day) => days[day].length > 0)
     .map((day) => {
-      const names = days[day].map((id) => exercises.find((ex) => ex.id === id)?.name ?? id);
+      const names = days[day].map((id) => activities.find((a) => a.id === id)?.name ?? id);
       return `${weekdayLabel(day)}: ${names.join(', ')}`;
     })
     .join(' · ');
@@ -34,12 +30,12 @@ function daysSummary(days: RoutineDays, exercises: ExerciseOption[]): string {
 function RoutineCard({
   routine,
   source,
-  exercises,
+  activities,
   onActivate,
 }: {
   routine: RoutineOption;
   source: 'predefined' | 'custom';
-  exercises: ExerciseOption[];
+  activities: ActivityOption[];
   onActivate: (source: 'predefined' | 'custom', ref: string, weeks: number) => void;
 }) {
   const [weeks, setWeeks] = useState('8');
@@ -50,7 +46,7 @@ function RoutineCard({
         <p className="font-display text-2xl text-paper">{routine.name}</p>
         {routine.subtitle && <p className="label-brutal">{routine.subtitle}</p>}
       </div>
-      <p className="font-mono text-sm text-paper-dim">{daysSummary(routine.days, exercises)}</p>
+      <p className="font-mono text-sm text-paper-dim">{daysSummary(routine.days, activities)}</p>
       <div className="flex items-center gap-2">
         <input
           type="number"
@@ -76,7 +72,7 @@ export default function RoutineList({
   title,
   source,
   routines,
-  exercises,
+  activities,
   emptyMessage,
   onActivate,
 }: RoutineListProps) {
@@ -92,7 +88,7 @@ export default function RoutineList({
               key={routine.ref}
               routine={routine}
               source={source}
-              exercises={exercises}
+              activities={activities}
               onActivate={onActivate}
             />
           ))}
