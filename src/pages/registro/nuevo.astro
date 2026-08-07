@@ -2,16 +2,14 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import WorkoutLogger from '../../components/react/WorkoutLogger/WorkoutLogger';
 import { getCollection } from 'astro:content';
-import { isGymActivity } from '../../lib/activities';
-import { muscleLabel } from '../../lib/muscles';
 
 const activityEntries = await getCollection('activities');
-const exercises = activityEntries
-  .filter(isGymActivity)
+const activities = activityEntries
   .map((e) => ({
     id: e.id,
     name: e.data.name,
-    muscleGroup: e.data.muscles.map((m) => muscleLabel(m)).join(', '),
+    discipline: e.data.discipline,
+    metricType: e.data.metricType,
   }))
   .sort((a, b) => a.name.localeCompare(b.name));
 
@@ -21,5 +19,5 @@ const plans = planEntries.map((p) => ({ id: p.id, days: p.data.days }));
 <BaseLayout title="Registrar entrenamiento">
   <p class="label-brutal mb-3 text-acid">Sesión de hoy</p>
   <h1 class="mb-8 font-display text-5xl text-paper sm:text-6xl">REGISTRAR ENTRENAMIENTO</h1>
-  <WorkoutLogger client:load exercises={exercises} plans={plans} />
+  <WorkoutLogger client:load activities={activities} plans={plans} />
 </BaseLayout>
