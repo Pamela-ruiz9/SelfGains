@@ -36,3 +36,12 @@ export interface ActiveRoutine {
   duration_weeks: number;
   created_at: string;
 }
+
+export interface WorkoutSession {
+  id: string;
+  workout_id: string;
+  activity_id: string;
+  duration_min: number;
+  distance_km: number | null;
+  created_at: string;
+}

@@ -77,3 +77,33 @@ create policy "Users can manage their own active routine"
   on active_routines for all
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
+
+create table workout_sessions (
+  id uuid primary key default gen_random_uuid(),
+  workout_id uuid not null references workouts(id) on delete cascade,
+  activity_id text not null,
+  duration_min numeric not null check (duration_min > 0),
+  distance_km numeric check (distance_km > 0),
+  created_at timestamptz not null default now()
+);
+
+alter table workout_sessions enable row level security;
+
+create policy "Users can manage sessions of their own workouts"
+  on workout_sessions for all
+  using (
+    exists (
+      select 1 from workouts
+      where workouts.id = workout_sessions.workout_id
+      and workouts.user_id = auth.uid()
+    )
+  )
+  with check (
+    exists (
+      select 1 from workouts
+      where workouts.id = workout_sessions.workout_id
+      and workouts.user_id = auth.uid()
+    )
+  );
+
+create index idx_workout_sessions_workout_id on workout_sessions(workout_id);
