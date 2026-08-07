@@ -16,6 +16,12 @@ export const DISCIPLINES: { id: ActivityOption['discipline']; label: string }[] 
 
 interface Props {
   activities: ActivityOption[];
+  /**
+   * Fires on mount, on tab switch (auto-selects the first activity of the
+   * new discipline), and on dropdown change. This is a "current selection"
+   * report, not a commit/add signal — consumers that need an explicit add
+   * action must gate it behind their own trigger (e.g. a separate button).
+   */
   onSelect: (activity: ActivityOption | null) => void;
 }
 
@@ -52,21 +58,24 @@ export default function ActivityPicker({ activities, onSelect }: Props) {
           </button>
         ))}
       </div>
-      <select
-        value={selectedId}
-        onChange={(e) => setSelectedId(e.target.value)}
-        className="input-brutal"
-      >
-        {filtered.length === 0 ? (
-          <option value="">Sin actividades en esta disciplina</option>
-        ) : (
-          filtered.map((a) => (
-            <option key={a.id} value={a.id}>
-              {a.name}
-            </option>
-          ))
-        )}
-      </select>
+      <label className="flex flex-col gap-2">
+        <span className="label-brutal">Actividad</span>
+        <select
+          value={selectedId}
+          onChange={(e) => setSelectedId(e.target.value)}
+          className="input-brutal"
+        >
+          {filtered.length === 0 ? (
+            <option value="">Sin actividades en esta disciplina</option>
+          ) : (
+            filtered.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.name}
+              </option>
+            ))
+          )}
+        </select>
+      </label>
     </div>
   );
 }
