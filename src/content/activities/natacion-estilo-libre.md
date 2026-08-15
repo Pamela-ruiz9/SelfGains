@@ -1,5 +1,5 @@
 ---
-name: Natación — estilo libre
+name: Natación — crol — completo
 discipline: natacion
 metricType: session
 ---

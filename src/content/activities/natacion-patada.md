@@ -1,5 +1,5 @@
 ---
-name: Natación — patada (con tabla)
+name: Natación — crol — patada (tabla)
 discipline: natacion
 metricType: session
 ---

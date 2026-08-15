@@ -1,5 +1,5 @@
 ---
-name: Natación — pull (solo brazada)
+name: Natación — crol — brazada (pull)
 discipline: natacion
 metricType: session
 ---
