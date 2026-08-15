@@ -20,7 +20,7 @@ function isActive(href: string) {
       <span class="font-display text-3xl tracking-wide text-paper">SELF</span>
       <span class="font-display text-3xl tracking-wide text-acid">GAINS</span>
     </a>
-    <div class="flex items-center gap-1 font-mono text-xs uppercase tracking-[0.15em] sm:gap-2 sm:text-sm">
+    <div class="hidden items-center gap-2 font-mono text-sm uppercase tracking-[0.15em] sm:flex">
       {
         links.map((link) => (
           <a
@@ -39,3 +39,24 @@ function isActive(href: string) {
     </div>
   </nav>
 </header>
+
+<nav
+  class="fixed inset-x-0 bottom-0 z-50 border-t-2 border-paper bg-ink/95 backdrop-blur sm:hidden"
+  style="padding-bottom: env(safe-area-inset-bottom);"
+>
+  <div class="grid grid-cols-5 font-mono text-[10px] uppercase tracking-wide">
+    {
+      links.map((link) => (
+        <a
+          href={link.href}
+          class:list={[
+            "flex flex-col items-center justify-center gap-1 border-t-2 py-2.5 text-center leading-tight transition-colors duration-150",
+            isActive(link.href) ? "border-acid text-acid" : "border-transparent text-paper-dim",
+          ]}
+        >
+          {link.label}
+        </a>
+      ))
+    }
+  </div>
+</nav>
