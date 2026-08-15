@@ -187,6 +187,62 @@ export function groupCardioPRsByDiscipline(
     : knownGroups;
 }
 
+export interface DisciplineSummary {
+  discipline: string;
+  sessionCount: number; // distinct days trained in this discipline
+  totalMinutes: number | null; // null for gym — sets have no duration logged
+  setCount: number | null; // null for session-based disciplines (running/natacion/combate)
+}
+
+// One entry per discipline the user has actually logged something in —
+// disciplines with zero activity are omitted entirely rather than shown as
+// empty, so this doubles as "which disciplines do you practice".
+export function summarizeByDiscipline(
+  workouts: (WorkoutWithSets & WorkoutWithSessions)[],
+  activities: { id: string; discipline: string }[]
+): DisciplineSummary[] {
+  const disciplineByActivityId = new Map(activities.map((a) => [a.id, a.discipline]));
+
+  const gymDates = new Set<string>();
+  let gymSetCount = 0;
+  const cardioStats = new Map<string, { dates: Set<string>; totalMinutes: number }>();
+
+  for (const workout of workouts) {
+    if (workout.sets.length > 0) {
+      gymDates.add(workout.date);
+      gymSetCount += workout.sets.length;
+    }
+    for (const session of workout.sessions) {
+      const discipline = disciplineByActivityId.get(session.activity_id) ?? UNKNOWN_DISCIPLINE;
+      const stat = cardioStats.get(discipline) ?? { dates: new Set<string>(), totalMinutes: 0 };
+      stat.dates.add(workout.date);
+      stat.totalMinutes += session.duration_min;
+      cardioStats.set(discipline, stat);
+    }
+  }
+
+  const summaries: DisciplineSummary[] = [];
+  if (gymDates.size > 0) {
+    summaries.push({
+      discipline: 'gym',
+      sessionCount: gymDates.size,
+      totalMinutes: null,
+      setCount: gymSetCount,
+    });
+  }
+  for (const discipline of ['running', 'natacion', 'combate', UNKNOWN_DISCIPLINE]) {
+    const stat = cardioStats.get(discipline);
+    if (!stat) continue;
+    summaries.push({
+      discipline,
+      sessionCount: stat.dates.size,
+      totalMinutes: Math.round(stat.totalMinutes),
+      setCount: null,
+    });
+  }
+  return summaries;
+}
+
 // Formats a pace in minutes-per-km as "M:SS /km" (e.g. 5.5 -> "5:30 /km").
 export function formatPace(paceMinPerKm: number): string {
   const totalSeconds = Math.round(paceMinPerKm * 60);

@@ -8,10 +8,12 @@ import {
   calculateCardioPRs,
   groupCardioPRsByDiscipline,
   progressForCardioActivity,
+  summarizeByDiscipline,
   type WorkoutWithSets,
   type WorkoutWithSessions,
 } from '../../../lib/prs';
 import type { ActivityOption } from '../ActivityPicker/ActivityPicker';
+import DisciplineSummary from './DisciplineSummary';
 import PRGrid from './PRGrid';
 import ProgressChart from './ProgressChart';
 import CardioPRGrid from './CardioPRGrid';
@@ -78,6 +80,8 @@ export default function ProgressList({ exerciseNames, exercises, activities }: P
   const cardioPrs = calculateCardioPRs(workouts);
   const disciplineGroups = groupCardioPRsByDiscipline(cardioPrs, activities);
 
+  const disciplineSummaries = summarizeByDiscipline(workouts, activities);
+
   useEffect(() => {
     if (selectedExerciseId === null && muscleGroups.length > 0) {
       setSelectedExerciseId(muscleGroups[0].entries[0].exerciseId);
@@ -123,6 +127,7 @@ export default function ProgressList({ exerciseNames, exercises, activities }: P
 
   return (
     <div className="flex flex-col gap-10">
+      <DisciplineSummary summaries={disciplineSummaries} />
       <PRGrid prs={prs} exercises={exercises} onSelectExercise={setSelectedExerciseId} />
       {selectedExerciseId && (
         <ProgressChart
