@@ -114,9 +114,9 @@ const MUSCLE_PARTS: MusclePartDef[] = [
   ),
 ];
 
-const COLOR_STATIC = '#3a3520';
-const COLOR_MUSCLE = '#565024';
-const COLOR_ACTIVE = '#d7ff3f';
+const COLOR_STATIC = '#9c8a66'; // skin — warm tan, readable against the dark canvas
+const COLOR_MUSCLE = '#b8563a'; // muscle bumps — terracotta, distinct hue from skin
+const COLOR_ACTIVE = '#d7ff3f'; // selected/hovered — site accent (acid)
 
 const SPHERE_SEGMENTS: [number, number] = [24, 20];
 const CYLINDER_SEGMENTS = 18;
