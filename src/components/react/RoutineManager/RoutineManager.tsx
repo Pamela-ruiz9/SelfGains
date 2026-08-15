@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../../../lib/supabase';
 import {
   activateRoutine,
+  daysElapsed,
   deactivateRoutine,
   deleteRoutine,
   getActiveRoutine,
@@ -127,6 +128,7 @@ export default function RoutineManager({ predefinedRoutines, activities }: Props
       : activeCustomRoutine?.name;
 
   const elapsed = activeRoutine ? weeksElapsed(activeRoutine.started_at) : 0;
+  const days = activeRoutine ? daysElapsed(activeRoutine.started_at) : 0;
   const expired = activeRoutine ? elapsed >= activeRoutine.duration_weeks : false;
 
   const predefinedOptions: RoutineOption[] = predefinedRoutines.map((p) => ({
@@ -163,7 +165,9 @@ export default function RoutineManager({ predefinedRoutines, activities }: Props
               <p className="font-display text-2xl text-paper">{activeName ?? 'Rutina desconocida'}</p>
               <p className="font-mono text-sm text-paper-dim">
                 Semana {Math.min(elapsed + 1, activeRoutine.duration_weeks)} de{' '}
-                {activeRoutine.duration_weeks}
+                {activeRoutine.duration_weeks} — día{' '}
+                {Math.min(days + 1, activeRoutine.duration_weeks * 7)} de{' '}
+                {activeRoutine.duration_weeks * 7}
               </p>
             </div>
             <button

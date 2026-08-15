@@ -259,6 +259,7 @@ export default function WorkoutLogger({ activities, plans }: Props) {
   const [loggedSets, setLoggedSets] = useState<LoggedSet[]>([]);
   const [loggedSessions, setLoggedSessions] = useState<LoggedSession[]>([]);
   const [planId, setPlanId] = useState<string | undefined>(undefined);
+  const [routineDaysMap, setRoutineDaysMap] = useState<RoutineDays | null>(null);
   const [todayActivities, setTodayActivities] = useState<ActivityOption[]>([]);
 
   const [selectedActivity, setSelectedActivity] = useState<ActivityOption | null>(null);
@@ -283,22 +284,32 @@ export default function WorkoutLogger({ activities, plans }: Props) {
       if (!active) return;
       setPlanId(active.routine_ref);
 
-      const today = getTodayWeekday();
-      let ids: string[] = [];
       if (active.source === 'predefined') {
         const plan = plans.find((p) => p.id === active.routine_ref);
-        ids = plan?.days[today] ?? [];
+        setRoutineDaysMap(plan?.days ?? null);
       } else {
         const routine = await getRoutineById(active.routine_ref);
-        ids = routine?.days[today] ?? [];
+        setRoutineDaysMap(routine?.days ?? null);
       }
-      setTodayActivities(
-        ids
-          .map((id) => activities.find((a) => a.id === id))
-          .filter((a): a is ActivityOption => a !== undefined)
-      );
     });
-  }, [plans, activities]);
+  }, [plans]);
+
+  // Re-suggests the routine's activities for whichever weekday `date` falls
+  // on — not just the real "today" — so switching the date to log a past or
+  // future session still surfaces that day's routine first.
+  useEffect(() => {
+    if (!routineDaysMap) {
+      setTodayActivities([]);
+      return;
+    }
+    const weekday = getTodayWeekday(new Date(`${date}T00:00:00`));
+    const ids = routineDaysMap[weekday] ?? [];
+    setTodayActivities(
+      ids
+        .map((id) => activities.find((a) => a.id === id))
+        .filter((a): a is ActivityOption => a !== undefined)
+    );
+  }, [date, routineDaysMap, activities]);
 
   function addLoggedSet(activityId: string, activityName: string, parsed: ParsedSet) {
     const setNumber = loggedSets.filter((s) => s.exerciseId === activityId).length + 1;
@@ -418,7 +429,9 @@ export default function WorkoutLogger({ activities, plans }: Props) {
 
       {todayActivities.length > 0 && (
         <div className="flex flex-col gap-4">
-          <p className="label-brutal text-acid">Hoy toca</p>
+          <p className="label-brutal text-acid">
+            {date === new Date().toISOString().slice(0, 10) ? 'Hoy toca' : 'Ese día toca'}
+          </p>
           <div className="grid gap-4 sm:grid-cols-2">
             {todayActivities.map((activity) => (
               <RoutineActivityCard

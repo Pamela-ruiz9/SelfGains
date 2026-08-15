@@ -96,7 +96,11 @@ export async function deactivateRoutine(): Promise<void> {
 }
 
 export function weeksElapsed(startedAt: string): number {
+  return Math.floor(daysElapsed(startedAt) / 7);
+}
+
+export function daysElapsed(startedAt: string): number {
   const start = new Date(`${startedAt}T00:00:00`);
-  const msPerWeek = 7 * 24 * 60 * 60 * 1000;
-  return Math.floor((Date.now() - start.getTime()) / msPerWeek);
+  const msPerDay = 24 * 60 * 60 * 1000;
+  return Math.floor((Date.now() - start.getTime()) / msPerDay);
 }
