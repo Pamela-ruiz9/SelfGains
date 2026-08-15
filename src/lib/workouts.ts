@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import type { Workout, WorkoutSet } from '../types/db';
+import type { Workout, WorkoutSet, WorkoutSession } from '../types/db';
 
 export async function createWorkout(
   date: string,
@@ -66,4 +66,36 @@ export async function getSetsForWorkout(workoutId: string): Promise<WorkoutSet[]
 
   if (error) throw error;
   return data as WorkoutSet[];
+}
+
+export async function addSession(
+  workoutId: string,
+  activityId: string,
+  durationMin: number,
+  distanceKm?: number
+): Promise<WorkoutSession> {
+  const { data, error } = await supabase
+    .from('workout_sessions')
+    .insert({
+      workout_id: workoutId,
+      activity_id: activityId,
+      duration_min: durationMin,
+      distance_km: distanceKm ?? null,
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as WorkoutSession;
+}
+
+export async function getSessionsForWorkout(workoutId: string): Promise<WorkoutSession[]> {
+  const { data, error } = await supabase
+    .from('workout_sessions')
+    .select('*')
+    .eq('workout_id', workoutId)
+    .order('created_at', { ascending: true });
+
+  if (error) throw error;
+  return data as WorkoutSession[];
 }

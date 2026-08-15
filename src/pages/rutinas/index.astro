@@ -14,13 +14,18 @@ const predefinedRoutines = planEntries
   }))
   .sort((a, b) => a.name.localeCompare(b.name));
 
-const exerciseEntries = await getCollection('exercises');
-const exercises = exerciseEntries
-  .map((e) => ({ id: e.id, name: e.data.name }))
+const activityEntries = await getCollection('activities');
+const activities = activityEntries
+  .map((e) => ({
+    id: e.id,
+    name: e.data.name,
+    discipline: e.data.discipline,
+    metricType: e.data.metricType,
+  }))
   .sort((a, b) => a.name.localeCompare(b.name));
 ---
 <BaseLayout title="Rutinas">
   <p class="label-brutal mb-3 text-acid">Elegí o armá tu plan</p>
   <h1 class="mb-8 font-display text-5xl text-paper sm:text-6xl">RUTINAS</h1>
-  <RoutineManager client:load predefinedRoutines={predefinedRoutines} exercises={exercises} />
+  <RoutineManager client:load predefinedRoutines={predefinedRoutines} activities={activities} />
 </BaseLayout>
