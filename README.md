@@ -69,5 +69,5 @@ configuradas en Settings → Secrets and variables → Actions → Variables.
       músculo para ver qué ejercicios lo trabajan (detalle en
       `docs/agents/muscle-explorer-3d-status.md`)
 - [x] Planes predefinidos que referencien la taxonomía muscular
-- [ ] Sugerencia de progresión automática
+- [x] Sugerencia de progresión automática
 - [x] Gráficas de progreso y cálculo de PRs
