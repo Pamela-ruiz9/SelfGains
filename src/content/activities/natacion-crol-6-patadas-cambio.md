@@ -1,6 +1,7 @@
 ---
-name: Natación — crol — 6 patadas y cambio
+name: 6 patadas y cambio
 discipline: natacion
+group: crol
 metricType: session
 ---
 

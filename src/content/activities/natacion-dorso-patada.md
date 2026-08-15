@@ -1,6 +1,7 @@
 ---
-name: Natación — dorso — patada (tabla)
+name: Patada (tabla)
 discipline: natacion
+group: dorso
 metricType: session
 ---
 

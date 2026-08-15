@@ -1,6 +1,7 @@
 ---
-name: Natación — mariposa — patada (tabla)
+name: Patada (tabla)
 discipline: natacion
+group: mariposa
 metricType: session
 ---
 

@@ -1,6 +1,7 @@
 ---
-name: Natación — mariposa — completo
+name: Completo
 discipline: natacion
+group: mariposa
 metricType: session
 ---
 

@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
+import { groupLabel, KNOWN_GROUPS } from '../../../lib/activities';
 
 export interface ActivityOption {
   id: string;
   name: string;
   discipline: 'gym' | 'running' | 'natacion' | 'combate';
   metricType: 'sets' | 'session';
+  group?: string;
 }
 
 export const DISCIPLINES: { id: ActivityOption['discipline']; label: string }[] = [
@@ -25,9 +27,21 @@ interface Props {
   onSelect: (activity: ActivityOption | null) => void;
 }
 
+function groupsIn(activities: ActivityOption[]): string[] {
+  const present = new Set(activities.map((a) => a.group).filter((g): g is string => !!g));
+  const known = KNOWN_GROUPS.filter((g) => present.has(g));
+  const unknown = [...present].filter((g) => !KNOWN_GROUPS.includes(g)).sort();
+  return [...known, ...unknown];
+}
+
 export default function ActivityPicker({ activities, onSelect }: Props) {
   const [discipline, setDiscipline] = useState<ActivityOption['discipline']>('gym');
-  const filtered = activities.filter((a) => a.discipline === discipline);
+  const byDiscipline = activities.filter((a) => a.discipline === discipline);
+  const groups = groupsIn(byDiscipline);
+
+  const [group, setGroup] = useState<string | undefined>(groups[0]);
+  const filtered = groups.length > 0 ? byDiscipline.filter((a) => a.group === group) : byDiscipline;
+
   const [selectedId, setSelectedId] = useState(filtered[0]?.id ?? '');
 
   useEffect(() => {
@@ -36,7 +50,18 @@ export default function ActivityPicker({ activities, onSelect }: Props) {
 
   function handleDisciplineChange(next: ActivityOption['discipline']) {
     setDiscipline(next);
-    const nextFiltered = activities.filter((a) => a.discipline === next);
+    const nextByDiscipline = activities.filter((a) => a.discipline === next);
+    const nextGroups = groupsIn(nextByDiscipline);
+    const nextGroup = nextGroups[0];
+    setGroup(nextGroup);
+    const nextFiltered =
+      nextGroups.length > 0 ? nextByDiscipline.filter((a) => a.group === nextGroup) : nextByDiscipline;
+    setSelectedId(nextFiltered[0]?.id ?? '');
+  }
+
+  function handleGroupChange(nextGroup: string) {
+    setGroup(nextGroup);
+    const nextFiltered = byDiscipline.filter((a) => a.group === nextGroup);
     setSelectedId(nextFiltered[0]?.id ?? '');
   }
 
@@ -58,6 +83,24 @@ export default function ActivityPicker({ activities, onSelect }: Props) {
           </button>
         ))}
       </div>
+      {groups.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {groups.map((g) => (
+            <button
+              key={g}
+              type="button"
+              onClick={() => handleGroupChange(g)}
+              className={
+                g === group
+                  ? 'btn-brutal-sm border-acid bg-acid text-ink'
+                  : 'btn-brutal-sm opacity-60'
+              }
+            >
+              {groupLabel(g)}
+            </button>
+          ))}
+        </div>
+      )}
       <label className="flex flex-col gap-2">
         <span className="label-brutal">Actividad</span>
         <select

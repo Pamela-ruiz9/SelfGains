@@ -3,7 +3,7 @@ import { supabase } from '../../../lib/supabase';
 import { createWorkout, addSet, addSession } from '../../../lib/workouts';
 import { getActiveRoutine, getRoutineById } from '../../../lib/routines';
 import { getTodayWeekday, type RoutineDays } from '../../../lib/weekdays';
-import { requiresDistance } from '../../../lib/activities';
+import { fullActivityName, requiresDistance } from '../../../lib/activities';
 import ActivityPicker, { type ActivityOption } from '../ActivityPicker/ActivityPicker';
 
 interface PredefinedRoutine {
@@ -205,7 +205,7 @@ function RoutineActivityCard({
         return;
       }
       setError(null);
-      onAddSet(activity.id, activity.name, parsed);
+      onAddSet(activity.id, fullActivityName(activity), parsed);
       setReps('');
       setWeight('');
       setRpe('');
@@ -216,7 +216,7 @@ function RoutineActivityCard({
         return;
       }
       setError(null);
-      onAddSession(activity.id, activity.name, parsed);
+      onAddSession(activity.id, fullActivityName(activity), parsed);
       setDuration('');
       setDistance('');
     }
@@ -224,7 +224,7 @@ function RoutineActivityCard({
 
   return (
     <form onSubmit={handleAdd} className="card-brutal flex flex-col gap-3">
-      <p className="font-display text-xl text-paper">{activity.name}</p>
+      <p className="font-display text-xl text-paper">{fullActivityName(activity)}</p>
       {activity.metricType === 'sets' ? (
         <SetFields
           reps={reps}
@@ -328,7 +328,7 @@ export default function WorkoutLogger({ activities, plans }: Props) {
         setError(parsed.error);
         return;
       }
-      addLoggedSet(selectedActivity.id, selectedActivity.name, parsed);
+      addLoggedSet(selectedActivity.id, fullActivityName(selectedActivity), parsed);
       setReps('');
       setWeight('');
       setRpe('');
@@ -338,7 +338,7 @@ export default function WorkoutLogger({ activities, plans }: Props) {
         setError(parsed.error);
         return;
       }
-      addLoggedSession(selectedActivity.id, selectedActivity.name, parsed);
+      addLoggedSession(selectedActivity.id, fullActivityName(selectedActivity), parsed);
       setDuration('');
       setDistance('');
     }

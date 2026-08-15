@@ -1,6 +1,7 @@
 ---
-name: Natación — pecho — patada (tabla)
+name: Patada (tabla)
 discipline: natacion
+group: pecho
 metricType: session
 ---
 

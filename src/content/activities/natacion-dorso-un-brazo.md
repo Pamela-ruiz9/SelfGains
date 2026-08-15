@@ -1,6 +1,7 @@
 ---
-name: Natación — dorso — un brazo
+name: Un brazo
 discipline: natacion
+group: dorso
 metricType: session
 ---
 

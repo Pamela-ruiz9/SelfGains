@@ -1,6 +1,7 @@
 ---
-name: Natación — pecho — 2 brazadas, 1 patada
+name: 2 brazadas, 1 patada
 discipline: natacion
+group: pecho
 metricType: session
 ---
 

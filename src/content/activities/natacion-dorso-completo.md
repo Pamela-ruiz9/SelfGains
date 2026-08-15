@@ -1,6 +1,7 @@
 ---
-name: Natación — dorso — completo
+name: Completo
 discipline: natacion
+group: dorso
 metricType: session
 ---
 

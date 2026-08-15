@@ -1,6 +1,7 @@
 ---
-name: Natación — mariposa — un brazo
+name: Un brazo
 discipline: natacion
+group: mariposa
 metricType: session
 ---
 

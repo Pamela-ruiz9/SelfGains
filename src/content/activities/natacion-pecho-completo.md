@@ -1,6 +1,7 @@
 ---
-name: Natación — pecho — completo
+name: Completo
 discipline: natacion
+group: pecho
 metricType: session
 ---
 

@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { WEEKDAYS, weekdayLabel, type RoutineDays } from '../../../lib/weekdays';
 import { createRoutine, updateRoutine } from '../../../lib/routines';
+import { fullActivityName } from '../../../lib/activities';
 import type { Routine } from '../../../types/db';
 import ActivityPicker, { type ActivityOption } from '../ActivityPicker/ActivityPicker';
 
@@ -50,18 +51,21 @@ function DayActivityPicker({
       </button>
       {dayIds.length > 0 && (
         <ul className="flex flex-col gap-1 font-mono text-sm">
-          {dayIds.map((id) => (
-            <li key={id} className="flex items-center justify-between gap-2 text-paper-dim">
-              <span>{activityById.get(id)?.name ?? id}</span>
-              <button
-                type="button"
-                onClick={() => onRemove(id)}
-                className="text-blood hover:text-paper"
-              >
-                Quitar
-              </button>
-            </li>
-          ))}
+          {dayIds.map((id) => {
+            const activity = activityById.get(id);
+            return (
+              <li key={id} className="flex items-center justify-between gap-2 text-paper-dim">
+                <span>{activity ? fullActivityName(activity) : id}</span>
+                <button
+                  type="button"
+                  onClick={() => onRemove(id)}
+                  className="text-blood hover:text-paper"
+                >
+                  Quitar
+                </button>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>

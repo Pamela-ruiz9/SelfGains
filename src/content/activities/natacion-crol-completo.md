@@ -1,6 +1,7 @@
 ---
-name: Natación — crol — completo
+name: Completo
 discipline: natacion
+group: crol
 metricType: session
 ---
 

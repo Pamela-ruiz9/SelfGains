@@ -1,6 +1,7 @@
 ---
-name: Natación — mariposa — brazada (pull)
+name: Brazada (pull)
 discipline: natacion
+group: mariposa
 metricType: session
 ---
 

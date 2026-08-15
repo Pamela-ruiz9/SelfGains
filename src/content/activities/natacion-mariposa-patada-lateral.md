@@ -1,6 +1,7 @@
 ---
-name: Natación — mariposa — patada lateral
+name: Patada lateral
 discipline: natacion
+group: mariposa
 metricType: session
 ---
 

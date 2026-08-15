@@ -6,7 +6,7 @@ import {
   updateSession,
   updateSet,
 } from '../../../lib/workouts';
-import { requiresDistance } from '../../../lib/activities';
+import { fullActivityName, requiresDistance } from '../../../lib/activities';
 import {
   parseSessionInput,
   parseSetInput,
@@ -257,15 +257,18 @@ export default function WorkoutHistory({ workouts, exerciseNames, activities, on
                 onChanged={onChanged}
               />
             ))}
-            {w.sessions.map((s) => (
-              <SessionRow
-                key={s.id}
-                session={s}
-                activityName={activityById.get(s.activity_id)?.name ?? s.activity_id}
-                activity={activityById.get(s.activity_id)}
-                onChanged={onChanged}
-              />
-            ))}
+            {w.sessions.map((s) => {
+              const activity = activityById.get(s.activity_id);
+              return (
+                <SessionRow
+                  key={s.id}
+                  session={s}
+                  activityName={activity ? fullActivityName(activity) : s.activity_id}
+                  activity={activity}
+                  onChanged={onChanged}
+                />
+              );
+            })}
           </ul>
         </div>
       ))}

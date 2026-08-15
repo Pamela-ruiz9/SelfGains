@@ -1,6 +1,7 @@
 ---
-name: Natación — crol — patada (tabla)
+name: Patada (tabla)
 discipline: natacion
+group: crol
 metricType: session
 ---
 

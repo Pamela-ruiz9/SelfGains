@@ -1,5 +1,5 @@
 ---
-name: Running — trote libre
+name: Trote libre
 discipline: running
 metricType: session
 ---

@@ -1,4 +1,5 @@
 import { DISCIPLINES, type ActivityOption } from '../ActivityPicker/ActivityPicker';
+import { fullActivityName } from '../../../lib/activities';
 import { formatPace, groupCardioPRsByDiscipline, type CardioPR } from '../../../lib/prs';
 
 interface Props {
@@ -8,7 +9,7 @@ interface Props {
 }
 
 export default function CardioPRGrid({ prs, activities, onSelectActivity }: Props) {
-  const nameById = new Map(activities.map((a) => [a.id, a.name]));
+  const nameById = new Map(activities.map((a) => [a.id, fullActivityName(a)]));
   const labelByDiscipline = new Map(DISCIPLINES.map((d) => [d.id as string, d.label]));
   const groups = groupCardioPRsByDiscipline(prs, activities);
 

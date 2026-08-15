@@ -1,6 +1,7 @@
 ---
-name: Natación — dorso — catch-up
+name: Catch-up
 discipline: natacion
+group: dorso
 metricType: session
 ---
 

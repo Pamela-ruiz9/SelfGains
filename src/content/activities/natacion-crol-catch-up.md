@@ -1,6 +1,7 @@
 ---
-name: Natación — crol — catch-up
+name: Catch-up
 discipline: natacion
+group: crol
 metricType: session
 ---
 

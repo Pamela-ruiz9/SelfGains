@@ -20,6 +20,7 @@ const activities = activityEntries
     name: e.data.name,
     discipline: e.data.discipline,
     metricType: e.data.metricType,
+    group: e.data.metricType === 'session' ? e.data.group : undefined,
   }))
   .sort((a, b) => a.name.localeCompare(b.name));
 ---

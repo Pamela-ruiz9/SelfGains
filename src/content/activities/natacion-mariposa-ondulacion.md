@@ -1,6 +1,7 @@
 ---
-name: Natación — mariposa — ondulación de cuerpo
+name: Ondulación de cuerpo
 discipline: natacion
+group: mariposa
 metricType: session
 ---
 

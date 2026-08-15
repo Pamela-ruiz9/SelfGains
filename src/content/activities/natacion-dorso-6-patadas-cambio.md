@@ -1,6 +1,7 @@
 ---
-name: Natación — dorso — 6 patadas y cambio
+name: 6 patadas y cambio
 discipline: natacion
+group: dorso
 metricType: session
 ---
 

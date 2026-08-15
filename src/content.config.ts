@@ -23,6 +23,10 @@ const activities = defineCollection({
       metricType: z.literal('session'),
       name: z.string(),
       discipline: z.enum(['running', 'natacion', 'combate']),
+      // Sub-category within a discipline (e.g. swim stroke: crol/dorso/mariposa/pecho).
+      // Lets the activity picker offer a second cascading selector instead of a
+      // flat list, and `name` only needs to hold the drill/variant, not the stroke.
+      group: z.string().optional(),
       videoUrl: z.string().url().optional(),
     }),
   ]),

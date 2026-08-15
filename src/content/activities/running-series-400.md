@@ -1,5 +1,5 @@
 ---
-name: Running — series de 400m
+name: Series de 400m
 discipline: running
 metricType: session
 ---

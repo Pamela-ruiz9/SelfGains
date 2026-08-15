@@ -1,6 +1,7 @@
 ---
-name: Natación — dorso — doble brazada
+name: Doble brazada
 discipline: natacion
+group: dorso
 metricType: session
 ---
 

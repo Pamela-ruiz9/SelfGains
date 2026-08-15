@@ -1,6 +1,7 @@
 ---
-name: Natación — dorso — brazada (pull)
+name: Brazada (pull)
 discipline: natacion
+group: dorso
 metricType: session
 ---
 

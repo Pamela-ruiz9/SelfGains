@@ -16,3 +16,30 @@ export function isGymActivity(entry: ActivityEntry): entry is ActivityEntry & { 
 export function requiresDistance(activity: { discipline: string }): boolean {
   return activity.discipline !== 'combate';
 }
+
+const GROUP_LABELS: Record<string, string> = {
+  crol: 'Crol',
+  dorso: 'Dorso',
+  mariposa: 'Mariposa',
+  pecho: 'Pecho',
+};
+
+// Canonical display order for known groups (e.g. swim strokes), since content
+// entries are otherwise sorted alphabetically by name and that would put
+// numeric drill names ("2 patadas...") ahead of "Crol" for no good reason.
+export const KNOWN_GROUPS = Object.keys(GROUP_LABELS);
+
+export function groupLabel(group: string | undefined): string | undefined {
+  if (!group) return undefined;
+  return GROUP_LABELS[group] ?? group;
+}
+
+// Activity `name` only holds the drill/variant (e.g. "Catch-up") since the
+// discipline and group are already implied once you're inside that tab/
+// selector in the activity picker. Anywhere an activity name is shown flat
+// (routine summaries, workout history, PR cards) it needs that context back,
+// so this reconstructs the qualified "Crol — Catch-up" form for display.
+export function fullActivityName(activity: { name: string; group?: string }): string {
+  const label = groupLabel(activity.group);
+  return label ? `${label} — ${activity.name}` : activity.name;
+}

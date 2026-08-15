@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { WEEKDAYS, weekdayLabel, type RoutineDays } from '../../../lib/weekdays';
+import { fullActivityName } from '../../../lib/activities';
 import type { ActivityOption } from '../ActivityPicker/ActivityPicker';
 
 export interface RoutineOption {
@@ -23,7 +24,10 @@ interface RoutineListProps {
 function daysSummary(days: RoutineDays, activities: ActivityOption[]): string {
   return WEEKDAYS.filter((day) => days[day].length > 0)
     .map((day) => {
-      const names = days[day].map((id) => activities.find((a) => a.id === id)?.name ?? id);
+      const names = days[day].map((id) => {
+        const activity = activities.find((a) => a.id === id);
+        return activity ? fullActivityName(activity) : id;
+      });
       return `${weekdayLabel(day)}: ${names.join(', ')}`;
     })
     .join(' · ');

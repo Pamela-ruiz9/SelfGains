@@ -1,5 +1,6 @@
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { formatPace, type CardioProgressPoint } from '../../../lib/prs';
+import { fullActivityName } from '../../../lib/activities';
 import type { ActivityOption } from '../ActivityPicker/ActivityPicker';
 
 interface Props {
@@ -33,7 +34,8 @@ export default function CardioProgressChart({
   activities,
   onSelectActivity,
 }: Props) {
-  const activityName = activities.find((a) => a.id === activityId)?.name ?? activityId;
+  const selected = activities.find((a) => a.id === activityId);
+  const activityName = selected ? fullActivityName(selected) : activityId;
   const cardioActivities = activities.filter(
     (a) => a.metricType === 'session' && a.discipline !== 'combate'
   );
@@ -49,7 +51,7 @@ export default function CardioProgressChart({
         >
           {cardioActivities.map((a) => (
             <option key={a.id} value={a.id}>
-              {a.name}
+              {fullActivityName(a)}
             </option>
           ))}
         </select>

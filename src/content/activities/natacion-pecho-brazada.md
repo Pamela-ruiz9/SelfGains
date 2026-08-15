@@ -1,6 +1,7 @@
 ---
-name: Natación — pecho — brazada (pull)
+name: Brazada (pull)
 discipline: natacion
+group: pecho
 metricType: session
 ---
 

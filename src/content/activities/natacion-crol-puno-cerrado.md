@@ -1,6 +1,7 @@
 ---
-name: Natación — crol — puño cerrado
+name: Puño cerrado
 discipline: natacion
+group: crol
 metricType: session
 ---
 

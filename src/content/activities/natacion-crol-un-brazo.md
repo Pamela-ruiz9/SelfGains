@@ -1,6 +1,7 @@
 ---
-name: Natación — crol — un brazo
+name: Un brazo
 discipline: natacion
+group: crol
 metricType: session
 ---
 
