@@ -1,9 +1,16 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { supabase } from '../../../lib/supabase';
-import { createWorkout, addSet, addSession } from '../../../lib/workouts';
+import {
+  createWorkout,
+  addSet,
+  addSession,
+  getWorkoutsForCurrentUser,
+  getSetsForWorkout,
+} from '../../../lib/workouts';
 import { getActiveRoutine, getRoutineById } from '../../../lib/routines';
 import { getTodayWeekday, type RoutineDays } from '../../../lib/weekdays';
 import { fullActivityName, requiresDistance } from '../../../lib/activities';
+import { suggestNextSet, type WorkoutWithSets } from '../../../lib/prs';
 import ActivityPicker, { type ActivityOption } from '../ActivityPicker/ActivityPicker';
 
 interface PredefinedRoutine {
@@ -182,15 +189,19 @@ export function SessionFields({
 
 function RoutineActivityCard({
   activity,
+  workouts,
   onAddSet,
   onAddSession,
 }: {
   activity: ActivityOption;
+  workouts: WorkoutWithSets[];
   onAddSet: (activityId: string, activityName: string, parsed: ParsedSet) => void;
   onAddSession: (activityId: string, activityName: string, parsed: ParsedSession) => void;
 }) {
-  const [reps, setReps] = useState('');
-  const [weight, setWeight] = useState('');
+  const suggestion =
+    activity.metricType === 'sets' ? suggestNextSet(workouts, activity.id) : null;
+  const [reps, setReps] = useState(suggestion ? String(suggestion.reps) : '');
+  const [weight, setWeight] = useState(suggestion ? String(suggestion.weight) : '');
   const [rpe, setRpe] = useState('');
   const [duration, setDuration] = useState('');
   const [distance, setDistance] = useState('');
@@ -225,6 +236,11 @@ function RoutineActivityCard({
   return (
     <form onSubmit={handleAdd} className="card-brutal flex flex-col gap-3">
       <p className="font-display text-xl text-paper">{fullActivityName(activity)}</p>
+      {suggestion && (
+        <p className="font-mono text-xs text-paper-dim">
+          Sugerido: {suggestion.reps} reps × {suggestion.weight} kg (+2.5 kg vs. tu última sesión)
+        </p>
+      )}
       {activity.metricType === 'sets' ? (
         <SetFields
           reps={reps}
@@ -261,6 +277,7 @@ export default function WorkoutLogger({ activities, plans }: Props) {
   const [planId, setPlanId] = useState<string | undefined>(undefined);
   const [routineDaysMap, setRoutineDaysMap] = useState<RoutineDays | null>(null);
   const [todayActivities, setTodayActivities] = useState<ActivityOption[]>([]);
+  const [pastWorkouts, setPastWorkouts] = useState<WorkoutWithSets[]>([]);
 
   const [selectedActivity, setSelectedActivity] = useState<ActivityOption | null>(null);
   const [reps, setReps] = useState('');
@@ -279,6 +296,12 @@ export default function WorkoutLogger({ activities, plans }: Props) {
       setIsLoggedIn(loggedIn);
       setAuthChecked(true);
       if (!loggedIn) return;
+
+      const list = await getWorkoutsForCurrentUser();
+      const withSets = await Promise.all(
+        list.map(async (w) => ({ ...w, sets: await getSetsForWorkout(w.id) }))
+      );
+      setPastWorkouts(withSets);
 
       const active = await getActiveRoutine();
       if (!active) return;
@@ -310,6 +333,20 @@ export default function WorkoutLogger({ activities, plans }: Props) {
         .filter((a): a is ActivityOption => a !== undefined)
     );
   }, [date, routineDaysMap, activities]);
+
+  // Prefills reps/peso for the free-form "Agregar otra actividad" picker with
+  // the same progression suggestion the "Hoy toca" cards use, whenever the
+  // selected activity changes.
+  useEffect(() => {
+    if (selectedActivity?.metricType === 'sets') {
+      const suggestion = suggestNextSet(pastWorkouts, selectedActivity.id);
+      setReps(suggestion ? String(suggestion.reps) : '');
+      setWeight(suggestion ? String(suggestion.weight) : '');
+    }
+  }, [selectedActivity, pastWorkouts]);
+
+  const freeFormSuggestion =
+    selectedActivity?.metricType === 'sets' ? suggestNextSet(pastWorkouts, selectedActivity.id) : null;
 
   function addLoggedSet(activityId: string, activityName: string, parsed: ParsedSet) {
     const setNumber = loggedSets.filter((s) => s.exerciseId === activityId).length + 1;
@@ -437,6 +474,7 @@ export default function WorkoutLogger({ activities, plans }: Props) {
               <RoutineActivityCard
                 key={activity.id}
                 activity={activity}
+                workouts={pastWorkouts}
                 onAddSet={addLoggedSet}
                 onAddSession={addLoggedSession}
               />
@@ -448,6 +486,12 @@ export default function WorkoutLogger({ activities, plans }: Props) {
       <form onSubmit={handleAddActivity} className="card-brutal flex flex-col gap-4">
         <p className="label-brutal text-acid">Agregar otra actividad</p>
         <ActivityPicker activities={activities} onSelect={setSelectedActivity} />
+        {freeFormSuggestion && (
+          <p className="font-mono text-xs text-paper-dim">
+            Sugerido: {freeFormSuggestion.reps} reps × {freeFormSuggestion.weight} kg (+2.5 kg vs. tu
+            última sesión)
+          </p>
+        )}
         {selectedActivity?.metricType === 'sets' && (
           <SetFields
             reps={reps}

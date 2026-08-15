@@ -10,6 +10,8 @@ import {
   getRoutineById,
   weeksElapsed,
 } from '../../../lib/routines';
+import { getWorkoutsForCurrentUser } from '../../../lib/workouts';
+import { weekAdherence } from '../../../lib/adherence';
 import type { RoutineDays } from '../../../lib/weekdays';
 import type { ActiveRoutine, Routine } from '../../../types/db';
 import type { ActivityOption } from '../ActivityPicker/ActivityPicker';
@@ -37,12 +39,18 @@ export default function RoutineManager({ predefinedRoutines, activities }: Props
   const [myRoutines, setMyRoutines] = useState<Routine[]>([]);
   const [activeCustomRoutine, setActiveCustomRoutine] = useState<Routine | null>(null);
   const [editingRoutine, setEditingRoutine] = useState<Routine | null>(null);
+  const [workoutDates, setWorkoutDates] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
 
   async function refresh() {
-    const [active, mine] = await Promise.all([getActiveRoutine(), getMyRoutines()]);
+    const [active, mine, workouts] = await Promise.all([
+      getActiveRoutine(),
+      getMyRoutines(),
+      getWorkoutsForCurrentUser(),
+    ]);
     setActiveRoutine(active);
     setMyRoutines(mine);
+    setWorkoutDates(new Set(workouts.map((w) => w.date)));
     if (active?.source === 'custom') {
       setActiveCustomRoutine(await getRoutineById(active.routine_ref));
     } else {
@@ -131,6 +139,12 @@ export default function RoutineManager({ predefinedRoutines, activities }: Props
   const days = activeRoutine ? daysElapsed(activeRoutine.started_at) : 0;
   const expired = activeRoutine ? elapsed >= activeRoutine.duration_weeks : false;
 
+  const activeRoutineDays: RoutineDays | null =
+    activeRoutine?.source === 'predefined'
+      ? predefinedRoutines.find((p) => p.id === activeRoutine.routine_ref)?.days ?? null
+      : activeCustomRoutine?.days ?? null;
+  const adherence = activeRoutineDays ? weekAdherence(activeRoutineDays, workoutDates) : null;
+
   const predefinedOptions: RoutineOption[] = predefinedRoutines.map((p) => ({
     ref: p.id,
     name: p.name,
@@ -169,6 +183,12 @@ export default function RoutineManager({ predefinedRoutines, activities }: Props
                 {Math.min(days + 1, activeRoutine.duration_weeks * 7)} de{' '}
                 {activeRoutine.duration_weeks * 7}
               </p>
+              {adherence && adherence.scheduledDays > 0 && (
+                <p className="font-mono text-sm text-paper-dim">
+                  Esta semana: {adherence.completedDays} de {adherence.scheduledDays} días
+                  cumplidos
+                </p>
+              )}
             </div>
             <button
               type="button"

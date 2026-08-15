@@ -16,6 +16,40 @@ export interface ProgressPoint {
   maxWeight: number;
 }
 
+export interface SuggestedSet {
+  reps: number;
+  weight: number;
+}
+
+const WEIGHT_INCREMENT_KG = 2.5;
+
+// Classic linear progression: suggest the same reps as last time, with
+// WEIGHT_INCREMENT_KG more weight, based on the heaviest set of the most
+// RECENT session for this exercise (not the all-time PR) — you're trying to
+// beat your last outing, not your best-ever. Returns null if the exercise
+// has never been logged.
+export function suggestNextSet(workouts: WorkoutWithSets[], exerciseId: string): SuggestedSet | null {
+  let mostRecentDate: string | null = null;
+  for (const workout of workouts) {
+    if (!workout.sets.some((s) => s.exercise_id === exerciseId)) continue;
+    if (mostRecentDate === null || workout.date > mostRecentDate) {
+      mostRecentDate = workout.date;
+    }
+  }
+  if (mostRecentDate === null) return null;
+
+  let heaviest: WorkoutSet | null = null;
+  for (const workout of workouts) {
+    if (workout.date !== mostRecentDate) continue;
+    for (const set of workout.sets) {
+      if (set.exercise_id !== exerciseId) continue;
+      if (!heaviest || set.weight > heaviest.weight) heaviest = set;
+    }
+  }
+  if (!heaviest) return null;
+  return { reps: heaviest.reps, weight: heaviest.weight + WEIGHT_INCREMENT_KG };
+}
+
 export interface MuscleGroup {
   muscleId: string;
   entries: ExercisePR[];
