@@ -10,7 +10,7 @@ import {
 import { getActiveRoutine, getRoutineById } from '../../../lib/routines';
 import { getTodayWeekday, type RoutineDays } from '../../../lib/weekdays';
 import { fullActivityName, requiresDistance } from '../../../lib/activities';
-import { suggestNextSet, type WorkoutWithSets } from '../../../lib/prs';
+import { suggestNextSet, type SuggestedSet, type WorkoutWithSets } from '../../../lib/prs';
 import ActivityPicker, { type ActivityOption } from '../ActivityPicker/ActivityPicker';
 
 interface PredefinedRoutine {
@@ -86,6 +86,13 @@ export function parseSessionInput(
   return { durationMin: durationNum, distanceKm: distanceNum };
 }
 
+function suggestionHint(suggestion: SuggestedSet): string {
+  const base = `Sugerido: ${suggestion.reps} reps × ${suggestion.weight} kg`;
+  return suggestion.readyToProgress
+    ? `${base} (+2.5 kg — llevas 3 sesiones con RPE bajo)`
+    : `${base} (igual que tu última sesión)`;
+}
+
 export function SetFields({
   reps,
   weight,
@@ -138,6 +145,10 @@ export function SetFields({
           className="input-brutal"
         />
       </label>
+      <p className="col-span-3 font-mono text-xs text-paper-dim">
+        Escala RPE: 10 = al fallo · 8–9 = 1–2 reps en reserva · 6–7 = varias reps en reserva · ≤4 =
+        fácil
+      </p>
     </div>
   );
 }
@@ -237,9 +248,7 @@ function RoutineActivityCard({
     <form onSubmit={handleAdd} className="card-brutal flex flex-col gap-3">
       <p className="font-display text-xl text-paper">{fullActivityName(activity)}</p>
       {suggestion && (
-        <p className="font-mono text-xs text-paper-dim">
-          Sugerido: {suggestion.reps} reps × {suggestion.weight} kg (+2.5 kg vs. tu última sesión)
-        </p>
+        <p className="font-mono text-xs text-paper-dim">{suggestionHint(suggestion)}</p>
       )}
       {activity.metricType === 'sets' ? (
         <SetFields
@@ -487,10 +496,7 @@ export default function WorkoutLogger({ activities, plans }: Props) {
         <p className="label-brutal text-acid">Agregar otra actividad</p>
         <ActivityPicker activities={activities} onSelect={setSelectedActivity} />
         {freeFormSuggestion && (
-          <p className="font-mono text-xs text-paper-dim">
-            Sugerido: {freeFormSuggestion.reps} reps × {freeFormSuggestion.weight} kg (+2.5 kg vs. tu
-            última sesión)
-          </p>
+          <p className="font-mono text-xs text-paper-dim">{suggestionHint(freeFormSuggestion)}</p>
         )}
         {selectedActivity?.metricType === 'sets' && (
           <SetFields

@@ -19,35 +19,54 @@ export interface ProgressPoint {
 export interface SuggestedSet {
   reps: number;
   weight: number;
+  readyToProgress: boolean; // true when the suggestion includes a weight bump
 }
 
 const WEIGHT_INCREMENT_KG = 2.5;
+const LOW_RPE_THRESHOLD = 4;
+const LOW_RPE_STREAK_REQUIRED = 3;
 
-// Classic linear progression: suggest the same reps as last time, with
-// WEIGHT_INCREMENT_KG more weight, based on the heaviest set of the most
-// RECENT session for this exercise (not the all-time PR) — you're trying to
-// beat your last outing, not your best-ever. Returns null if the exercise
-// has never been logged.
-export function suggestNextSet(workouts: WorkoutWithSets[], exerciseId: string): SuggestedSet | null {
-  let mostRecentDate: string | null = null;
+// One entry per date this exercise was logged — the day's heaviest set (same
+// "which set represents the session" rule used everywhere else in this
+// file) — sorted most-recent first.
+function sessionsForExercise(
+  workouts: WorkoutWithSets[],
+  exerciseId: string
+): { date: string; set: WorkoutSet }[] {
+  const heaviestByDate = new Map<string, WorkoutSet>();
   for (const workout of workouts) {
-    if (!workout.sets.some((s) => s.exercise_id === exerciseId)) continue;
-    if (mostRecentDate === null || workout.date > mostRecentDate) {
-      mostRecentDate = workout.date;
-    }
-  }
-  if (mostRecentDate === null) return null;
-
-  let heaviest: WorkoutSet | null = null;
-  for (const workout of workouts) {
-    if (workout.date !== mostRecentDate) continue;
     for (const set of workout.sets) {
       if (set.exercise_id !== exerciseId) continue;
-      if (!heaviest || set.weight > heaviest.weight) heaviest = set;
+      const current = heaviestByDate.get(workout.date);
+      if (!current || set.weight > current.weight) heaviestByDate.set(workout.date, set);
     }
   }
-  if (!heaviest) return null;
-  return { reps: heaviest.reps, weight: heaviest.weight + WEIGHT_INCREMENT_KG };
+  return Array.from(heaviestByDate.entries())
+    .map(([date, set]) => ({ date, set }))
+    .sort((a, b) => b.date.localeCompare(a.date));
+}
+
+// RPE-autoregulated progression: hold the same weight/reps as last time by
+// default. Only bump the weight once the last LOW_RPE_STREAK_REQUIRED
+// sessions all came in under LOW_RPE_THRESHOLD — a sustained "this has gotten
+// easy" signal, not a single easy day. A session with no RPE recorded can't
+// confirm it was easy, so it breaks the streak same as a high-RPE one.
+// Returns null if the exercise has never been logged.
+export function suggestNextSet(workouts: WorkoutWithSets[], exerciseId: string): SuggestedSet | null {
+  const sessions = sessionsForExercise(workouts, exerciseId);
+  if (sessions.length === 0) return null;
+
+  const mostRecent = sessions[0].set;
+  const lastStreak = sessions.slice(0, LOW_RPE_STREAK_REQUIRED);
+  const readyToProgress =
+    lastStreak.length === LOW_RPE_STREAK_REQUIRED &&
+    lastStreak.every(({ set }) => set.rpe !== null && set.rpe < LOW_RPE_THRESHOLD);
+
+  return {
+    reps: mostRecent.reps,
+    weight: readyToProgress ? mostRecent.weight + WEIGHT_INCREMENT_KG : mostRecent.weight,
+    readyToProgress,
+  };
 }
 
 export interface MuscleGroup {
