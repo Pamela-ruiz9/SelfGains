@@ -1,0 +1,9 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ResetPasswordForm from '../components/react/Auth/ResetPasswordForm';
+---
+<BaseLayout title="Restablecer contraseña">
+  <p class="label-brutal mb-3 text-acid">Último paso</p>
+  <h1 class="mb-8 font-display text-5xl text-paper sm:text-6xl">NUEVA CONTRASEÑA</h1>
+  <ResetPasswordForm client:load />
+</BaseLayout>

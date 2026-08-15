@@ -10,7 +10,7 @@ import {
 import { getActiveRoutine, getRoutineById } from '../../../lib/routines';
 import { getTodayWeekday, type RoutineDays } from '../../../lib/weekdays';
 import { fullActivityName, requiresDistance } from '../../../lib/activities';
-import { suggestNextSet, type SuggestedSet, type WorkoutWithSets } from '../../../lib/prs';
+import { calculatePRs, suggestNextSet, type SuggestedSet, type WorkoutWithSets } from '../../../lib/prs';
 import ActivityPicker, { type ActivityOption } from '../ActivityPicker/ActivityPicker';
 
 interface PredefinedRoutine {
@@ -86,11 +86,37 @@ export function parseSessionInput(
   return { durationMin: durationNum, distanceKm: distanceNum };
 }
 
+// Compares each just-saved set against the PRs computed from workouts logged
+// BEFORE this session (pastWorkouts doesn't include what was just saved), so
+// a set that ties or beats the prior best gets called out by name.
+function buildSavedMessage(justSaved: LoggedSet[], pastWorkouts: WorkoutWithSets[]): string {
+  const priorPRByExercise = new Map(calculatePRs(pastWorkouts).map((pr) => [pr.exerciseId, pr.weight]));
+
+  const bestByExercise = new Map<string, LoggedSet>();
+  for (const s of justSaved) {
+    const current = bestByExercise.get(s.exerciseId);
+    if (!current || s.weight > current.weight) bestByExercise.set(s.exerciseId, s);
+  }
+
+  const newPRs = Array.from(bestByExercise.values()).filter((s) => {
+    const prior = priorPRByExercise.get(s.exerciseId);
+    return prior === undefined || s.weight > prior;
+  });
+
+  if (newPRs.length === 0) return 'Entrenamiento guardado correctamente.';
+  const list = newPRs.map((pr) => `${pr.exerciseName} (${pr.weight} kg)`).join(', ');
+  return `Entrenamiento guardado correctamente. ¡Nuevo PR en ${list}!`;
+}
+
 function suggestionHint(suggestion: SuggestedSet): string {
   const base = `Sugerido: ${suggestion.reps} reps × ${suggestion.weight} kg`;
-  return suggestion.readyToProgress
-    ? `${base} (+2.5 kg — llevas 3 sesiones con RPE bajo)`
-    : `${base} (igual que tu última sesión)`;
+  if (suggestion.status === 'progress') {
+    return `${base} (+2.5 kg — llevas 3 sesiones con RPE bajo)`;
+  }
+  if (suggestion.status === 'deload') {
+    return `${base} (-10% — llevas 3 sesiones al límite sin avanzar, toca bajar peso)`;
+  }
+  return `${base} (igual que tu última sesión)`;
 }
 
 export function SetFields({
@@ -432,7 +458,7 @@ export default function WorkoutLogger({ activities, plans }: Props) {
       for (const s of loggedSessions) {
         await addSession(workout.id, s.activityId, s.durationMin, s.distanceKm ?? undefined);
       }
-      setSavedMessage('Entrenamiento guardado correctamente.');
+      setSavedMessage(buildSavedMessage(loggedSets, pastWorkouts));
       setLoggedSets([]);
       setLoggedSessions([]);
     } catch (err) {

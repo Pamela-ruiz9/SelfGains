@@ -8,10 +8,15 @@ const base = import.meta.env.BASE_URL;
   <p class="label-brutal mb-3 text-acid">Bienvenido de vuelta</p>
   <h1 class="mb-8 font-display text-5xl text-paper sm:text-6xl">INICIAR SESIÓN</h1>
   <LoginForm client:load />
-  <p class="mt-6 font-mono text-sm text-paper-dim">
-    ¿No tienes cuenta?
-    <a href={`${base}registro-cuenta/`} class="text-acid underline underline-offset-4 hover:text-paper">
-      Crea una
+  <p class="mt-6 flex flex-col gap-2 font-mono text-sm text-paper-dim">
+    <span>
+      ¿No tienes cuenta?
+      <a href={`${base}registro-cuenta/`} class="text-acid underline underline-offset-4 hover:text-paper">
+        Crea una
+      </a>
+    </span>
+    <a href={`${base}olvide-contrasena/`} class="text-acid underline underline-offset-4 hover:text-paper">
+      ¿Olvidaste tu contraseña?
     </a>
   </p>
 </BaseLayout>

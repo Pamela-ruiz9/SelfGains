@@ -19,12 +19,18 @@ export interface ProgressPoint {
 export interface SuggestedSet {
   reps: number;
   weight: number;
-  readyToProgress: boolean; // true when the suggestion includes a weight bump
+  status: 'progress' | 'hold' | 'deload';
 }
 
 const WEIGHT_INCREMENT_KG = 2.5;
 const LOW_RPE_THRESHOLD = 4;
-const LOW_RPE_STREAK_REQUIRED = 3;
+const HIGH_RPE_THRESHOLD = 9;
+const STREAK_REQUIRED = 3;
+const DELOAD_FACTOR = 0.9; // -10%
+
+function roundToHalf(n: number): number {
+  return Math.round(n * 2) / 2;
+}
 
 // One entry per date this exercise was logged — the day's heaviest set (same
 // "which set represents the session" rule used everywhere else in this
@@ -47,26 +53,48 @@ function sessionsForExercise(
 }
 
 // RPE-autoregulated progression: hold the same weight/reps as last time by
-// default. Only bump the weight once the last LOW_RPE_STREAK_REQUIRED
-// sessions all came in under LOW_RPE_THRESHOLD — a sustained "this has gotten
-// easy" signal, not a single easy day. A session with no RPE recorded can't
-// confirm it was easy, so it breaks the streak same as a high-RPE one.
+// default.
+//
+// - Bump the weight (+WEIGHT_INCREMENT_KG) once the last STREAK_REQUIRED
+//   sessions all came in under LOW_RPE_THRESHOLD — a sustained "this has
+//   gotten easy" signal, not a single easy day.
+// - Suggest a deload (-10%, rounded to the nearest 0.5kg) when the last
+//   STREAK_REQUIRED sessions were all at HIGH_RPE_THRESHOLD+ AND the same
+//   weight — grinding near failure without progressing, a plateau signal.
+// - A session with no RPE recorded can't confirm either streak, so it breaks
+//   both same as a value outside the threshold would.
+//
 // Returns null if the exercise has never been logged.
 export function suggestNextSet(workouts: WorkoutWithSets[], exerciseId: string): SuggestedSet | null {
   const sessions = sessionsForExercise(workouts, exerciseId);
   if (sessions.length === 0) return null;
 
   const mostRecent = sessions[0].set;
-  const lastStreak = sessions.slice(0, LOW_RPE_STREAK_REQUIRED);
-  const readyToProgress =
-    lastStreak.length === LOW_RPE_STREAK_REQUIRED &&
-    lastStreak.every(({ set }) => set.rpe !== null && set.rpe < LOW_RPE_THRESHOLD);
+  const lastStreak = sessions.slice(0, STREAK_REQUIRED);
+  const streakFull = lastStreak.length === STREAK_REQUIRED;
 
-  return {
-    reps: mostRecent.reps,
-    weight: readyToProgress ? mostRecent.weight + WEIGHT_INCREMENT_KG : mostRecent.weight,
-    readyToProgress,
-  };
+  const readyToProgress =
+    streakFull && lastStreak.every(({ set }) => set.rpe !== null && set.rpe < LOW_RPE_THRESHOLD);
+
+  const stalledAtHighEffort =
+    !readyToProgress &&
+    streakFull &&
+    lastStreak.every(
+      ({ set }) =>
+        set.rpe !== null && set.rpe >= HIGH_RPE_THRESHOLD && set.weight === mostRecent.weight
+    );
+
+  if (readyToProgress) {
+    return { reps: mostRecent.reps, weight: mostRecent.weight + WEIGHT_INCREMENT_KG, status: 'progress' };
+  }
+  if (stalledAtHighEffort) {
+    return {
+      reps: mostRecent.reps,
+      weight: roundToHalf(mostRecent.weight * DELOAD_FACTOR),
+      status: 'deload',
+    };
+  }
+  return { reps: mostRecent.reps, weight: mostRecent.weight, status: 'hold' };
 }
 
 export interface MuscleGroup {
