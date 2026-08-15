@@ -1,0 +1,7 @@
+---
+name: Natación — mariposa — patada lateral
+discipline: natacion
+metricType: session
+---
+
+Drill de patada de delfín nadando de costado, sin brazada, alternando de lado cada cierto tramo. Trabaja la ondulación en un plano distinto al frontal. Registrá la distancia total nadada y el tiempo de la sesión.
