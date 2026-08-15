@@ -1,0 +1,274 @@
+import { useState } from 'react';
+import {
+  deleteSession,
+  deleteSet,
+  deleteWorkout,
+  updateSession,
+  updateSet,
+} from '../../../lib/workouts';
+import { requiresDistance } from '../../../lib/activities';
+import {
+  parseSessionInput,
+  parseSetInput,
+  SessionFields,
+  SetFields,
+} from '../WorkoutLogger/WorkoutLogger';
+import type { WorkoutSession, WorkoutSet } from '../../../types/db';
+import type { WorkoutWithSessions, WorkoutWithSets } from '../../../lib/prs';
+import type { ActivityOption } from '../ActivityPicker/ActivityPicker';
+
+interface WorkoutWithLogs extends WorkoutWithSets, WorkoutWithSessions {}
+
+interface Props {
+  workouts: WorkoutWithLogs[];
+  exerciseNames: Record<string, string>;
+  activities: ActivityOption[];
+  onChanged: () => void;
+}
+
+function SetRow({
+  set,
+  exerciseName,
+  onChanged,
+}: {
+  set: WorkoutSet;
+  exerciseName: string;
+  onChanged: () => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [reps, setReps] = useState(String(set.reps));
+  const [weight, setWeight] = useState(String(set.weight));
+  const [rpe, setRpe] = useState(set.rpe !== null ? String(set.rpe) : '');
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  async function handleSave() {
+    const parsed = parseSetInput(reps, weight, rpe);
+    if ('error' in parsed) {
+      setError(parsed.error);
+      return;
+    }
+    setError(null);
+    setSaving(true);
+    try {
+      await updateSet(set.id, parsed.reps, parsed.weight, parsed.rpe ?? undefined);
+      setEditing(false);
+      onChanged();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo guardar el cambio.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!confirm('¿Eliminar esta serie?')) return;
+    try {
+      await deleteSet(set.id);
+      onChanged();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo eliminar la serie.');
+    }
+  }
+
+  if (editing) {
+    return (
+      <li className="flex flex-col gap-2 py-3">
+        <span className="font-body text-paper">
+          {exerciseName} — serie {set.set_number}
+        </span>
+        <SetFields
+          reps={reps}
+          weight={weight}
+          rpe={rpe}
+          onRepsChange={setReps}
+          onWeightChange={setWeight}
+          onRpeChange={setRpe}
+        />
+        {error && <p className="font-mono text-xs text-blood">{error}</p>}
+        <div className="flex gap-2">
+          <button type="button" onClick={handleSave} disabled={saving} className="btn-brutal-sm">
+            {saving ? 'Guardando...' : 'Guardar'}
+          </button>
+          <button
+            type="button"
+            onClick={() => setEditing(false)}
+            className="btn-brutal-sm opacity-60"
+          >
+            Cancelar
+          </button>
+        </div>
+      </li>
+    );
+  }
+
+  return (
+    <li className="flex flex-wrap items-baseline gap-x-2 py-2">
+      <span className="font-body text-paper">{exerciseName}</span>
+      <span className="text-paper-dim">
+        — serie {set.set_number}: {set.reps} reps x {set.weight} kg
+        {set.rpe !== null ? ` (RPE ${set.rpe})` : ''}
+      </span>
+      <span className="ml-auto flex gap-3 font-mono text-xs">
+        <button type="button" onClick={() => setEditing(true)} className="text-acid hover:text-paper">
+          Editar
+        </button>
+        <button type="button" onClick={handleDelete} className="text-blood hover:text-paper">
+          Eliminar
+        </button>
+      </span>
+    </li>
+  );
+}
+
+function SessionRow({
+  session,
+  activityName,
+  activity,
+  onChanged,
+}: {
+  session: WorkoutSession;
+  activityName: string;
+  activity: ActivityOption | undefined;
+  onChanged: () => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [duration, setDuration] = useState(String(session.duration_min));
+  const [distance, setDistance] = useState(session.distance_km !== null ? String(session.distance_km) : '');
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  const needsDistance = activity ? requiresDistance(activity) : session.distance_km !== null;
+
+  async function handleSave() {
+    const parsed = parseSessionInput(duration, distance, needsDistance);
+    if ('error' in parsed) {
+      setError(parsed.error);
+      return;
+    }
+    setError(null);
+    setSaving(true);
+    try {
+      await updateSession(session.id, parsed.durationMin, parsed.distanceKm ?? undefined);
+      setEditing(false);
+      onChanged();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo guardar el cambio.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!confirm('¿Eliminar esta sesión?')) return;
+    try {
+      await deleteSession(session.id);
+      onChanged();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo eliminar la sesión.');
+    }
+  }
+
+  if (editing) {
+    return (
+      <li className="flex flex-col gap-2 py-3">
+        <span className="font-body text-paper">{activityName}</span>
+        <SessionFields
+          duration={duration}
+          distance={distance}
+          requiresDistance={needsDistance}
+          onDurationChange={setDuration}
+          onDistanceChange={setDistance}
+        />
+        {error && <p className="font-mono text-xs text-blood">{error}</p>}
+        <div className="flex gap-2">
+          <button type="button" onClick={handleSave} disabled={saving} className="btn-brutal-sm">
+            {saving ? 'Guardando...' : 'Guardar'}
+          </button>
+          <button
+            type="button"
+            onClick={() => setEditing(false)}
+            className="btn-brutal-sm opacity-60"
+          >
+            Cancelar
+          </button>
+        </div>
+      </li>
+    );
+  }
+
+  return (
+    <li className="flex flex-wrap items-baseline gap-x-2 py-2">
+      <span className="font-body text-paper">{activityName}</span>
+      <span className="text-paper-dim">
+        — {session.distance_km !== null ? `${session.distance_km} km en ` : ''}
+        {session.duration_min} min
+      </span>
+      <span className="ml-auto flex gap-3 font-mono text-xs">
+        <button type="button" onClick={() => setEditing(true)} className="text-acid hover:text-paper">
+          Editar
+        </button>
+        <button type="button" onClick={handleDelete} className="text-blood hover:text-paper">
+          Eliminar
+        </button>
+      </span>
+    </li>
+  );
+}
+
+export default function WorkoutHistory({ workouts, exerciseNames, activities, onChanged }: Props) {
+  const [error, setError] = useState<string | null>(null);
+  const activityById = new Map(activities.map((a) => [a.id, a]));
+
+  async function handleDeleteWorkout(workoutId: string) {
+    if (!confirm('¿Eliminar todo el entrenamiento de este día? Esta acción no se puede deshacer.')) {
+      return;
+    }
+    setError(null);
+    try {
+      await deleteWorkout(workoutId);
+      onChanged();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo eliminar el entrenamiento.');
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-5">
+      {error && <p className="border-l-2 border-blood pl-3 font-mono text-sm text-blood">{error}</p>}
+      {workouts.map((w) => (
+        <div key={w.id} className="card-brutal">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="font-display text-2xl tracking-wide text-acid">{w.date}</h2>
+            <button
+              type="button"
+              onClick={() => handleDeleteWorkout(w.id)}
+              className="font-mono text-xs text-blood hover:text-paper"
+            >
+              Eliminar día
+            </button>
+          </div>
+          <ul className="mt-3 flex flex-col divide-y divide-paper-dim/20 font-mono text-sm">
+            {w.sets.map((s) => (
+              <SetRow
+                key={s.id}
+                set={s}
+                exerciseName={exerciseNames[s.exercise_id] ?? s.exercise_id}
+                onChanged={onChanged}
+              />
+            ))}
+            {w.sessions.map((s) => (
+              <SessionRow
+                key={s.id}
+                session={s}
+                activityName={activityById.get(s.activity_id)?.name ?? s.activity_id}
+                activity={activityById.get(s.activity_id)}
+                onChanged={onChanged}
+              />
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+  );
+}

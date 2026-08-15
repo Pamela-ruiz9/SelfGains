@@ -1,11 +1,14 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { WEEKDAYS, weekdayLabel, type RoutineDays } from '../../../lib/weekdays';
-import { createRoutine } from '../../../lib/routines';
+import { createRoutine, updateRoutine } from '../../../lib/routines';
+import type { Routine } from '../../../types/db';
 import ActivityPicker, { type ActivityOption } from '../ActivityPicker/ActivityPicker';
 
 interface Props {
   activities: ActivityOption[];
-  onCreated: () => void;
+  editingRoutine?: Routine | null;
+  onSaved: () => void;
+  onCancelEdit?: () => void;
 }
 
 function emptyDays(): RoutineDays {
@@ -65,11 +68,17 @@ function DayActivityPicker({
   );
 }
 
-export default function CreateRoutineForm({ activities, onCreated }: Props) {
-  const [name, setName] = useState('');
-  const [days, setDays] = useState<RoutineDays>(emptyDays());
+export default function CreateRoutineForm({ activities, editingRoutine, onSaved, onCancelEdit }: Props) {
+  const [name, setName] = useState(editingRoutine?.name ?? '');
+  const [days, setDays] = useState<RoutineDays>(editingRoutine?.days ?? emptyDays());
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setName(editingRoutine?.name ?? '');
+    setDays(editingRoutine?.days ?? emptyDays());
+    setError(null);
+  }, [editingRoutine]);
 
   function handleAddToDay(day: keyof RoutineDays, id: string) {
     setDays((prev) => {
@@ -93,12 +102,20 @@ export default function CreateRoutineForm({ activities, onCreated }: Props) {
 
     setSaving(true);
     try {
-      await createRoutine(name.trim(), days);
+      if (editingRoutine) {
+        await updateRoutine(editingRoutine.id, name.trim(), days);
+      } else {
+        await createRoutine(name.trim(), days);
+      }
       setName('');
       setDays(emptyDays());
-      onCreated();
+      onSaved();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo crear la rutina.');
+      setError(
+        err instanceof Error
+          ? err.message
+          : `No se pudo ${editingRoutine ? 'guardar' : 'crear'} la rutina.`
+      );
     } finally {
       setSaving(false);
     }
@@ -106,7 +123,7 @@ export default function CreateRoutineForm({ activities, onCreated }: Props) {
 
   return (
     <form onSubmit={handleSubmit} className="card-brutal flex flex-col gap-4">
-      <p className="label-brutal text-acid">Crear rutina</p>
+      <p className="label-brutal text-acid">{editingRoutine ? 'Editar rutina' : 'Crear rutina'}</p>
       <label className="flex flex-col gap-2">
         <span className="label-brutal">Nombre</span>
         <input
@@ -130,9 +147,20 @@ export default function CreateRoutineForm({ activities, onCreated }: Props) {
         ))}
       </div>
       {error && <p className="border-l-2 border-blood pl-3 font-mono text-sm text-blood">{error}</p>}
-      <button type="submit" disabled={saving} className="btn-brutal self-start">
-        {saving ? 'Guardando...' : 'Guardar rutina'}
-      </button>
+      <div className="flex gap-3">
+        <button type="submit" disabled={saving} className="btn-brutal self-start">
+          {saving ? 'Guardando...' : editingRoutine ? 'Guardar cambios' : 'Guardar rutina'}
+        </button>
+        {editingRoutine && (
+          <button
+            type="button"
+            onClick={onCancelEdit}
+            className="btn-brutal-outline self-start"
+          >
+            Cancelar
+          </button>
+        )}
+      </div>
     </form>
   );
 }

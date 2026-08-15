@@ -16,6 +16,8 @@ interface RoutineListProps {
   activities: ActivityOption[];
   emptyMessage: string;
   onActivate: (source: 'predefined' | 'custom', ref: string, weeks: number) => void;
+  onEdit?: (ref: string) => void;
+  onDelete?: (ref: string) => void;
 }
 
 function daysSummary(days: RoutineDays, activities: ActivityOption[]): string {
@@ -32,19 +34,43 @@ function RoutineCard({
   source,
   activities,
   onActivate,
+  onEdit,
+  onDelete,
 }: {
   routine: RoutineOption;
   source: 'predefined' | 'custom';
   activities: ActivityOption[];
   onActivate: (source: 'predefined' | 'custom', ref: string, weeks: number) => void;
+  onEdit?: (ref: string) => void;
+  onDelete?: (ref: string) => void;
 }) {
   const [weeks, setWeeks] = useState('8');
 
   return (
     <div className="card-brutal flex flex-col gap-3">
-      <div>
-        <p className="font-display text-2xl text-paper">{routine.name}</p>
-        {routine.subtitle && <p className="label-brutal">{routine.subtitle}</p>}
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="font-display text-2xl text-paper">{routine.name}</p>
+          {routine.subtitle && <p className="label-brutal">{routine.subtitle}</p>}
+        </div>
+        {source === 'custom' && (
+          <div className="flex shrink-0 gap-3 font-mono text-xs">
+            <button
+              type="button"
+              onClick={() => onEdit?.(routine.ref)}
+              className="text-acid hover:text-paper"
+            >
+              Editar
+            </button>
+            <button
+              type="button"
+              onClick={() => onDelete?.(routine.ref)}
+              className="text-blood hover:text-paper"
+            >
+              Eliminar
+            </button>
+          </div>
+        )}
       </div>
       <p className="font-mono text-sm text-paper-dim">{daysSummary(routine.days, activities)}</p>
       <div className="flex items-center gap-2">
@@ -75,6 +101,8 @@ export default function RoutineList({
   activities,
   emptyMessage,
   onActivate,
+  onEdit,
+  onDelete,
 }: RoutineListProps) {
   return (
     <div className="flex flex-col gap-3">
@@ -90,6 +118,8 @@ export default function RoutineList({
               source={source}
               activities={activities}
               onActivate={onActivate}
+              onEdit={onEdit}
+              onDelete={onDelete}
             />
           ))}
         </div>

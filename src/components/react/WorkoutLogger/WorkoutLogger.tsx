@@ -3,6 +3,7 @@ import { supabase } from '../../../lib/supabase';
 import { createWorkout, addSet, addSession } from '../../../lib/workouts';
 import { getActiveRoutine, getRoutineById } from '../../../lib/routines';
 import { getTodayWeekday, type RoutineDays } from '../../../lib/weekdays';
+import { requiresDistance } from '../../../lib/activities';
 import ActivityPicker, { type ActivityOption } from '../ActivityPicker/ActivityPicker';
 
 interface PredefinedRoutine {
@@ -42,7 +43,7 @@ interface ParsedSession {
   distanceKm: number | null;
 }
 
-function parseSetInput(reps: string, weight: string, rpe: string): ParsedSet | { error: string } {
+export function parseSetInput(reps: string, weight: string, rpe: string): ParsedSet | { error: string } {
   const repsNum = Number(reps);
   const weightNum = Number(weight);
   const rpeNum = rpe === '' ? null : Number(rpe);
@@ -59,16 +60,16 @@ function parseSetInput(reps: string, weight: string, rpe: string): ParsedSet | {
   return { reps: repsNum, weight: weightNum, rpe: rpeNum };
 }
 
-function parseSessionInput(
+export function parseSessionInput(
   duration: string,
   distance: string,
-  requiresDistance: boolean
+  needsDistance: boolean
 ): ParsedSession | { error: string } {
   const durationNum = Number(duration);
   if (!Number.isFinite(durationNum) || durationNum <= 0) {
     return { error: 'La duración debe ser un número mayor a 0.' };
   }
-  if (!requiresDistance) {
+  if (!needsDistance) {
     return { durationMin: durationNum, distanceKm: null };
   }
   const distanceNum = Number(distance);
@@ -78,11 +79,7 @@ function parseSessionInput(
   return { durationMin: durationNum, distanceKm: distanceNum };
 }
 
-function requiresDistance(activity: Pick<ActivityOption, 'discipline'>): boolean {
-  return activity.discipline !== 'combate';
-}
-
-function SetFields({
+export function SetFields({
   reps,
   weight,
   rpe,
@@ -138,7 +135,7 @@ function SetFields({
   );
 }
 
-function SessionFields({
+export function SessionFields({
   duration,
   distance,
   requiresDistance,

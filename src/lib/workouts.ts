@@ -99,3 +99,51 @@ export async function getSessionsForWorkout(workoutId: string): Promise<WorkoutS
   if (error) throw error;
   return data as WorkoutSession[];
 }
+
+export async function updateSet(
+  setId: string,
+  reps: number,
+  weight: number,
+  rpe?: number
+): Promise<WorkoutSet> {
+  const { data, error } = await supabase
+    .from('workout_sets')
+    .update({ reps, weight, rpe: rpe ?? null })
+    .eq('id', setId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as WorkoutSet;
+}
+
+export async function deleteSet(setId: string): Promise<void> {
+  const { error } = await supabase.from('workout_sets').delete().eq('id', setId);
+  if (error) throw error;
+}
+
+export async function updateSession(
+  sessionId: string,
+  durationMin: number,
+  distanceKm?: number
+): Promise<WorkoutSession> {
+  const { data, error } = await supabase
+    .from('workout_sessions')
+    .update({ duration_min: durationMin, distance_km: distanceKm ?? null })
+    .eq('id', sessionId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as WorkoutSession;
+}
+
+export async function deleteSession(sessionId: string): Promise<void> {
+  const { error } = await supabase.from('workout_sessions').delete().eq('id', sessionId);
+  if (error) throw error;
+}
+
+export async function deleteWorkout(workoutId: string): Promise<void> {
+  const { error } = await supabase.from('workouts').delete().eq('id', workoutId);
+  if (error) throw error;
+}

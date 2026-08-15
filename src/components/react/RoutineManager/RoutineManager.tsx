@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../../../lib/supabase';
 import {
   activateRoutine,
+  deactivateRoutine,
+  deleteRoutine,
   getActiveRoutine,
   getMyRoutines,
   getRoutineById,
@@ -33,6 +35,7 @@ export default function RoutineManager({ predefinedRoutines, activities }: Props
   const [activeRoutine, setActiveRoutine] = useState<ActiveRoutine | null>(null);
   const [myRoutines, setMyRoutines] = useState<Routine[]>([]);
   const [activeCustomRoutine, setActiveCustomRoutine] = useState<Routine | null>(null);
+  const [editingRoutine, setEditingRoutine] = useState<Routine | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function refresh() {
@@ -66,6 +69,36 @@ export default function RoutineManager({ predefinedRoutines, activities }: Props
       await refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo activar la rutina.');
+    }
+  }
+
+  async function handleDeactivate() {
+    setError(null);
+    try {
+      await deactivateRoutine();
+      await refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo desactivar la rutina.');
+    }
+  }
+
+  function handleEditRoutine(ref: string) {
+    const routine = myRoutines.find((r) => r.id === ref);
+    if (routine) setEditingRoutine(routine);
+  }
+
+  async function handleDeleteRoutine(ref: string) {
+    if (!confirm('¿Eliminar esta rutina? Esta acción no se puede deshacer.')) return;
+    setError(null);
+    try {
+      await deleteRoutine(ref);
+      if (activeRoutine?.source === 'custom' && activeRoutine.routine_ref === ref) {
+        await deactivateRoutine();
+      }
+      if (editingRoutine?.id === ref) setEditingRoutine(null);
+      await refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo eliminar la rutina.');
     }
   }
 
@@ -125,12 +158,21 @@ export default function RoutineManager({ predefinedRoutines, activities }: Props
             </p>
           </div>
         ) : (
-          <div className="card-brutal">
-            <p className="font-display text-2xl text-paper">{activeName ?? 'Rutina desconocida'}</p>
-            <p className="font-mono text-sm text-paper-dim">
-              Semana {Math.min(elapsed + 1, activeRoutine.duration_weeks)} de{' '}
-              {activeRoutine.duration_weeks}
-            </p>
+          <div className="card-brutal flex items-start justify-between gap-3">
+            <div>
+              <p className="font-display text-2xl text-paper">{activeName ?? 'Rutina desconocida'}</p>
+              <p className="font-mono text-sm text-paper-dim">
+                Semana {Math.min(elapsed + 1, activeRoutine.duration_weeks)} de{' '}
+                {activeRoutine.duration_weeks}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleDeactivate}
+              className="shrink-0 font-mono text-xs text-blood hover:text-paper"
+            >
+              Desactivar
+            </button>
           </div>
         )}
       </div>
@@ -153,9 +195,19 @@ export default function RoutineManager({ predefinedRoutines, activities }: Props
         activities={activities}
         emptyMessage="Todavía no creaste ninguna rutina propia."
         onActivate={handleActivate}
+        onEdit={handleEditRoutine}
+        onDelete={handleDeleteRoutine}
       />
 
-      <CreateRoutineForm activities={activities} onCreated={refresh} />
+      <CreateRoutineForm
+        activities={activities}
+        editingRoutine={editingRoutine}
+        onSaved={() => {
+          setEditingRoutine(null);
+          refresh();
+        }}
+        onCancelEdit={() => setEditingRoutine(null)}
+      />
     </div>
   );
 }
