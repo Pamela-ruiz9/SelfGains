@@ -181,6 +181,8 @@ export interface WorkoutWithSessions extends Workout {
 export interface CardioPR {
   activityId: string;
   paceMinPerKm: number;
+  distanceKm: number;
+  durationMin: number;
   date: string;
 }
 
@@ -208,6 +210,8 @@ export function calculateCardioPRs(workouts: WorkoutWithSessions[]): CardioPR[] 
         prsByActivity.set(session.activity_id, {
           activityId: session.activity_id,
           paceMinPerKm: pace,
+          distanceKm: session.distance_km,
+          durationMin: session.duration_min,
           date: workout.date,
         });
       }
@@ -322,6 +326,23 @@ export function summarizeByDiscipline(
     });
   }
   return summaries;
+}
+
+export interface MeasurementPoint {
+  date: string;
+  value: number;
+}
+
+// One point per date that has a non-null value for this measurement key,
+// sorted chronologically — mirrors progressForExercise/progressForCardioActivity.
+export function progressForMeasurement(
+  history: { date: string; [key: string]: unknown }[],
+  key: string
+): MeasurementPoint[] {
+  return history
+    .filter((m) => typeof m[key] === 'number')
+    .map((m) => ({ date: m.date, value: m[key] as number }))
+    .sort((a, b) => a.date.localeCompare(b.date));
 }
 
 // Formats a pace in minutes-per-km as "M:SS /km" (e.g. 5.5 -> "5:30 /km").

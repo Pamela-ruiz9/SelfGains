@@ -33,6 +33,9 @@ export default function CardioPRGrid({ prs, activities, onSelectActivity }: Prop
                   {nameById.get(pr.activityId) ?? pr.activityId}
                 </span>
                 <span className="font-mono text-sm text-acid">{formatPace(pr.paceMinPerKm)}</span>
+                <span className="font-mono text-xs text-paper-dim">
+                  {pr.distanceKm} km · {pr.durationMin} min
+                </span>
                 <span className="font-mono text-xs text-paper-dim">{pr.date}</span>
               </button>
             ))}

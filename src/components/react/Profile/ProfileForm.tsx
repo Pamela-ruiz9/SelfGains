@@ -1,7 +1,9 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
 import { supabase } from '../../../lib/supabase';
 import { getMyProfile, uploadAvatar, upsertProfile } from '../../../lib/profile';
+import { logMeasurement } from '../../../lib/measurements';
 import { applyTheme, DEFAULT_ACCENT, type ThemeMode } from '../../../lib/theme';
+import { getActiveRoutine, weeksElapsed } from '../../../lib/routines';
 import type { Profile } from '../../../types/db';
 
 const MEASUREMENT_FIELDS: { key: keyof Profile; label: string }[] = [
@@ -30,6 +32,7 @@ export default function ProfileForm() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [savedMessage, setSavedMessage] = useState<string | null>(null);
+  const [routineExpired, setRoutineExpired] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
@@ -53,6 +56,11 @@ export default function ProfileForm() {
           arm_cm: profile.arm_cm?.toString() ?? '',
           leg_cm: profile.leg_cm?.toString() ?? '',
         });
+      }
+
+      const active = await getActiveRoutine();
+      if (active) {
+        setRoutineExpired(weeksElapsed(active.started_at) >= active.duration_weeks);
       }
     });
   }, []);
@@ -114,6 +122,7 @@ export default function ProfileForm() {
         parsed[key] = num;
       }
       await upsertProfile({ display_name: displayName.trim() || null, ...parsed });
+      await logMeasurement(parsed);
       setSavedMessage('Perfil guardado correctamente.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo guardar el perfil.');
@@ -213,6 +222,14 @@ export default function ProfileForm() {
           />
         </div>
       </div>
+
+      {routineExpired && (
+        <div className="card-brutal border-acid">
+          <p className="font-mono text-sm text-paper">
+            Tu rutina activa venció — buen momento para actualizar tus medidas y ver cómo vas.
+          </p>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         <label className="flex flex-col gap-2">

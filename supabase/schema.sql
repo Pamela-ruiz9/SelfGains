@@ -152,3 +152,30 @@ create policy "Users can update their own avatar"
 create policy "Users can delete their own avatar"
   on storage.objects for delete
   using (bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text);
+
+-- One row per user per day, upserted on save from Perfil — the history
+-- powering the measurement progress chart on Progreso. `profiles` still
+-- holds the latest snapshot for quick display; this table is what makes
+-- that snapshot a trend instead of a single overwritten value.
+create table measurements (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  date date not null default current_date,
+  weight_kg numeric,
+  height_cm numeric,
+  waist_cm numeric,
+  hip_cm numeric,
+  arm_cm numeric,
+  leg_cm numeric,
+  created_at timestamptz not null default now(),
+  unique (user_id, date)
+);
+
+alter table measurements enable row level security;
+
+create policy "Users can manage their own measurements"
+  on measurements for all
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+create index idx_measurements_user_date on measurements(user_id, date);

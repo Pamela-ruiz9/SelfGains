@@ -6,7 +6,8 @@ import {
   updateSession,
   updateSet,
 } from '../../../lib/workouts';
-import { fullActivityName, requiresDistance } from '../../../lib/activities';
+import { DISCIPLINE_COLORS, fullActivityName, requiresDistance } from '../../../lib/activities';
+import { DISCIPLINES } from '../ActivityPicker/ActivityPicker';
 import {
   parseSessionInput,
   parseSetInput,
@@ -216,9 +217,40 @@ function SessionRow({
   );
 }
 
+const LABEL_BY_DISCIPLINE: Record<string, string> = Object.fromEntries(
+  DISCIPLINES.map((d) => [d.id, d.label])
+);
+
+function DisciplineTags({ disciplines }: { disciplines: string[] }) {
+  if (disciplines.length === 0) return null;
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {disciplines.map((d) => (
+        <span
+          key={d}
+          style={{ backgroundColor: DISCIPLINE_COLORS[d] ?? 'var(--color-paper-dim)' }}
+          className="px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-on-accent"
+        >
+          {LABEL_BY_DISCIPLINE[d] ?? d}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 export default function WorkoutHistory({ workouts, exerciseNames, activities, onChanged }: Props) {
   const [error, setError] = useState<string | null>(null);
   const activityById = new Map(activities.map((a) => [a.id, a]));
+
+  function disciplinesForWorkout(w: WorkoutWithLogs): string[] {
+    const found = new Set<string>();
+    if (w.sets.length > 0) found.add('gym');
+    for (const s of w.sessions) {
+      const discipline = activityById.get(s.activity_id)?.discipline;
+      if (discipline) found.add(discipline);
+    }
+    return DISCIPLINES.map((d) => d.id).filter((id) => found.has(id));
+  }
 
   async function handleDeleteWorkout(workoutId: string) {
     if (!confirm('¿Eliminar todo el entrenamiento de este día? Esta acción no se puede deshacer.')) {
@@ -239,7 +271,10 @@ export default function WorkoutHistory({ workouts, exerciseNames, activities, on
       {workouts.map((w) => (
         <div key={w.id} className="card-brutal">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="font-display text-2xl tracking-wide text-acid">{w.date}</h2>
+            <div className="flex flex-wrap items-center gap-3">
+              <h2 className="font-display text-2xl tracking-wide text-acid">{w.date}</h2>
+              <DisciplineTags disciplines={disciplinesForWorkout(w)} />
+            </div>
             <button
               type="button"
               onClick={() => handleDeleteWorkout(w.id)}

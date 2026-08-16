@@ -179,6 +179,16 @@ export default function RoutineManager({ predefinedRoutines, activities }: Props
               Tu rutina "{activeName ?? 'desconocida'}" venció hace{' '}
               {elapsed - activeRoutine.duration_weeks + 1} semana(s). ¿Elegís una nueva abajo?
             </p>
+            <p className="mt-2 font-mono text-sm text-paper-dim">
+              Aprovechá para{' '}
+              <a
+                href={`${import.meta.env.BASE_URL}perfil/`}
+                className="text-acid underline underline-offset-4 hover:text-paper"
+              >
+                actualizar tus medidas
+              </a>{' '}
+              y ver tu progreso.
+            </p>
           </div>
         ) : (
           <div className="card-brutal flex items-start justify-between gap-3">

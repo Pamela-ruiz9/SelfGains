@@ -17,6 +17,16 @@ export function requiresDistance(activity: { discipline: string }): boolean {
   return activity.discipline !== 'combate';
 }
 
+// Fixed per-discipline colors for the little tags on each workout-history
+// day — categorical labels, not the user's customizable accent, so these
+// stay constant regardless of theme/accent picks.
+export const DISCIPLINE_COLORS: Record<string, string> = {
+  gym: 'var(--color-acid)',
+  running: 'var(--color-blood)',
+  natacion: '#3fa9ff',
+  combate: '#a855f7',
+};
+
 const GROUP_LABELS: Record<string, string> = {
   crol: 'Crol',
   dorso: 'Dorso',
