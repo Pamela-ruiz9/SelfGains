@@ -42,10 +42,16 @@ export default function ProfileForm() {
       if (!loggedIn) return;
 
       setEmail(data.session!.user.email ?? '');
+
+      // Google sign-in gives us a photo/name for free via user_metadata — use
+      // it as the default avatar/nombre until the user sets their own, same
+      // pattern as most apps that support Google login.
+      const googleMeta = data.session!.user.user_metadata ?? {};
+      const googleAvatar: string | null = googleMeta.avatar_url ?? googleMeta.picture ?? null;
+      const googleName: string | null = googleMeta.full_name ?? googleMeta.name ?? null;
+
       const profile = await getMyProfile();
       if (profile) {
-        setDisplayName(profile.display_name ?? '');
-        setAvatarUrl(profile.avatar_url);
         setTheme(profile.theme);
         setAccentColor(profile.accent_color);
         setMeasurements({
@@ -56,6 +62,20 @@ export default function ProfileForm() {
           arm_cm: profile.arm_cm?.toString() ?? '',
           leg_cm: profile.leg_cm?.toString() ?? '',
         });
+
+        const backfill: Partial<Profile> = {};
+        if (!profile.avatar_url && googleAvatar) backfill.avatar_url = googleAvatar;
+        if (!profile.display_name && googleName) backfill.display_name = googleName;
+
+        setAvatarUrl(profile.avatar_url ?? googleAvatar);
+        setDisplayName(profile.display_name ?? googleName ?? '');
+
+        if (Object.keys(backfill).length > 0) {
+          await upsertProfile(backfill);
+        }
+      } else {
+        setAvatarUrl(googleAvatar);
+        setDisplayName(googleName ?? '');
       }
 
       const active = await getActiveRoutine();
