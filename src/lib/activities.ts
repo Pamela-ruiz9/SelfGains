@@ -17,6 +17,17 @@ export function requiresDistance(activity: { discipline: string }): boolean {
   return activity.discipline !== 'combate';
 }
 
+// Distance is stored/summed in km everywhere (DB column, pace math) but
+// shown/entered in meters in the UI — swim/run session distances are small
+// enough that meters read far more naturally than fractional km.
+export function kmToMeters(km: number): number {
+  return Math.round(km * 1000);
+}
+
+export function metersToKm(meters: number): number {
+  return meters / 1000;
+}
+
 // Fixed per-discipline colors for the little tags on each workout-history
 // day — categorical labels, not the user's customizable accent, so these
 // stay constant regardless of theme/accent picks.

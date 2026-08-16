@@ -10,7 +10,7 @@ import {
   type RoutineDays,
 } from '../../../lib/weekdays';
 import { createRoutine, updateRoutine } from '../../../lib/routines';
-import { fullActivityName, requiresDistance } from '../../../lib/activities';
+import { fullActivityName, metersToKm, requiresDistance } from '../../../lib/activities';
 import type { Routine } from '../../../types/db';
 import ActivityPicker, { type ActivityOption } from '../ActivityPicker/ActivityPicker';
 
@@ -61,7 +61,7 @@ function DayActivityPicker({
       if (targetReps !== '') entry.targetReps = Number(targetReps);
     } else {
       if (targetDistance !== '' && requiresDistance(selected)) {
-        entry.targetDistanceKm = Number(targetDistance);
+        entry.targetDistanceKm = metersToKm(Number(targetDistance));
       }
       if (targetDuration !== '') entry.targetDurationMin = Number(targetDuration);
     }
@@ -100,11 +100,11 @@ function DayActivityPicker({
           {requiresDistance(selected) && (
             <input
               type="number"
-              placeholder="Distancia (km)"
+              placeholder="Distancia (m)"
               value={targetDistance}
               onChange={(e) => setTargetDistance(e.target.value)}
               min={0}
-              step="0.1"
+              step="1"
               className="input-brutal"
             />
           )}

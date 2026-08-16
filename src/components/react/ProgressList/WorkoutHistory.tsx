@@ -6,7 +6,7 @@ import {
   updateSession,
   updateSet,
 } from '../../../lib/workouts';
-import { DISCIPLINE_COLORS, fullActivityName, requiresDistance } from '../../../lib/activities';
+import { DISCIPLINE_COLORS, fullActivityName, kmToMeters, requiresDistance } from '../../../lib/activities';
 import { DISCIPLINES } from '../ActivityPicker/ActivityPicker';
 import {
   parseSessionInput,
@@ -135,7 +135,9 @@ function SessionRow({
 }) {
   const [editing, setEditing] = useState(false);
   const [duration, setDuration] = useState(String(session.duration_min));
-  const [distance, setDistance] = useState(session.distance_km !== null ? String(session.distance_km) : '');
+  const [distance, setDistance] = useState(
+    session.distance_km !== null ? String(kmToMeters(session.distance_km)) : ''
+  );
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -202,7 +204,7 @@ function SessionRow({
     <li className="flex flex-wrap items-baseline gap-x-2 py-2">
       <span className="font-body text-paper">{activityName}</span>
       <span className="text-paper-dim">
-        — {session.distance_km !== null ? `${session.distance_km} km en ` : ''}
+        — {session.distance_km !== null ? `${kmToMeters(session.distance_km)} m en ` : ''}
         {session.duration_min} min
       </span>
       <span className="ml-auto flex gap-3 font-mono text-xs">

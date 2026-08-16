@@ -1,5 +1,5 @@
 import { DISCIPLINES, type ActivityOption } from '../ActivityPicker/ActivityPicker';
-import { fullActivityName } from '../../../lib/activities';
+import { fullActivityName, kmToMeters } from '../../../lib/activities';
 import { formatPace, groupCardioPRsByDiscipline, type CardioPR } from '../../../lib/prs';
 
 interface Props {
@@ -34,7 +34,7 @@ export default function CardioPRGrid({ prs, activities, onSelectActivity }: Prop
                 </span>
                 <span className="font-mono text-sm text-acid">{formatPace(pr.paceMinPerKm)}</span>
                 <span className="font-mono text-xs text-paper-dim">
-                  {pr.distanceKm} km · {pr.durationMin} min
+                  {kmToMeters(pr.distanceKm)} m · {pr.durationMin} min
                 </span>
                 <span className="font-mono text-xs text-paper-dim">{pr.date}</span>
               </button>

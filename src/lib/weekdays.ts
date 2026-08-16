@@ -1,3 +1,5 @@
+import { kmToMeters } from './activities';
+
 export const WEEKDAYS = [
   'lunes',
   'martes',
@@ -49,7 +51,7 @@ export function targetSummary(
     return null;
   }
   const parts: string[] = [];
-  if (target.targetDistanceKm) parts.push(`${target.targetDistanceKm} km`);
+  if (target.targetDistanceKm) parts.push(`${kmToMeters(target.targetDistanceKm)} m`);
   if (target.targetDurationMin) parts.push(`${target.targetDurationMin} min`);
   return parts.length > 0 ? parts.join(' · ') : null;
 }

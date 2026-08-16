@@ -16,7 +16,7 @@ import {
   type RoutineActivityTarget,
   type RoutineDays,
 } from '../../../lib/weekdays';
-import { fullActivityName, requiresDistance } from '../../../lib/activities';
+import { fullActivityName, kmToMeters, metersToKm, requiresDistance } from '../../../lib/activities';
 import { calculatePRs, suggestNextSet, type SuggestedSet, type WorkoutWithSets } from '../../../lib/prs';
 import ActivityPicker, { type ActivityOption } from '../ActivityPicker/ActivityPicker';
 
@@ -79,6 +79,8 @@ export function parseSetInput(reps: string, weight: string, rpe: string): Parsed
   return { reps: repsNum, weight: weightNum, rpe: rpeNum };
 }
 
+// `distance` is the user-facing string in METERS; distanceKm on the way out
+// is what actually gets stored (DB column, pace math elsewhere).
 export function parseSessionInput(
   duration: string,
   distance: string,
@@ -91,11 +93,11 @@ export function parseSessionInput(
   if (!needsDistance) {
     return { durationMin: durationNum, distanceKm: null };
   }
-  const distanceNum = Number(distance);
-  if (!Number.isFinite(distanceNum) || distanceNum <= 0) {
+  const distanceMetersNum = Number(distance);
+  if (!Number.isFinite(distanceMetersNum) || distanceMetersNum <= 0) {
     return { error: 'La distancia debe ser un número mayor a 0.' };
   }
-  return { durationMin: durationNum, distanceKm: distanceNum };
+  return { durationMin: durationNum, distanceKm: metersToKm(distanceMetersNum) };
 }
 
 // Compares each just-saved set against the PRs computed from workouts logged
@@ -208,13 +210,13 @@ export function SessionFields({
     <div className={requiresDistance ? 'grid grid-cols-2 gap-3' : 'grid grid-cols-1 gap-3'}>
       {requiresDistance && (
         <label className="flex flex-col gap-2">
-          <span className="label-brutal">Distancia (km)</span>
+          <span className="label-brutal">Distancia (m)</span>
           <input
             type="number"
             value={distance}
             onChange={(e) => onDistanceChange(e.target.value)}
             min={0}
-            step="0.1"
+            step="1"
             required
             className="input-brutal"
           />
@@ -258,7 +260,9 @@ function RoutineActivityCard({
   const [weight, setWeight] = useState(suggestion ? String(suggestion.weight) : '');
   const [rpe, setRpe] = useState('');
   const [duration, setDuration] = useState(target.targetDurationMin ? String(target.targetDurationMin) : '');
-  const [distance, setDistance] = useState(target.targetDistanceKm ? String(target.targetDistanceKm) : '');
+  const [distance, setDistance] = useState(
+    target.targetDistanceKm ? String(kmToMeters(target.targetDistanceKm)) : ''
+  );
   const [error, setError] = useState<string | null>(null);
 
   function handleAdd(e: FormEvent) {
@@ -623,7 +627,7 @@ export default function WorkoutLogger({ activities, plans }: Props) {
                 <tr key={i} className="border-b border-paper-dim/20">
                   <td className="px-3 py-2 font-body text-paper">{s.activityName}</td>
                   <td className="px-3 py-2">
-                    {s.distanceKm !== null ? `${s.distanceKm} km` : '—'}
+                    {s.distanceKm !== null ? `${kmToMeters(s.distanceKm)} m` : '—'}
                   </td>
                   <td className="px-3 py-2">{s.durationMin} min</td>
                   <td className="px-3 py-2">
