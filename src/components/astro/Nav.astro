@@ -32,9 +32,22 @@ function iconSvg(id: string, strokeWidth = 2) {
 ---
 <header class="sticky top-0 z-50 border-b-2 border-paper bg-ink/95 backdrop-blur">
   <nav class="mx-auto flex max-w-5xl items-center justify-between px-4 py-4 sm:px-6">
-    <a href={base} class="group flex items-baseline gap-1">
-      <span class="font-display text-3xl tracking-wide text-paper">SELF</span>
-      <span class="font-display text-3xl tracking-wide text-acid">GAINS</span>
+    <a href={base} class="group flex items-center gap-2">
+      <svg viewBox="0 0 100 100" class="h-8 w-8 shrink-0 text-acid" aria-hidden="true">
+        <polygon
+          points="16,4 84,4 96,16 96,84 84,96 16,96 4,84 4,16"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="7"
+        ></polygon>
+        <text x="50" y="67" font-family="Bebas Neue, Arial Narrow, sans-serif" font-size="46" text-anchor="middle" fill="currentColor"
+          >SG</text
+        >
+      </svg>
+      <span class="flex items-baseline gap-1">
+        <span class="font-display text-3xl tracking-wide text-paper">SELF</span>
+        <span class="font-display text-3xl tracking-wide text-acid">GAINS</span>
+      </span>
     </a>
     <div class="hidden items-center gap-2 font-mono text-sm uppercase tracking-[0.15em] sm:flex">
       {
