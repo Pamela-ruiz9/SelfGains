@@ -29,11 +29,13 @@ function DayActivityPicker({
   dayIds,
   onAdd,
   onRemove,
+  onMove,
 }: {
   activities: ActivityOption[];
   dayIds: string[];
   onAdd: (id: string) => void;
   onRemove: (id: string) => void;
+  onMove: (id: string, direction: -1 | 1) => void;
 }) {
   const [selected, setSelected] = useState<ActivityOption | null>(null);
   const activityById = new Map(activities.map((a) => [a.id, a]));
@@ -51,18 +53,38 @@ function DayActivityPicker({
       </button>
       {dayIds.length > 0 && (
         <ul className="flex flex-col gap-1 font-mono text-sm">
-          {dayIds.map((id) => {
+          {dayIds.map((id, index) => {
             const activity = activityById.get(id);
             return (
               <li key={id} className="flex items-center justify-between gap-2 text-paper-dim">
                 <span>{activity ? fullActivityName(activity) : id}</span>
-                <button
-                  type="button"
-                  onClick={() => onRemove(id)}
-                  className="text-blood hover:text-paper"
-                >
-                  Quitar
-                </button>
+                <span className="flex shrink-0 items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => onMove(id, -1)}
+                    disabled={index === 0}
+                    aria-label="Mover arriba"
+                    className="text-acid hover:text-paper disabled:pointer-events-none disabled:opacity-30"
+                  >
+                    ↑
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onMove(id, 1)}
+                    disabled={index === dayIds.length - 1}
+                    aria-label="Mover abajo"
+                    className="text-acid hover:text-paper disabled:pointer-events-none disabled:opacity-30"
+                  >
+                    ↓
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onRemove(id)}
+                    className="text-blood hover:text-paper"
+                  >
+                    Quitar
+                  </button>
+                </span>
               </li>
             );
           })}
@@ -93,6 +115,18 @@ export default function CreateRoutineForm({ activities, editingRoutine, onSaved,
 
   function handleRemoveFromDay(day: keyof RoutineDays, id: string) {
     setDays((prev) => ({ ...prev, [day]: prev[day].filter((existing) => existing !== id) }));
+  }
+
+  function handleMoveInDay(day: keyof RoutineDays, id: string, direction: -1 | 1) {
+    setDays((prev) => {
+      const list = prev[day];
+      const index = list.indexOf(id);
+      const newIndex = index + direction;
+      if (index === -1 || newIndex < 0 || newIndex >= list.length) return prev;
+      const next = [...list];
+      [next[index], next[newIndex]] = [next[newIndex], next[index]];
+      return { ...prev, [day]: next };
+    });
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -146,6 +180,7 @@ export default function CreateRoutineForm({ activities, editingRoutine, onSaved,
               dayIds={days[day]}
               onAdd={(id) => handleAddToDay(day, id)}
               onRemove={(id) => handleRemoveFromDay(day, id)}
+              onMove={(id, direction) => handleMoveInDay(day, id, direction)}
             />
           </div>
         ))}
