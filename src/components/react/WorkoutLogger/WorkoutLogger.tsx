@@ -206,6 +206,84 @@ export function SetFields({
   );
 }
 
+const DISTANCE_STEP = 25; // one pool length — the increment that matters mid-swim
+const DISTANCE_PRESETS = [200, 400, 800, 1500];
+const DURATION_STEP = 1;
+const DURATION_PRESETS = [15, 30, 45, 60];
+
+function bumpValue(value: string, delta: number): string {
+  const next = Math.max(0, (Number(value) || 0) + delta);
+  return String(next);
+}
+
+// Big stepper buttons + one-tap presets for the common totals, so a session
+// can be logged with a handful of taps instead of typing on a phone
+// keyboard — the number inputs stay as a fallback for anything off-preset.
+function SteppedNumberField({
+  label,
+  value,
+  step,
+  presets,
+  unit,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  step: number;
+  presets: number[];
+  unit: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-2">
+      <span className="label-brutal">{label}</span>
+      <div className="flex items-stretch gap-2">
+        <button
+          type="button"
+          onClick={() => onChange(bumpValue(value, -step))}
+          aria-label={`Restar ${step} ${unit}`}
+          className="h-14 w-14 shrink-0 border-2 border-paper-dim/50 font-display text-2xl text-paper active:border-acid active:text-acid"
+        >
+          −
+        </button>
+        <input
+          type="number"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          min={0}
+          step="1"
+          required
+          className="input-brutal h-14 flex-1 text-center text-xl"
+        />
+        <button
+          type="button"
+          onClick={() => onChange(bumpValue(value, step))}
+          aria-label={`Sumar ${step} ${unit}`}
+          className="h-14 w-14 shrink-0 border-2 border-paper-dim/50 font-display text-2xl text-paper active:border-acid active:text-acid"
+        >
+          +
+        </button>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {presets.map((preset) => (
+          <button
+            key={preset}
+            type="button"
+            onClick={() => onChange(String(preset))}
+            className={`h-12 min-w-[4.5rem] flex-1 border-2 font-mono text-sm transition-colors ${
+              value === String(preset)
+                ? 'border-acid bg-acid text-on-accent'
+                : 'border-paper-dim/50 text-paper-dim hover:border-acid hover:text-acid'
+            }`}
+          >
+            {preset} {unit}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function SessionFields({
   duration,
   distance,
@@ -220,33 +298,25 @@ export function SessionFields({
   onDistanceChange: (v: string) => void;
 }) {
   return (
-    <div className={requiresDistance ? 'grid grid-cols-2 gap-3' : 'grid grid-cols-1 gap-3'}>
+    <div className="flex flex-col gap-4">
       {requiresDistance && (
-        <label className="flex flex-col gap-2">
-          <span className="label-brutal">Distancia (m)</span>
-          <input
-            type="number"
-            value={distance}
-            onChange={(e) => onDistanceChange(e.target.value)}
-            min={0}
-            step="1"
-            required
-            className="input-brutal"
-          />
-        </label>
-      )}
-      <label className="flex flex-col gap-2">
-        <span className="label-brutal">Tiempo (min)</span>
-        <input
-          type="number"
-          value={duration}
-          onChange={(e) => onDurationChange(e.target.value)}
-          min={0}
-          step="1"
-          required
-          className="input-brutal"
+        <SteppedNumberField
+          label="Distancia (m)"
+          value={distance}
+          step={DISTANCE_STEP}
+          presets={DISTANCE_PRESETS}
+          unit="m"
+          onChange={onDistanceChange}
         />
-      </label>
+      )}
+      <SteppedNumberField
+        label="Tiempo (min)"
+        value={duration}
+        step={DURATION_STEP}
+        presets={DURATION_PRESETS}
+        unit="min"
+        onChange={onDurationChange}
+      />
     </div>
   );
 }
