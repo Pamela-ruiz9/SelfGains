@@ -107,3 +107,48 @@ create policy "Users can manage sessions of their own workouts"
   );
 
 create index idx_workout_sessions_workout_id on workout_sessions(workout_id);
+
+create table profiles (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  display_name text,
+  avatar_url text,
+  weight_kg numeric,
+  height_cm numeric,
+  waist_cm numeric,
+  hip_cm numeric,
+  arm_cm numeric,
+  leg_cm numeric,
+  accent_color text not null default '#d7ff3f',
+  theme text not null default 'dark' check (theme in ('light', 'dark')),
+  updated_at timestamptz not null default now()
+);
+
+alter table profiles enable row level security;
+
+create policy "Users can manage their own profile"
+  on profiles for all
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+-- Public bucket: avatar URLs are read via plain <img src>, so anyone with the
+-- URL can view an avatar (no private data in the image itself). Writes are
+-- restricted per-user by the {user_id}/... path prefix.
+insert into storage.buckets (id, name, public)
+values ('avatars', 'avatars', true)
+on conflict (id) do nothing;
+
+create policy "Avatar images are publicly accessible"
+  on storage.objects for select
+  using (bucket_id = 'avatars');
+
+create policy "Users can upload their own avatar"
+  on storage.objects for insert
+  with check (bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text);
+
+create policy "Users can update their own avatar"
+  on storage.objects for update
+  using (bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text);
+
+create policy "Users can delete their own avatar"
+  on storage.objects for delete
+  using (bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text);

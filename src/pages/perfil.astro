@@ -1,0 +1,9 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ProfileForm from '../components/react/Profile/ProfileForm';
+---
+<BaseLayout title="Perfil">
+  <p class="label-brutal mb-3 text-acid">Tu cuenta</p>
+  <h1 class="mb-8 font-display text-5xl text-paper sm:text-6xl">PERFIL</h1>
+  <ProfileForm client:load />
+</BaseLayout>

@@ -45,3 +45,18 @@ export interface WorkoutSession {
   distance_km: number | null;
   created_at: string;
 }
+
+export interface Profile {
+  user_id: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  weight_kg: number | null;
+  height_cm: number | null;
+  waist_cm: number | null;
+  hip_cm: number | null;
+  arm_cm: number | null;
+  leg_cm: number | null;
+  accent_color: string;
+  theme: 'light' | 'dark';
+  updated_at: string;
+}

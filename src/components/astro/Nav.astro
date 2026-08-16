@@ -4,10 +4,10 @@ const path = Astro.url.pathname;
 
 const links = [
   { href: `${base}ejercicios/`, label: "Ejercicios" },
-  { href: `${base}registro/nuevo/`, label: "Registrar" },
   { href: `${base}rutinas/`, label: "Rutinas" },
+  { href: `${base}registro/nuevo/`, label: "Registrar" },
   { href: `${base}progreso/`, label: "Progreso" },
-  { href: `${base}login/`, label: "Login" },
+  { href: `${base}perfil/`, label: "Perfil" },
 ];
 
 function isActive(href: string) {
@@ -28,7 +28,7 @@ function isActive(href: string) {
             class:list={[
               "border-2 px-3 py-2 transition-colors duration-150",
               isActive(link.href)
-                ? "border-acid bg-acid text-ink"
+                ? "border-acid bg-acid text-on-accent"
                 : "border-transparent text-paper hover:border-paper-dim/50 hover:text-acid",
             ]}
           >
@@ -44,19 +44,35 @@ function isActive(href: string) {
   class="fixed inset-x-0 bottom-0 z-50 border-t-2 border-paper bg-ink/95 backdrop-blur sm:hidden"
   style="padding-bottom: env(safe-area-inset-bottom);"
 >
-  <div class="grid grid-cols-5 font-mono text-[10px] uppercase tracking-wide">
+  <div class="grid grid-cols-5 items-end font-mono text-[10px] uppercase tracking-wide">
     {
-      links.map((link) => (
-        <a
-          href={link.href}
-          class:list={[
-            "flex flex-col items-center justify-center gap-1 border-t-2 py-2.5 text-center leading-tight transition-colors duration-150",
-            isActive(link.href) ? "border-acid text-acid" : "border-transparent text-paper-dim",
-          ]}
-        >
-          {link.label}
-        </a>
-      ))
+      links.map((link, i) =>
+        i === 2 ? (
+          <a href={link.href} class="relative flex flex-col items-center gap-1 pb-1.5">
+            <span
+              class:list={[
+                "-mt-7 flex h-14 w-14 items-center justify-center rounded-full border-2 font-display text-3xl leading-none transition-colors duration-150",
+                isActive(link.href) ? "border-acid bg-acid text-on-accent" : "border-acid bg-ink text-acid",
+              ]}
+            >
+              +
+            </span>
+            <span class:list={["leading-tight", isActive(link.href) ? "text-acid" : "text-paper-dim"]}>
+              {link.label}
+            </span>
+          </a>
+        ) : (
+          <a
+            href={link.href}
+            class:list={[
+              "flex flex-col items-center justify-center gap-1 border-t-2 py-2.5 text-center leading-tight transition-colors duration-150",
+              isActive(link.href) ? "border-acid text-acid" : "border-transparent text-paper-dim",
+            ]}
+          >
+            {link.label}
+          </a>
+        )
+      )
     }
   </div>
 </nav>

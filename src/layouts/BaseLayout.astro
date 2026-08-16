@@ -19,6 +19,16 @@ const { title } = Astro.props;
       rel="stylesheet"
     />
     <title>{title} · SelfGains</title>
+    <script is:inline>
+      (function () {
+        try {
+          var theme = localStorage.getItem('selfgains-theme') || 'dark';
+          var accent = localStorage.getItem('selfgains-accent') || '#d7ff3f';
+          document.documentElement.dataset.theme = theme;
+          document.documentElement.style.setProperty('--color-acid', accent);
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body class="min-h-screen">
     <Nav />

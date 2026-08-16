@@ -75,7 +75,7 @@ export default function ActivityPicker({ activities, onSelect }: Props) {
             onClick={() => handleDisciplineChange(d.id)}
             className={
               d.id === discipline
-                ? 'btn-brutal-sm border-acid bg-acid text-ink'
+                ? 'btn-brutal-sm border-acid bg-acid text-on-accent'
                 : 'btn-brutal-sm opacity-60'
             }
           >
@@ -92,7 +92,7 @@ export default function ActivityPicker({ activities, onSelect }: Props) {
               onClick={() => handleGroupChange(g)}
               className={
                 g === group
-                  ? 'btn-brutal-sm border-acid bg-acid text-ink'
+                  ? 'btn-brutal-sm border-acid bg-acid text-on-accent'
                   : 'btn-brutal-sm opacity-60'
               }
             >

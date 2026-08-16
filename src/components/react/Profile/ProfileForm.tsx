@@ -1,0 +1,265 @@
+import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
+import { supabase } from '../../../lib/supabase';
+import { getMyProfile, uploadAvatar, upsertProfile } from '../../../lib/profile';
+import { applyTheme, DEFAULT_ACCENT, type ThemeMode } from '../../../lib/theme';
+import type { Profile } from '../../../types/db';
+
+const MEASUREMENT_FIELDS: { key: keyof Profile; label: string }[] = [
+  { key: 'weight_kg', label: 'Peso (kg)' },
+  { key: 'height_cm', label: 'Estatura (cm)' },
+  { key: 'waist_cm', label: 'Cintura (cm)' },
+  { key: 'hip_cm', label: 'Cadera (cm)' },
+  { key: 'arm_cm', label: 'Brazo (cm)' },
+  { key: 'leg_cm', label: 'Pierna (cm)' },
+];
+
+const ACCENT_PRESETS = ['#d7ff3f', '#3fd7ff', '#ff3fb8', '#ff9c3f', '#8f3fff', '#3fff8f'];
+
+export default function ProfileForm() {
+  const [authChecked, setAuthChecked] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [email, setEmail] = useState('');
+
+  const [displayName, setDisplayName] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [measurements, setMeasurements] = useState<Record<string, string>>({});
+  const [theme, setTheme] = useState<ThemeMode>('dark');
+  const [accentColor, setAccentColor] = useState(DEFAULT_ACCENT);
+
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [savedMessage, setSavedMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(async ({ data }) => {
+      const loggedIn = data.session !== null;
+      setIsLoggedIn(loggedIn);
+      setAuthChecked(true);
+      if (!loggedIn) return;
+
+      setEmail(data.session!.user.email ?? '');
+      const profile = await getMyProfile();
+      if (profile) {
+        setDisplayName(profile.display_name ?? '');
+        setAvatarUrl(profile.avatar_url);
+        setTheme(profile.theme);
+        setAccentColor(profile.accent_color);
+        setMeasurements({
+          weight_kg: profile.weight_kg?.toString() ?? '',
+          height_cm: profile.height_cm?.toString() ?? '',
+          waist_cm: profile.waist_cm?.toString() ?? '',
+          hip_cm: profile.hip_cm?.toString() ?? '',
+          arm_cm: profile.arm_cm?.toString() ?? '',
+          leg_cm: profile.leg_cm?.toString() ?? '',
+        });
+      }
+    });
+  }, []);
+
+  async function handlePhotoChange(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setError(null);
+    setUploadingPhoto(true);
+    try {
+      const url = await uploadAvatar(file);
+      await upsertProfile({ avatar_url: url });
+      setAvatarUrl(url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo subir la foto.');
+    } finally {
+      setUploadingPhoto(false);
+      e.target.value = '';
+    }
+  }
+
+  async function handleThemeChange(next: ThemeMode) {
+    setTheme(next);
+    applyTheme(next, accentColor);
+    try {
+      await upsertProfile({ theme: next });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo guardar el tema.');
+    }
+  }
+
+  async function handleAccentChange(next: string) {
+    setAccentColor(next);
+    applyTheme(theme, next);
+    try {
+      await upsertProfile({ accent_color: next });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo guardar el color.');
+    }
+  }
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setSavedMessage(null);
+    setSaving(true);
+    try {
+      const parsed: Record<string, number | null> = {};
+      for (const { key, label } of MEASUREMENT_FIELDS) {
+        const raw = measurements[key] ?? '';
+        if (raw === '') {
+          parsed[key] = null;
+          continue;
+        }
+        const num = Number(raw);
+        if (!Number.isFinite(num) || num < 0) {
+          throw new Error(`${label}: debe ser un número válido.`);
+        }
+        parsed[key] = num;
+      }
+      await upsertProfile({ display_name: displayName.trim() || null, ...parsed });
+      setSavedMessage('Perfil guardado correctamente.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo guardar el perfil.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    window.location.href = import.meta.env.BASE_URL;
+  }
+
+  if (!authChecked) {
+    return <p className="font-mono text-sm text-paper-dim">Cargando...</p>;
+  }
+
+  if (!isLoggedIn) {
+    return (
+      <p className="font-mono text-sm text-paper-dim">
+        Debes{' '}
+        <a
+          href={`${import.meta.env.BASE_URL}login/`}
+          className="text-acid underline underline-offset-4 hover:text-paper"
+        >
+          iniciar sesión
+        </a>{' '}
+        para ver tu perfil.
+      </p>
+    );
+  }
+
+  return (
+    <div className="flex max-w-sm flex-col gap-10">
+      <div className="flex items-center gap-4">
+        <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-paper-dim/40 bg-surface">
+          {avatarUrl ? (
+            <img src={avatarUrl} alt="Foto de perfil" className="h-full w-full object-cover" />
+          ) : (
+            <span className="font-display text-3xl text-paper-dim">
+              {(displayName || email).charAt(0).toUpperCase()}
+            </span>
+          )}
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="btn-brutal-outline w-fit cursor-pointer px-4 py-2 text-sm">
+            {uploadingPhoto ? 'Subiendo...' : 'Cambiar foto'}
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handlePhotoChange}
+              disabled={uploadingPhoto}
+            />
+          </label>
+          <span className="font-mono text-xs text-paper-dim">{email}</span>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <p className="label-brutal text-acid">Apariencia</p>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => handleThemeChange('dark')}
+            className={theme === 'dark' ? 'btn-brutal-sm border-acid bg-acid text-on-accent' : 'btn-brutal-sm'}
+          >
+            Oscuro
+          </button>
+          <button
+            type="button"
+            onClick={() => handleThemeChange('light')}
+            className={theme === 'light' ? 'btn-brutal-sm border-acid bg-acid text-on-accent' : 'btn-brutal-sm'}
+          >
+            Claro
+          </button>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {ACCENT_PRESETS.map((color) => (
+            <button
+              key={color}
+              type="button"
+              aria-label={`Color ${color}`}
+              onClick={() => handleAccentChange(color)}
+              style={{ backgroundColor: color }}
+              className={`h-8 w-8 rounded-full border-2 transition-transform duration-150 ${
+                accentColor.toLowerCase() === color ? 'scale-110 border-paper' : 'border-paper-dim/40'
+              }`}
+            />
+          ))}
+          <input
+            type="color"
+            value={accentColor}
+            onChange={(e) => handleAccentChange(e.target.value)}
+            aria-label="Elegir color personalizado"
+            className="h-8 w-8 cursor-pointer border-2 border-paper-dim/40 bg-transparent p-0"
+          />
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        <label className="flex flex-col gap-2">
+          <span className="label-brutal">Nombre en la app</span>
+          <input
+            type="text"
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+            disabled={saving}
+            className="input-brutal"
+          />
+        </label>
+
+        <div className="grid grid-cols-2 gap-4">
+          {MEASUREMENT_FIELDS.map(({ key, label }) => (
+            <label key={key} className="flex flex-col gap-2">
+              <span className="label-brutal">{label}</span>
+              <input
+                type="number"
+                value={measurements[key] ?? ''}
+                onChange={(e) => setMeasurements((prev) => ({ ...prev, [key]: e.target.value }))}
+                min={0}
+                step="0.1"
+                disabled={saving}
+                className="input-brutal"
+              />
+            </label>
+          ))}
+        </div>
+
+        {error && <p className="border-l-2 border-blood pl-3 font-mono text-sm text-blood">{error}</p>}
+        {savedMessage && (
+          <p className="border-l-2 border-acid pl-3 font-mono text-sm text-acid">{savedMessage}</p>
+        )}
+
+        <button type="submit" disabled={saving} className="btn-brutal self-start">
+          {saving ? 'Guardando...' : 'Guardar perfil'}
+        </button>
+      </form>
+
+      <button
+        type="button"
+        onClick={handleLogout}
+        className="self-start font-mono text-sm text-blood underline underline-offset-4 hover:text-paper"
+      >
+        Cerrar sesión
+      </button>
+    </div>
+  );
+}

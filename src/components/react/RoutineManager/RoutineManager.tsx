@@ -41,6 +41,8 @@ export default function RoutineManager({ predefinedRoutines, activities }: Props
   const [editingRoutine, setEditingRoutine] = useState<Routine | null>(null);
   const [workoutDates, setWorkoutDates] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
+  const [showAddRoutine, setShowAddRoutine] = useState(false);
+  const [addRoutineTab, setAddRoutineTab] = useState<'custom' | 'predefined'>('custom');
 
   async function refresh() {
     const [active, mine, workouts] = await Promise.all([
@@ -75,6 +77,7 @@ export default function RoutineManager({ predefinedRoutines, activities }: Props
     }
     try {
       await activateRoutine(source, ref, weeks);
+      setShowAddRoutine(false);
       await refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo activar la rutina.');
@@ -93,7 +96,11 @@ export default function RoutineManager({ predefinedRoutines, activities }: Props
 
   function handleEditRoutine(ref: string) {
     const routine = myRoutines.find((r) => r.id === ref);
-    if (routine) setEditingRoutine(routine);
+    if (routine) {
+      setEditingRoutine(routine);
+      setAddRoutineTab('custom');
+      setShowAddRoutine(true);
+    }
   }
 
   async function handleDeleteRoutine(ref: string) {
@@ -204,15 +211,6 @@ export default function RoutineManager({ predefinedRoutines, activities }: Props
       {error && <p className="border-l-2 border-blood pl-3 font-mono text-sm text-blood">{error}</p>}
 
       <RoutineList
-        title="Predefinidas"
-        source="predefined"
-        routines={predefinedOptions}
-        activities={activities}
-        emptyMessage="No hay rutinas predefinidas todavía."
-        onActivate={handleActivate}
-      />
-
-      <RoutineList
         title="Mis rutinas"
         source="custom"
         routines={customOptions}
@@ -223,15 +221,78 @@ export default function RoutineManager({ predefinedRoutines, activities }: Props
         onDelete={handleDeleteRoutine}
       />
 
-      <CreateRoutineForm
-        activities={activities}
-        editingRoutine={editingRoutine}
-        onSaved={() => {
-          setEditingRoutine(null);
-          refresh();
-        }}
-        onCancelEdit={() => setEditingRoutine(null)}
-      />
+      {!showAddRoutine ? (
+        <button
+          type="button"
+          onClick={() => setShowAddRoutine(true)}
+          className="btn-brutal self-start"
+        >
+          + Agregar nueva rutina
+        </button>
+      ) : (
+        <div className="flex flex-col gap-6">
+          <div className="flex items-center justify-between gap-3">
+            <p className="label-brutal text-acid">Agregar nueva rutina</p>
+            <button
+              type="button"
+              onClick={() => {
+                setShowAddRoutine(false);
+                setEditingRoutine(null);
+              }}
+              className="font-mono text-xs text-paper-dim hover:text-paper"
+            >
+              Cerrar
+            </button>
+          </div>
+
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setAddRoutineTab('custom')}
+              className={
+                addRoutineTab === 'custom'
+                  ? 'btn-brutal-sm border-acid bg-acid text-on-accent'
+                  : 'btn-brutal-sm'
+              }
+            >
+              Crear la mía
+            </button>
+            <button
+              type="button"
+              onClick={() => setAddRoutineTab('predefined')}
+              className={
+                addRoutineTab === 'predefined'
+                  ? 'btn-brutal-sm border-acid bg-acid text-on-accent'
+                  : 'btn-brutal-sm'
+              }
+            >
+              Elegir predefinida
+            </button>
+          </div>
+
+          {addRoutineTab === 'custom' ? (
+            <CreateRoutineForm
+              activities={activities}
+              editingRoutine={editingRoutine}
+              onSaved={() => {
+                setEditingRoutine(null);
+                setShowAddRoutine(false);
+                refresh();
+              }}
+              onCancelEdit={() => setEditingRoutine(null)}
+            />
+          ) : (
+            <RoutineList
+              title="Predefinidas"
+              source="predefined"
+              routines={predefinedOptions}
+              activities={activities}
+              emptyMessage="No hay rutinas predefinidas todavía."
+              onActivate={handleActivate}
+            />
+          )}
+        </div>
+      )}
     </div>
   );
 }
