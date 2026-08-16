@@ -37,9 +37,11 @@ export function entryTarget(entry: RoutineDayEntry): Omit<RoutineActivityTarget,
   return typeof entry === 'string' ? {} : entry;
 }
 
-// Short display form of a target, e.g. "4x10" or "2 km · 40 min". Returns
-// null when the entry has no target at all (legacy string entries, or a
-// target-carrying entry the user just didn't fill in).
+// Short display form of a target, e.g. "4x10" or "2000 m". Returns null when
+// the entry has no target at all (legacy string entries, or a target-
+// carrying entry the user just didn't fill in). Duration is deliberately
+// never part of the target/summary — that's what actually gets timed and
+// entered in Registrar, not something the routine prescribes ahead of time.
 export function targetSummary(
   metricType: 'sets' | 'session',
   target: Omit<RoutineActivityTarget, 'activityId'>
@@ -50,10 +52,7 @@ export function targetSummary(
     if (target.targetReps) return `${target.targetReps} reps`;
     return null;
   }
-  const parts: string[] = [];
-  if (target.targetDistanceKm) parts.push(`${kmToMeters(target.targetDistanceKm)} m`);
-  if (target.targetDurationMin) parts.push(`${target.targetDurationMin} min`);
-  return parts.length > 0 ? parts.join(' · ') : null;
+  return target.targetDistanceKm ? `${kmToMeters(target.targetDistanceKm)} m` : null;
 }
 
 const JS_DAY_TO_WEEKDAY: Weekday[] = [

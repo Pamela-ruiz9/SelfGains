@@ -50,7 +50,6 @@ function DayActivityPicker({
   const [targetSets, setTargetSets] = useState('');
   const [targetReps, setTargetReps] = useState('');
   const [targetDistance, setTargetDistance] = useState('');
-  const [targetDuration, setTargetDuration] = useState('');
   const activityById = new Map(activities.map((a) => [a.id, a]));
 
   function handleAdd() {
@@ -59,17 +58,13 @@ function DayActivityPicker({
     if (selected.metricType === 'sets') {
       if (targetSets !== '') entry.targetSets = Number(targetSets);
       if (targetReps !== '') entry.targetReps = Number(targetReps);
-    } else {
-      if (targetDistance !== '' && requiresDistance(selected)) {
-        entry.targetDistanceKm = metersToKm(Number(targetDistance));
-      }
-      if (targetDuration !== '') entry.targetDurationMin = Number(targetDuration);
+    } else if (targetDistance !== '' && requiresDistance(selected)) {
+      entry.targetDistanceKm = metersToKm(Number(targetDistance));
     }
     onAdd(entry);
     setTargetSets('');
     setTargetReps('');
     setTargetDistance('');
-    setTargetDuration('');
   }
 
   return (
@@ -98,28 +93,16 @@ function DayActivityPicker({
           />
         </div>
       )}
-      {selected?.metricType === 'session' && (
-        <div className="grid grid-cols-2 gap-2">
-          {requiresDistance(selected) && (
-            <input
-              type="number"
-              placeholder="Distancia (m)"
-              value={targetDistance}
-              onChange={(e) => setTargetDistance(e.target.value)}
-              min={0}
-              step="1"
-              className="input-brutal"
-            />
-          )}
-          <input
-            type="number"
-            placeholder="Tiempo (min)"
-            value={targetDuration}
-            onChange={(e) => setTargetDuration(e.target.value)}
-            min={0}
-            className="input-brutal"
-          />
-        </div>
+      {selected?.metricType === 'session' && requiresDistance(selected) && (
+        <input
+          type="number"
+          placeholder="Distancia (m)"
+          value={targetDistance}
+          onChange={(e) => setTargetDistance(e.target.value)}
+          min={0}
+          step="1"
+          className="input-brutal"
+        />
       )}
       <button
         type="button"

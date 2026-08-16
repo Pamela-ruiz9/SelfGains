@@ -259,7 +259,7 @@ function RoutineActivityCard({
   );
   const [weight, setWeight] = useState(suggestion ? String(suggestion.weight) : '');
   const [rpe, setRpe] = useState('');
-  const [duration, setDuration] = useState(target.targetDurationMin ? String(target.targetDurationMin) : '');
+  const [duration, setDuration] = useState('');
   const [distance, setDistance] = useState(
     target.targetDistanceKm ? String(kmToMeters(target.targetDistanceKm)) : ''
   );
