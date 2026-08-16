@@ -6,6 +6,7 @@ import {
   addSession,
   getWorkoutsForCurrentUser,
   getSetsForWorkout,
+  getSessionsForWorkout,
 } from '../../../lib/workouts';
 import { getActiveRoutine, getRoutineById } from '../../../lib/routines';
 import {
@@ -17,13 +18,25 @@ import {
   type RoutineDays,
 } from '../../../lib/weekdays';
 import { fullActivityName, kmToMeters, metersToKm, requiresDistance } from '../../../lib/activities';
-import { calculatePRs, suggestNextSet, type SuggestedSet, type WorkoutWithSets } from '../../../lib/prs';
-import ActivityPicker, { type ActivityOption } from '../ActivityPicker/ActivityPicker';
+import {
+  calculatePRs,
+  suggestNextSet,
+  type SuggestedSet,
+  type WorkoutWithSets,
+  type WorkoutWithSessions,
+} from '../../../lib/prs';
+import ActivityPicker, { DISCIPLINES, type ActivityOption } from '../ActivityPicker/ActivityPicker';
 
 interface PredefinedRoutine {
   id: string;
   days: RoutineDays;
 }
+
+interface WorkoutWithLogs extends WorkoutWithSets, WorkoutWithSessions {}
+
+const LABEL_BY_DISCIPLINE: Record<string, string> = Object.fromEntries(
+  DISCIPLINES.map((d) => [d.id, d.label])
+);
 
 interface TodayActivityEntry {
   activity: ActivityOption;
@@ -244,12 +257,16 @@ function RoutineActivityCard({
   workouts,
   onAddSet,
   onAddSession,
+  done,
+  progressLabel,
 }: {
   activity: ActivityOption;
   target: Omit<RoutineActivityTarget, 'activityId'>;
   workouts: WorkoutWithSets[];
   onAddSet: (activityId: string, activityName: string, parsed: ParsedSet) => void;
   onAddSession: (activityId: string, activityName: string, parsed: ParsedSession) => void;
+  done: boolean;
+  progressLabel: string | null;
 }) {
   const suggestion =
     activity.metricType === 'sets' ? suggestNextSet(workouts, activity.id) : null;
@@ -292,12 +309,27 @@ function RoutineActivityCard({
   }
 
   return (
-    <form onSubmit={handleAdd} className="card-brutal flex flex-col gap-3">
-      <p className="font-display text-xl text-paper">{fullActivityName(activity)}</p>
+    <form
+      onSubmit={handleAdd}
+      className={`card-brutal flex flex-col gap-3 transition-colors ${done ? 'border-acid' : ''}`}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <p className="font-display text-xl text-paper">{fullActivityName(activity)}</p>
+        {done && (
+          <span className="shrink-0 border-2 border-acid px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-acid">
+            ✓ Hecho
+          </span>
+        )}
+      </div>
       {activity.description && (
         <p className="font-mono text-xs text-paper-dim">{activity.description}</p>
       )}
-      {goal && <p className="font-mono text-xs text-acid">Meta: {goal}</p>}
+      {goal && (
+        <p className="font-mono text-xs text-acid">
+          Meta: {goal}
+          {progressLabel && <span className="text-paper-dim"> — llevas {progressLabel}</span>}
+        </p>
+      )}
       {suggestion && (
         <p className="font-mono text-xs text-paper-dim">{suggestionHint(suggestion)}</p>
       )}
@@ -337,7 +369,8 @@ export default function WorkoutLogger({ activities, plans }: Props) {
   const [planId, setPlanId] = useState<string | undefined>(undefined);
   const [routineDaysMap, setRoutineDaysMap] = useState<RoutineDays | null>(null);
   const [todayActivities, setTodayActivities] = useState<TodayActivityEntry[]>([]);
-  const [pastWorkouts, setPastWorkouts] = useState<WorkoutWithSets[]>([]);
+  const [pastWorkouts, setPastWorkouts] = useState<WorkoutWithLogs[]>([]);
+  const [copySourceId, setCopySourceId] = useState('');
 
   const [selectedActivity, setSelectedActivity] = useState<ActivityOption | null>(null);
   const [reps, setReps] = useState('');
@@ -358,10 +391,14 @@ export default function WorkoutLogger({ activities, plans }: Props) {
       if (!loggedIn) return;
 
       const list = await getWorkoutsForCurrentUser();
-      const withSets = await Promise.all(
-        list.map(async (w) => ({ ...w, sets: await getSetsForWorkout(w.id) }))
+      const withLogs = await Promise.all(
+        list.map(async (w) => ({
+          ...w,
+          sets: await getSetsForWorkout(w.id),
+          sessions: await getSessionsForWorkout(w.id),
+        }))
       );
-      setPastWorkouts(withSets);
+      setPastWorkouts(withLogs);
 
       const active = await getActiveRoutine();
       if (!active) return;
@@ -411,6 +448,8 @@ export default function WorkoutLogger({ activities, plans }: Props) {
   const freeFormSuggestion =
     selectedActivity?.metricType === 'sets' ? suggestNextSet(pastWorkouts, selectedActivity.id) : null;
 
+  const activityById = new Map(activities.map((a) => [a.id, a]));
+
   function addLoggedSet(activityId: string, activityName: string, parsed: ParsedSet) {
     const setNumber = loggedSets.filter((s) => s.exerciseId === activityId).length + 1;
     setLoggedSets((prev) => [
@@ -421,6 +460,87 @@ export default function WorkoutLogger({ activities, plans }: Props) {
 
   function addLoggedSession(activityId: string, activityName: string, parsed: ParsedSession) {
     setLoggedSessions((prev) => [...prev, { activityId, activityName, ...parsed }]);
+  }
+
+  // How many sets/whether a session has already been staged today for this
+  // routine activity — drives both the per-card "✓ Hecho" badge and the
+  // day's overall progress bar, so both stay in sync with the same source
+  // of truth (the in-progress draft, not what's saved yet).
+  function loggedCountFor(activity: ActivityOption): number {
+    return activity.metricType === 'sets'
+      ? loggedSets.filter((s) => s.exerciseId === activity.id).length
+      : loggedSessions.filter((s) => s.activityId === activity.id).length;
+  }
+
+  function isActivityDone(activity: ActivityOption, target: Omit<RoutineActivityTarget, 'activityId'>): boolean {
+    const count = loggedCountFor(activity);
+    if (activity.metricType === 'sets' && target.targetSets) return count >= target.targetSets;
+    return count > 0;
+  }
+
+  const completedCount = todayActivities.filter(({ activity, target }) =>
+    isActivityDone(activity, target)
+  ).length;
+  const totalTodayCount = todayActivities.length;
+  const progressPct = totalTodayCount > 0 ? Math.round((completedCount / totalTodayCount) * 100) : 0;
+
+  // Copies every set/session from a previously logged day into today's
+  // draft in one shot — for a rest day with no routine assigned, or to
+  // bolt on a whole other discipline you already have a good log for,
+  // without re-typing it one exercise at a time.
+  function copyWorkout(workoutId: string) {
+    const source = pastWorkouts.find((w) => w.id === workoutId);
+    if (!source) return;
+
+    if (source.sets.length > 0) {
+      setLoggedSets((prev) => {
+        const counts = new Map<string, number>();
+        for (const s of prev) counts.set(s.exerciseId, (counts.get(s.exerciseId) ?? 0) + 1);
+        const additions: LoggedSet[] = source.sets.map((s) => {
+          const activity = activityById.get(s.exercise_id);
+          const setNumber = (counts.get(s.exercise_id) ?? 0) + 1;
+          counts.set(s.exercise_id, setNumber);
+          return {
+            exerciseId: s.exercise_id,
+            exerciseName: activity ? fullActivityName(activity) : s.exercise_id,
+            setNumber,
+            reps: s.reps,
+            weight: s.weight,
+            rpe: s.rpe,
+          };
+        });
+        return [...prev, ...additions];
+      });
+    }
+
+    if (source.sessions.length > 0) {
+      setLoggedSessions((prev) => [
+        ...prev,
+        ...source.sessions.map((s) => {
+          const activity = activityById.get(s.activity_id);
+          return {
+            activityId: s.activity_id,
+            activityName: activity ? fullActivityName(activity) : s.activity_id,
+            durationMin: s.duration_min,
+            distanceKm: s.distance_km,
+          };
+        }),
+      ]);
+    }
+
+    setCopySourceId('');
+    setError(null);
+    setSavedMessage(null);
+  }
+
+  function disciplinesForPastWorkout(w: WorkoutWithLogs): string[] {
+    const found = new Set<string>();
+    if (w.sets.length > 0) found.add('gym');
+    for (const s of w.sessions) {
+      const discipline = activityById.get(s.activity_id)?.discipline;
+      if (discipline) found.add(discipline);
+    }
+    return DISCIPLINES.map((d) => d.id).filter((id) => found.has(id));
   }
 
   function handleAddActivity(e: FormEvent) {
@@ -527,22 +647,78 @@ export default function WorkoutLogger({ activities, plans }: Props) {
         />
       </label>
 
+      {pastWorkouts.length > 0 && (
+        <div className="card-brutal flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <label className="flex flex-1 flex-col gap-2">
+            <span className="label-brutal">Copiar un entrenamiento anterior</span>
+            <select
+              value={copySourceId}
+              onChange={(e) => setCopySourceId(e.target.value)}
+              className="input-brutal"
+            >
+              <option value="">
+                {todayActivities.length === 0
+                  ? 'Elige un día para copiar aquí (sin rutina asignada hoy)'
+                  : 'Elige un día para sumar otra disciplina hoy'}
+              </option>
+              {pastWorkouts.map((w) => {
+                const labels = disciplinesForPastWorkout(w).map((id) => LABEL_BY_DISCIPLINE[id] ?? id);
+                return (
+                  <option key={w.id} value={w.id}>
+                    {w.date}
+                    {labels.length > 0 ? ` — ${labels.join(', ')}` : ''}
+                  </option>
+                );
+              })}
+            </select>
+          </label>
+          <button
+            type="button"
+            onClick={() => copyWorkout(copySourceId)}
+            disabled={!copySourceId}
+            className="btn-brutal-sm shrink-0"
+          >
+            Copiar a este día
+          </button>
+        </div>
+      )}
+
       {todayActivities.length > 0 && (
         <div className="flex flex-col gap-4">
-          <p className="label-brutal text-acid">
-            {date === new Date().toISOString().slice(0, 10) ? 'Hoy toca' : 'Ese día toca'}
-          </p>
+          <div className="flex items-center justify-between gap-3">
+            <p className="label-brutal text-acid">
+              {date === new Date().toISOString().slice(0, 10) ? 'Hoy toca' : 'Ese día toca'}
+            </p>
+            <span className="font-mono text-xs text-paper-dim">
+              {completedCount} de {totalTodayCount} completado{totalTodayCount === 1 ? '' : 's'}
+            </span>
+          </div>
+          <div className="h-3 w-full border-2 border-paper-dim/30">
+            <div
+              className="h-full bg-acid transition-all duration-300"
+              style={{ width: `${progressPct}%` }}
+            />
+          </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            {todayActivities.map(({ activity, target }) => (
-              <RoutineActivityCard
-                key={activity.id}
-                activity={activity}
-                target={target}
-                workouts={pastWorkouts}
-                onAddSet={addLoggedSet}
-                onAddSession={addLoggedSession}
-              />
-            ))}
+            {todayActivities.map(({ activity, target }) => {
+              const count = loggedCountFor(activity);
+              const progressLabel =
+                activity.metricType === 'sets' && target.targetSets
+                  ? `${count}/${target.targetSets} series`
+                  : null;
+              return (
+                <RoutineActivityCard
+                  key={activity.id}
+                  activity={activity}
+                  target={target}
+                  workouts={pastWorkouts}
+                  onAddSet={addLoggedSet}
+                  onAddSession={addLoggedSession}
+                  done={isActivityDone(activity, target)}
+                  progressLabel={progressLabel}
+                />
+              );
+            })}
           </div>
         </div>
       )}
