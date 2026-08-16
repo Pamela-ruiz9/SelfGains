@@ -1,5 +1,12 @@
 import { useState } from 'react';
-import { WEEKDAYS, weekdayLabel, type RoutineDays } from '../../../lib/weekdays';
+import {
+  entryActivityId,
+  entryTarget,
+  targetSummary,
+  WEEKDAYS,
+  weekdayLabel,
+  type RoutineDays,
+} from '../../../lib/weekdays';
 import { fullActivityName } from '../../../lib/activities';
 import type { ActivityOption } from '../ActivityPicker/ActivityPicker';
 
@@ -24,9 +31,12 @@ interface RoutineListProps {
 function daysSummary(days: RoutineDays, activities: ActivityOption[]): string {
   return WEEKDAYS.filter((day) => days[day].length > 0)
     .map((day) => {
-      const names = days[day].map((id) => {
+      const names = days[day].map((entry) => {
+        const id = entryActivityId(entry);
         const activity = activities.find((a) => a.id === id);
-        return activity ? fullActivityName(activity) : id;
+        const label = activity ? fullActivityName(activity) : id;
+        const summary = activity ? targetSummary(activity.metricType, entryTarget(entry)) : null;
+        return summary ? `${label} (${summary})` : label;
       });
       return `${weekdayLabel(day)}: ${names.join(', ')}`;
     })

@@ -8,7 +8,14 @@ import {
   getSetsForWorkout,
 } from '../../../lib/workouts';
 import { getActiveRoutine, getRoutineById } from '../../../lib/routines';
-import { getTodayWeekday, type RoutineDays } from '../../../lib/weekdays';
+import {
+  entryActivityId,
+  entryTarget,
+  getTodayWeekday,
+  targetSummary,
+  type RoutineActivityTarget,
+  type RoutineDays,
+} from '../../../lib/weekdays';
 import { fullActivityName, requiresDistance } from '../../../lib/activities';
 import { calculatePRs, suggestNextSet, type SuggestedSet, type WorkoutWithSets } from '../../../lib/prs';
 import ActivityPicker, { type ActivityOption } from '../ActivityPicker/ActivityPicker';
@@ -16,6 +23,11 @@ import ActivityPicker, { type ActivityOption } from '../ActivityPicker/ActivityP
 interface PredefinedRoutine {
   id: string;
   days: RoutineDays;
+}
+
+interface TodayActivityEntry {
+  activity: ActivityOption;
+  target: Omit<RoutineActivityTarget, 'activityId'>;
 }
 
 interface LoggedSet {
@@ -226,22 +238,27 @@ export function SessionFields({
 
 function RoutineActivityCard({
   activity,
+  target,
   workouts,
   onAddSet,
   onAddSession,
 }: {
   activity: ActivityOption;
+  target: Omit<RoutineActivityTarget, 'activityId'>;
   workouts: WorkoutWithSets[];
   onAddSet: (activityId: string, activityName: string, parsed: ParsedSet) => void;
   onAddSession: (activityId: string, activityName: string, parsed: ParsedSession) => void;
 }) {
   const suggestion =
     activity.metricType === 'sets' ? suggestNextSet(workouts, activity.id) : null;
-  const [reps, setReps] = useState(suggestion ? String(suggestion.reps) : '');
+  const goal = targetSummary(activity.metricType, target);
+  const [reps, setReps] = useState(
+    target.targetReps ? String(target.targetReps) : suggestion ? String(suggestion.reps) : ''
+  );
   const [weight, setWeight] = useState(suggestion ? String(suggestion.weight) : '');
   const [rpe, setRpe] = useState('');
-  const [duration, setDuration] = useState('');
-  const [distance, setDistance] = useState('');
+  const [duration, setDuration] = useState(target.targetDurationMin ? String(target.targetDurationMin) : '');
+  const [distance, setDistance] = useState(target.targetDistanceKm ? String(target.targetDistanceKm) : '');
   const [error, setError] = useState<string | null>(null);
 
   function handleAdd(e: FormEvent) {
@@ -273,6 +290,7 @@ function RoutineActivityCard({
   return (
     <form onSubmit={handleAdd} className="card-brutal flex flex-col gap-3">
       <p className="font-display text-xl text-paper">{fullActivityName(activity)}</p>
+      {goal && <p className="font-mono text-xs text-acid">Meta: {goal}</p>}
       {suggestion && (
         <p className="font-mono text-xs text-paper-dim">{suggestionHint(suggestion)}</p>
       )}
@@ -311,7 +329,7 @@ export default function WorkoutLogger({ activities, plans }: Props) {
   const [loggedSessions, setLoggedSessions] = useState<LoggedSession[]>([]);
   const [planId, setPlanId] = useState<string | undefined>(undefined);
   const [routineDaysMap, setRoutineDaysMap] = useState<RoutineDays | null>(null);
-  const [todayActivities, setTodayActivities] = useState<ActivityOption[]>([]);
+  const [todayActivities, setTodayActivities] = useState<TodayActivityEntry[]>([]);
   const [pastWorkouts, setPastWorkouts] = useState<WorkoutWithSets[]>([]);
 
   const [selectedActivity, setSelectedActivity] = useState<ActivityOption | null>(null);
@@ -361,11 +379,14 @@ export default function WorkoutLogger({ activities, plans }: Props) {
       return;
     }
     const weekday = getTodayWeekday(new Date(`${date}T00:00:00`));
-    const ids = routineDaysMap[weekday] ?? [];
+    const entries = routineDaysMap[weekday] ?? [];
     setTodayActivities(
-      ids
-        .map((id) => activities.find((a) => a.id === id))
-        .filter((a): a is ActivityOption => a !== undefined)
+      entries
+        .map((entry) => {
+          const activity = activities.find((a) => a.id === entryActivityId(entry));
+          return activity ? { activity, target: entryTarget(entry) } : null;
+        })
+        .filter((e): e is TodayActivityEntry => e !== null)
     );
   }, [date, routineDaysMap, activities]);
 
@@ -505,10 +526,11 @@ export default function WorkoutLogger({ activities, plans }: Props) {
             {date === new Date().toISOString().slice(0, 10) ? 'Hoy toca' : 'Ese día toca'}
           </p>
           <div className="grid gap-4 sm:grid-cols-2">
-            {todayActivities.map((activity) => (
+            {todayActivities.map(({ activity, target }) => (
               <RoutineActivityCard
                 key={activity.id}
                 activity={activity}
+                target={target}
                 workouts={pastWorkouts}
                 onAddSet={addLoggedSet}
                 onAddSession={addLoggedSession}
