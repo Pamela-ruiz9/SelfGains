@@ -7,6 +7,7 @@ export interface ActivityOption {
   discipline: 'gym' | 'running' | 'natacion' | 'combate';
   metricType: 'sets' | 'session';
   group?: string;
+  description?: string;
 }
 
 export const DISCIPLINES: { id: ActivityOption['discipline']; label: string }[] = [

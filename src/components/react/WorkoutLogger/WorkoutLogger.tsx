@@ -294,6 +294,9 @@ function RoutineActivityCard({
   return (
     <form onSubmit={handleAdd} className="card-brutal flex flex-col gap-3">
       <p className="font-display text-xl text-paper">{fullActivityName(activity)}</p>
+      {activity.description && (
+        <p className="font-mono text-xs text-paper-dim">{activity.description}</p>
+      )}
       {goal && <p className="font-mono text-xs text-acid">Meta: {goal}</p>}
       {suggestion && (
         <p className="font-mono text-xs text-paper-dim">{suggestionHint(suggestion)}</p>
@@ -547,6 +550,9 @@ export default function WorkoutLogger({ activities, plans }: Props) {
       <form onSubmit={handleAddActivity} className="card-brutal flex flex-col gap-4">
         <p className="label-brutal text-acid">Agregar otra actividad</p>
         <ActivityPicker activities={activities} onSelect={setSelectedActivity} />
+        {selectedActivity?.description && (
+          <p className="font-mono text-xs text-paper-dim">{selectedActivity.description}</p>
+        )}
         {freeFormSuggestion && (
           <p className="font-mono text-xs text-paper-dim">{suggestionHint(freeFormSuggestion)}</p>
         )}

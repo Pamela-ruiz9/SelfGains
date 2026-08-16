@@ -22,6 +22,7 @@ const activities = activityEntries
     discipline: e.data.discipline,
     metricType: e.data.metricType,
     group: e.data.metricType === 'session' ? e.data.group : undefined,
+    description: e.body?.trim() ?? '',
   }))
   .sort((a, b) => a.name.localeCompare(b.name));
 ---

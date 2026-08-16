@@ -75,6 +75,9 @@ function DayActivityPicker({
   return (
     <div className="flex flex-col gap-2">
       <ActivityPicker activities={activities} onSelect={setSelected} />
+      {selected?.description && (
+        <p className="font-mono text-xs text-paper-dim">{selected.description}</p>
+      )}
       {selected?.metricType === 'sets' && (
         <div className="grid grid-cols-2 gap-2">
           <input
