@@ -1,0 +1,16 @@
+{
+  "name": "SelfGains",
+  "short_name": "SelfGains",
+  "description": "Registro de entrenamientos, rutinas y progreso — gym, running, natación y combate.",
+  "lang": "es",
+  "start_url": "/SelfGains/",
+  "scope": "/SelfGains/",
+  "display": "standalone",
+  "background_color": "#0c0c0a",
+  "theme_color": "#0c0c0a",
+  "icons": [
+    { "src": "/SelfGains/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/SelfGains/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/SelfGains/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
