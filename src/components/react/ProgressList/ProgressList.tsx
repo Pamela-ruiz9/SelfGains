@@ -214,6 +214,7 @@ export default function ProgressList({ exerciseNames, exercises, activities }: P
           exerciseNames={exerciseNames}
           activities={activities}
           onChanged={loadWorkouts}
+          filterDiscipline={selectedDiscipline}
         />
       </div>
     </div>

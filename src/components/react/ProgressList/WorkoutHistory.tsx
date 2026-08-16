@@ -25,6 +25,7 @@ interface Props {
   exerciseNames: Record<string, string>;
   activities: ActivityOption[];
   onChanged: () => void;
+  filterDiscipline?: string | null;
 }
 
 function SetRow({
@@ -240,7 +241,13 @@ function DisciplineTags({ disciplines }: { disciplines: string[] }) {
   );
 }
 
-export default function WorkoutHistory({ workouts, exerciseNames, activities, onChanged }: Props) {
+export default function WorkoutHistory({
+  workouts,
+  exerciseNames,
+  activities,
+  onChanged,
+  filterDiscipline,
+}: Props) {
   const [error, setError] = useState<string | null>(null);
   const activityById = new Map(activities.map((a) => [a.id, a]));
 
@@ -253,6 +260,10 @@ export default function WorkoutHistory({ workouts, exerciseNames, activities, on
     }
     return DISCIPLINES.map((d) => d.id).filter((id) => found.has(id));
   }
+
+  const visibleWorkouts = filterDiscipline
+    ? workouts.filter((w) => disciplinesForWorkout(w).includes(filterDiscipline))
+    : workouts;
 
   async function handleDeleteWorkout(workoutId: string) {
     if (!confirm('¿Eliminar todo el entrenamiento de este día? Esta acción no se puede deshacer.')) {
@@ -270,7 +281,12 @@ export default function WorkoutHistory({ workouts, exerciseNames, activities, on
   return (
     <div className="flex flex-col gap-5">
       {error && <p className="border-l-2 border-blood pl-3 font-mono text-sm text-blood">{error}</p>}
-      {workouts.map((w) => (
+      {visibleWorkouts.length === 0 && (
+        <p className="font-mono text-sm text-paper-dim">
+          No hay entrenamientos de esta disciplina todavía.
+        </p>
+      )}
+      {visibleWorkouts.map((w) => (
         <div key={w.id} className="card-brutal">
           <div className="flex items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-3">
