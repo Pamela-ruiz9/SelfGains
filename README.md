@@ -69,5 +69,24 @@ configuradas en Settings → Secrets and variables → Actions → Variables.
       músculo para ver qué ejercicios lo trabajan (detalle en
       `docs/agents/muscle-explorer-3d-status.md`)
 - [x] Planes predefinidos que referencien la taxonomía muscular
-- [x] Sugerencia de progresión automática
-- [x] Gráficas de progreso y cálculo de PRs
+- [x] Sugerencia de progresión automática (autoregulada por RPE, con deload
+      automático — detalle en `docs/agents/progreso-graficas-prs-status.md`)
+- [x] Gráficas de progreso y cálculo de PRs (gym y cardio)
+- [x] Entrenamiento multi-disciplina (gym, running, natación, combate —
+      detalle en `docs/agents/multi-disciplina-status.md`)
+- [x] Rutinas: predefinidas o propias, con targets por actividad, CRUD
+      completo, adherencia semanal (detalle en `docs/agents/rutinas-status.md`)
+- [x] Perfil de usuario: foto, medidas corporales, tema claro/oscuro y color
+      de acento personalizable (detalle en
+      `docs/agents/perfil-y-personalizacion-status.md`)
+- [x] Progreso rediseñado: medidas corporales con historial, resumen y
+      filtrado por disciplina (detalle en
+      `docs/agents/progreso-graficas-prs-status.md`)
+- [x] Nav móvil con barra inferior + UX de registro en vivo (copiar
+      entrenamiento anterior, barra de progreso, botones grandes para cardio
+      — detalle en `docs/agents/mobile-nav-y-registro-ux-status.md`)
+- [x] Logo / favicon / ícono de app (detalle en
+      `docs/agents/logo-identidad-status.md`)
+- [ ] Suite de tests automatizada — toda la verificación hoy es manual vía
+      Playwright contra Supabase real (ver
+      `docs/agents/notas-de-entorno-y-lecciones.md`)

@@ -1,5 +1,12 @@
 # Gráficas de progreso y PRs — estado
 
+> **2026-08-15/16:** esta página se rediseñó por completo (medidas corporales,
+> resumen por disciplina, PRs de cardio, filtrado). El resto de este archivo
+> es la versión original (2026-08-06); ver `## Rediseño completo (2026-08-15)`
+> más abajo para el estado real actual. Se deja el historial original sin
+> reescribir porque sigue siendo correcto para lo que describe (la grilla de
+> PRs de gym y su gráfica no cambiaron de lógica, solo de contexto alrededor).
+
 Página `/progreso/`: grilla de récords personales (peso máximo por ejercicio, agrupada por músculo) + gráfica de peso máximo por sesión a lo largo del tiempo para un ejercicio elegido, arriba del historial de entrenamientos que ya existía. Spec y plan en `docs/superpowers/specs/2026-08-06-selfgains-progreso-graficas-prs-design.md` y `docs/superpowers/plans/2026-08-06-progreso-graficas-prs.md`.
 
 ## Completado (2026-08-06)
@@ -28,23 +35,41 @@ Commits: `489ebd4`, `f0be2af`, `8f693eb`, `febc7d5`, `7ce7a69`, `bfc5e07`.
 - Sin notificación/resaltado al lograr un PR nuevo en el momento de guardar (`WorkoutLogger` no cambia).
 - Sin suite de tests automatizada (consistente con el resto del proyecto).
 
-## Pendiente: "Sugerencia de progresión automática" — PAUSADA (2026-08-06)
+## "Sugerencia de progresión automática" — RESUELTO (2026-08-15)
 
-Era el último ítem del roadmap original. Se empezó a brainstormear pero **se pausó antes de escribir spec o plan** — no hay artefactos de diseño, solo estas notas de lo que se alcanzó a decidir:
+Ya no está pausado. Se retomó y se implementó completo, con un esquema distinto al que se estaba evaluando acá (ver por qué en "Ya decidido" abajo — la pista de "+2.5kg fijo" que quedó sin confirmar se descartó explícitamente):
 
-**Ya decidido (si se retoma, no volver a preguntar):**
-- Tipo de sugerencia: más peso, mismas reps que la última vez (no 1RM, no doble progresión por reps).
-- Base: la serie más pesada de la sesión **más reciente** de ese ejercicio (no el PR histórico) — coherente con progresión lineal clásica (intentás superar tu última salida, no tu mejor marca de siempre).
-- Ubicación: en "Registrar entrenamiento", precargando los campos de reps/peso (editable), tanto en las tarjetas "Hoy toca" de una rutina activa como al elegir un ejercicio del formulario libre.
+- **Esquema final: autoregulado por RPE, no incremento fijo.** El usuario rechazó "+2.5kg siempre" en cuanto se lo propuse ("porque no mejor sugerimos subir de peso hasta que la tasa de esfuerzo comience a bajar mucho, tambien ese rate no tiene escala") — dos problemas con la idea original: ignoraba el esfuerzo real, y RPE no tenía ninguna referencia visible en la UI.
+- Reglas implementadas en `src/lib/prs.ts` (`suggestNextSet`): sugiere subir +2.5kg solo tras **3 sesiones consecutivas con RPE < 4** (umbral bajo = "muy fácil, subí"); sugiere bajar el peso **-10%** tras **3 sesiones consecutivas con RPE ≥ 9** sin haber subido peso (estancamiento al límite → deload); en cualquier otro caso, sugiere repetir el mismo peso/reps de la última sesión.
+- Se agregó una leyenda de la escala RPE (0–10, con referencias tipo "8–9 = 1–2 reps en reserva") junto a los campos de RPE en el formulario — no existía ninguna referencia antes, que era parte del problema original.
+- Se muestra tanto en las tarjetas "Hoy toca" de rutina activa como en el selector libre de `WorkoutLogger`, con el motivo visible ("+2.5 kg — llevas 3 sesiones con RPE bajo", "-10% — llevas 3 sesiones al límite sin avanzar", o "igual que tu última sesión").
+- `WorkoutLogger` ahora sí carga historial (`getWorkoutsForCurrentUser` + `getSetsForWorkout`), que es lo que esta nota decía que faltaba.
+- Guardar un set que iguala o supera el PR previo del ejercicio resalta el mensaje de guardado con "¡Nuevo PR en X!" (ver `buildSavedMessage` en `WorkoutLogger.tsx`).
 
-**Explícitamente rechazado:**
-- Incremento distinto por grupo muscular (ej. +2.5kg tren superior / +5kg tren inferior) — el usuario dijo "no me gustó" la clasificación propuesta, sin especificar por qué ni proponer una alternativa. **No asumir la clasificación que yo había armado si se retoma** — la lista completa de qué músculo iba en qué grupo se descartó junto con la idea.
+Commits: `15208c8`, `45c6906`, `ed9cc4a`.
 
-**Sin decidir:**
-- Qué incremento usar en su lugar (la opción más simple sobre la mesa era +2.5kg fijo para todo, pero nunca se confirmó — se pausó en esa pregunta).
-- Todo el diseño técnico (de dónde sale "la sesión más reciente" — WorkoutLogger hoy NO carga historial de entrenamientos pasados, solo la rutina activa; habría que sumar un fetch nuevo tipo `getWorkoutsForCurrentUser`/`getSetsForWorkout`, mismo patrón que ya usa `ProgressList`).
+## Rediseño completo (2026-08-15)
+
+La página completa se repensó varias veces en la misma sesión, en pasadas sucesivas:
+
+1. **Resumen por disciplina** (`34d6b78`) — tarjetas clickeables arriba de todo, una por disciplina que el usuario realmente practica (gym/running/natación/combate — nunca las 4 si solo entrena gym), con conteo de sesiones/series/minutos. Clickear una tarjeta filtra todo lo de abajo a esa disciplina.
+2. **PRs de cardio** (`8231ea9`, `6a6ca19`, del 2026-08-06 pero recién expuestos en el rediseño) — para running/natación: distancia, tiempo y **ritmo** (`distancia / tiempo`, no al revés), calculado en `calculateCardioPRs`/`progressForCardioActivity` en `prs.ts`, con su propia gráfica (`CardioProgressChart.tsx`).
+3. **Medidas corporales** (`78d1a51`) — tabla nueva `measurements` en Supabase (peso, estatura, cintura, cadera, brazo, pierna; una fila por usuario+fecha, upsert), tarjetas de resumen (`MeasurementsSummary.tsx`) con la última medida de cada campo, clickeables para ver su historial en gráfica (`MeasurementsChart.tsx`, Recharts otra vez). El recordatorio para actualizarlas está atado al vencimiento de la rutina activa (banner en `/rutinas/` y `/perfil/`), no a un cron/notificación — decisión explícita del usuario sobre las dos opciones que se le plantearon.
+4. **Entrenamientos por día con etiquetas de disciplina** (`WorkoutHistory.tsx`, extraído en `976922c` junto con el resto del CRUD de rutinas/sets/sesiones, etiquetas de disciplina agregadas después en `78d1a51`) — el historial se agrupa por día, con una etiqueta de color por disciplina practicada ese día (mismo mapa de colores `DISCIPLINE_COLORS` que usa el resto de la app), y tiene edición/borrado in-place de cada set/sesión.
+5. **Filtrado del historial por disciplina seleccionada** (`46c2447`, 2026-08-15 tarde) — pedido explícito del usuario después de que el resumen por disciplina ya filtraba los PRs pero no "Entrenamientos": clickear una disciplina ahora también filtra qué días se muestran abajo, no solo los PRs de arriba.
+
+Commits (todos 2026-08-15 salvo donde se indica): `34d6b78`, `78d1a51`, `46c2447`, más `8231ea9`/`6a6ca19` (2026-08-06, expuestos recién acá).
+
+## Lo que falta / limitaciones conocidas (actualizado 2026-08-16)
+
+- Sin 1RM estimado (explícitamente fuera de alcance del spec original).
+- Sin gráfica de volumen, solo peso máximo por sesión (gym) / ritmo por sesión (cardio).
+- Sin comparar/superponer más de un ejercicio o actividad en la misma gráfica.
+- Sin filtrado por rango de fechas (siempre muestra el historial completo, aunque ahora sí se puede filtrar por disciplina).
+- Sin suite de tests automatizada (consistente con el resto del proyecto) — toda la verificación es manual vía Playwright contra Supabase real, ver notas de cada commit y `docs/agents/notas-de-entorno-y-lecciones.md`.
+- El deload (-10%) y el progreso (+2.5kg) usan umbrales fijos sin que el usuario los pueda ajustar — no hay configuración de "qué tan agresivo" quiere el autoregulado.
 
 ## Si se retoma
 
-- Arrancar el brainstorming preguntando de nuevo por el esquema de incremento (no reusar la clasificación por músculo ya rechazada).
-- Revisar `src/lib/prs.ts` antes de diseñar — `progressForExercise` ya calcula "peso máximo por fecha" para un ejercicio, es la pieza más reusable para esta feature.
+- El límite real que queda es el diseño técnico del deload/progresión si algún día se quiere hacer configurable — hoy `LOW_RPE_THRESHOLD`, `HIGH_RPE_THRESHOLD`, `STREAK_REQUIRED`, `WEIGHT_INCREMENT_KG`, `DELOAD_FACTOR` son constantes en `src/lib/prs.ts`, no vienen de ningún lado editable por el usuario.
+- Si se agrega volumen o 1RM, `progressForExercise`/`calculatePRs` en `src/lib/prs.ts` siguen siendo el punto de entrada natural — no hay que tocar el modelo de datos, ya se guarda todo lo necesario (`reps`, `weight`, `rpe` por set).
