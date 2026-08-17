@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import Nav from '../components/astro/Nav.astro';
+import { ClientRouter, fade } from 'astro:transitions';
 
 interface Props {
   title: string;
@@ -45,10 +46,11 @@ const base = import.meta.env.BASE_URL;
         });
       }
     </script>
+    <ClientRouter />
   </head>
   <body class="min-h-screen">
     <Nav />
-    <main class="mx-auto max-w-5xl px-4 py-10 pb-24 sm:px-6 sm:py-14">
+    <main transition:animate={fade({ duration: '0.2s' })} class="mx-auto max-w-5xl px-4 py-10 pb-24 sm:px-6 sm:py-14">
       <slot />
     </main>
   </body>
