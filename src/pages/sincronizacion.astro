@@ -1,0 +1,9 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ConflictResolution from '../components/react/SyncBanner/ConflictResolution';
+---
+<BaseLayout title="Sincronización">
+  <p class="label-brutal mb-3 text-acid">Cambios sin sincronizar</p>
+  <h1 class="mb-8 font-display text-5xl text-paper sm:text-6xl">CONFLICTOS</h1>
+  <ConflictResolution client:load />
+</BaseLayout>
