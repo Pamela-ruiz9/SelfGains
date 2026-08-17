@@ -242,7 +242,7 @@ function SteppedNumberField({
           type="button"
           onClick={() => onChange(bumpValue(value, -step))}
           aria-label={`Restar ${step} ${unit}`}
-          className="h-14 w-14 shrink-0 border-2 border-paper-dim/50 font-display text-2xl text-paper active:border-acid active:text-acid"
+          className="h-14 w-14 shrink-0 border-2 border-paper-dim/50 font-display text-2xl text-paper transition-transform duration-100 active:scale-95 active:border-acid active:text-acid"
         >
           −
         </button>
@@ -259,7 +259,7 @@ function SteppedNumberField({
           type="button"
           onClick={() => onChange(bumpValue(value, step))}
           aria-label={`Sumar ${step} ${unit}`}
-          className="h-14 w-14 shrink-0 border-2 border-paper-dim/50 font-display text-2xl text-paper active:border-acid active:text-acid"
+          className="h-14 w-14 shrink-0 border-2 border-paper-dim/50 font-display text-2xl text-paper transition-transform duration-100 active:scale-95 active:border-acid active:text-acid"
         >
           +
         </button>
@@ -900,7 +900,9 @@ export default function WorkoutLogger({ activities, plans }: Props) {
 
       {error && <p className="border-l-2 border-blood pl-3 font-mono text-sm text-blood">{error}</p>}
       {savedMessage && (
-        <p className="border-l-2 border-acid pl-3 font-mono text-sm text-acid">{savedMessage}</p>
+        <p key={savedMessage} className="reveal border-l-2 border-acid pl-3 font-mono text-sm text-acid">
+          {savedMessage}
+        </p>
       )}
 
       <button
