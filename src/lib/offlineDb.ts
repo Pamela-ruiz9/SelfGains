@@ -52,6 +52,9 @@ export function getOfflineDb(): Promise<IDBPDatabase<SelfGainsOfflineDB>> {
         db.createObjectStore('queue', { keyPath: 'id', autoIncrement: true });
         db.createObjectStore('conflicts', { keyPath: 'id', autoIncrement: true });
       },
+    }).catch((err) => {
+      dbPromise = null;
+      throw err;
     });
   }
   return dbPromise;
