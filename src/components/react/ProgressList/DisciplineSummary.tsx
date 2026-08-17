@@ -25,7 +25,7 @@ export default function DisciplineSummary({ summaries, selected, onSelect }: Pro
             type="button"
             onClick={() => onSelect(selected === s.discipline ? null : s.discipline)}
             style={{ borderTopColor: DISCIPLINE_COLORS[s.discipline] ?? undefined }}
-            className={`card-brutal flex flex-col gap-1 border-t-4 text-left transition-colors hover:border-acid ${
+            className={`card-brutal card-brutal-tap flex flex-col gap-1 border-t-4 text-left transition-colors hover:border-acid ${
               selected === s.discipline ? 'border-acid' : ''
             }`}
           >

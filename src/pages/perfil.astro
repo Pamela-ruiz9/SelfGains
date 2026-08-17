@@ -1,9 +1,13 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ProfileForm from '../components/react/Profile/ProfileForm';
+import InstallPrompt from '../components/react/InstallPrompt/InstallPrompt';
 ---
 <BaseLayout title="Perfil">
   <p class="label-brutal mb-3 text-acid">Tu cuenta</p>
   <h1 class="mb-8 font-display text-5xl text-paper sm:text-6xl">PERFIL</h1>
   <ProfileForm client:load />
+  <div class="mt-6">
+    <InstallPrompt client:load variant="card" />
+  </div>
 </BaseLayout>

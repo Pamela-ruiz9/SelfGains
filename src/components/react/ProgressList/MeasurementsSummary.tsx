@@ -29,7 +29,7 @@ export default function MeasurementsSummary({ latest, selected, onSelect }: Prop
             key={key}
             type="button"
             onClick={() => onSelect(selected === key ? null : key)}
-            className={`card-brutal flex flex-col gap-1 text-left transition-colors hover:border-acid ${
+            className={`card-brutal card-brutal-tap flex flex-col gap-1 text-left transition-colors hover:border-acid ${
               selected === key ? 'border-acid' : ''
             }`}
           >

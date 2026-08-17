@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import Nav from '../components/astro/Nav.astro';
+import { ClientRouter, fade } from 'astro:transitions';
 
 interface Props {
   title: string;
@@ -16,6 +17,11 @@ const base = import.meta.env.BASE_URL;
     <link rel="icon" type="image/svg+xml" href={`${base}favicon.svg`} />
     <link rel="icon" type="image/png" sizes="32x32" href={`${base}favicon-32.png`} />
     <link rel="apple-touch-icon" href={`${base}apple-touch-icon.png`} />
+    <link rel="manifest" href={`${base}manifest.webmanifest`} />
+    <meta name="theme-color" content="#0c0c0a" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="SelfGains" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -33,10 +39,18 @@ const base = import.meta.env.BASE_URL;
         } catch (e) {}
       })();
     </script>
+    <script is:inline define:vars={{ swUrl: `${base}sw.js` }}>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register(swUrl).catch(() => {});
+        });
+      }
+    </script>
+    <ClientRouter />
   </head>
   <body class="min-h-screen">
     <Nav />
-    <main class="mx-auto max-w-5xl px-4 py-10 pb-24 sm:px-6 sm:py-14">
+    <main transition:animate={fade({ duration: '0.2s' })} class="mx-auto max-w-5xl px-4 py-10 pb-24 sm:px-6 sm:py-14">
       <slot />
     </main>
   </body>
