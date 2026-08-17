@@ -640,7 +640,18 @@ export async function deleteWorkout(workoutId: string): Promise<void> {
 // Reproducción de la cola al reconectar.
 // ---------------------------------------------------------------------
 
-export async function flushQueue(): Promise<void> {
+let flushInFlight: Promise<void> | null = null;
+
+export function flushQueue(): Promise<void> {
+  if (!flushInFlight) {
+    flushInFlight = runFlushQueue().finally(() => {
+      flushInFlight = null;
+    });
+  }
+  return flushInFlight;
+}
+
+async function runFlushQueue(): Promise<void> {
   if (!navigator.onLine) return;
   const tempIdMap = new Map<string, string>();
   let processedAny = false;
