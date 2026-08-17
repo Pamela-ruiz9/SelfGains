@@ -1,6 +1,7 @@
 import { supabase } from './supabase';
 import type { ActiveRoutine, Routine } from '../types/db';
 import type { RoutineDays } from './weekdays';
+import { isNetworkError, readCache, writeCache } from './offlineQueue';
 
 export async function createRoutine(name: string, days: RoutineDays): Promise<Routine> {
   const {
@@ -62,10 +63,21 @@ export async function activateRoutine(
 }
 
 export async function getActiveRoutine(): Promise<ActiveRoutine | null> {
-  const { data, error } = await supabase.from('active_routines').select('*').maybeSingle();
-
-  if (error) throw error;
-  return data as ActiveRoutine | null;
+  try {
+    const { data, error } = await supabase.from('active_routines').select('*').maybeSingle();
+    if (error) throw error;
+    const result = data as ActiveRoutine | null;
+    const { data: session } = await supabase.auth.getSession();
+    const userId = session.session?.user.id;
+    if (userId) await writeCache(`activeRoutine:${userId}`, result);
+    return result;
+  } catch (err) {
+    if (!isNetworkError(err)) throw err;
+    const { data: session } = await supabase.auth.getSession();
+    const userId = session.session?.user.id;
+    if (!userId) throw err;
+    return await readCache<ActiveRoutine | null>(`activeRoutine:${userId}`);
+  }
 }
 
 export async function updateRoutine(id: string, name: string, days: RoutineDays): Promise<Routine> {
