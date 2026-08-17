@@ -431,15 +431,46 @@ export async function updateSet(setId: string, reps: number, weight: number, rpe
   }
 }
 
+async function findQueuedUpdate(
+  type: 'updateSet' | 'updateSession',
+  idKey: 'setId' | 'sessionId',
+  id: string
+): Promise<QueueItem | undefined> {
+  const items = await getQueueItems();
+  return items.find((i) => i.type === type && (i.payload as Record<string, unknown>)[idKey] === id);
+}
+
+async function cancelDependentQueueItems(tempId: string): Promise<void> {
+  const items = await getQueueItems();
+  for (const item of items) {
+    if (item.dependsOnTempId === tempId) {
+      await removeQueueItem(item.id!);
+    }
+  }
+}
+
 async function queueUpdateSet(setId: string, reps: number, weight: number, rpe?: number): Promise<WorkoutSet> {
   const workoutId = await lookupSetWorkout(setId);
   const cached = workoutId ? ((await readCache<WorkoutSet[]>(`sets:${workoutId}`)) ?? []) : [];
   const existing = cached.find((s) => s.id === setId);
-  await enqueue({
-    type: 'updateSet',
-    payload: { setId, workoutId, reps, weight, rpe: rpe ?? null },
-    snapshotUpdatedAt: existing?.updated_at,
-  });
+
+  const pendingUpdate = await findQueuedUpdate('updateSet', 'setId', setId);
+  if (pendingUpdate) {
+    // Ya hay una edición offline de este mismo set en cola — se actualizan
+    // los valores pero se conserva el snapshotUpdatedAt original (el último
+    // valor confirmado por el servidor), para no generar un conflicto falso
+    // contra el propio cambio anterior todavía sin sincronizar.
+    await updateQueueItem(pendingUpdate.id!, {
+      payload: { ...pendingUpdate.payload, reps, weight, rpe: rpe ?? null },
+    });
+  } else {
+    await enqueue({
+      type: 'updateSet',
+      payload: { setId, workoutId, reps, weight, rpe: rpe ?? null },
+      snapshotUpdatedAt: existing?.updated_at,
+    });
+  }
+
   const optimistic: WorkoutSet = {
     id: setId,
     workout_id: workoutId ?? existing?.workout_id ?? '',
@@ -523,11 +554,20 @@ async function queueUpdateSession(
   const workoutId = await lookupSessionWorkout(sessionId);
   const cached = workoutId ? ((await readCache<WorkoutSession[]>(`sessions:${workoutId}`)) ?? []) : [];
   const existing = cached.find((s) => s.id === sessionId);
-  await enqueue({
-    type: 'updateSession',
-    payload: { sessionId, workoutId, durationMin, distanceKm: distanceKm ?? null },
-    snapshotUpdatedAt: existing?.updated_at,
-  });
+
+  const pendingUpdate = await findQueuedUpdate('updateSession', 'sessionId', sessionId);
+  if (pendingUpdate) {
+    await updateQueueItem(pendingUpdate.id!, {
+      payload: { ...pendingUpdate.payload, durationMin, distanceKm: distanceKm ?? null },
+    });
+  } else {
+    await enqueue({
+      type: 'updateSession',
+      payload: { sessionId, workoutId, durationMin, distanceKm: distanceKm ?? null },
+      snapshotUpdatedAt: existing?.updated_at,
+    });
+  }
+
   const optimistic: WorkoutSession = {
     id: sessionId,
     workout_id: workoutId ?? existing?.workout_id ?? '',
@@ -575,10 +615,13 @@ export async function deleteWorkout(workoutId: string): Promise<void> {
   const pending = await findQueuedCreateByTempId(workoutId);
   if (pending) {
     await removeQueueItem(pending.id!);
+    await cancelDependentQueueItems(workoutId);
     const userId = pending.payload.userId as string | undefined;
     if (userId) {
       await patchCacheArray<Workout>(`workouts:${userId}`, (items) => items.filter((w) => w.id !== workoutId));
     }
+    await patchCacheArray<WorkoutSet>(`sets:${workoutId}`, () => []);
+    await patchCacheArray<WorkoutSession>(`sessions:${workoutId}`, () => []);
     return;
   }
   try {
@@ -642,9 +685,19 @@ async function applyQueueItem(item: QueueItem, tempIdMap: Map<string, string>): 
         const realWorkoutId = item.dependsOnTempId ? tempIdMap.get(item.dependsOnTempId)! : p.workoutId;
         const set = await addSetRemote(realWorkoutId, p.exerciseId, p.setNumber, p.reps, p.weight, p.rpe ?? undefined);
         if (item.tempId) tempIdMap.set(item.tempId, set.id);
-        await patchCacheArray<WorkoutSet>(`sets:${realWorkoutId}`, (items) =>
-          items.map((s) => (s.id === item.tempId ? set : s))
-        );
+        if (item.dependsOnTempId) {
+          // El set se cacheó bajo la clave temporal del workout padre
+          // (todavía no sincronizado cuando se encoló) — migrar esa entrada
+          // puntual a la clave real en vez de patchear una clave nueva vacía.
+          await patchCacheArray<WorkoutSet>(`sets:${item.dependsOnTempId}`, (items) =>
+            items.filter((s) => s.id !== item.tempId)
+          );
+          await patchCacheArray<WorkoutSet>(`sets:${realWorkoutId}`, (items) => [...items, set]);
+        } else {
+          await patchCacheArray<WorkoutSet>(`sets:${realWorkoutId}`, (items) =>
+            items.map((s) => (s.id === item.tempId ? set : s))
+          );
+        }
         await indexSetWorkout(set.id, realWorkoutId);
         return 'ok';
       }
@@ -663,9 +716,16 @@ async function applyQueueItem(item: QueueItem, tempIdMap: Map<string, string>): 
           p.distanceKm ?? undefined
         );
         if (item.tempId) tempIdMap.set(item.tempId, session.id);
-        await patchCacheArray<WorkoutSession>(`sessions:${realWorkoutId}`, (items) =>
-          items.map((s) => (s.id === item.tempId ? session : s))
-        );
+        if (item.dependsOnTempId) {
+          await patchCacheArray<WorkoutSession>(`sessions:${item.dependsOnTempId}`, (items) =>
+            items.filter((s) => s.id !== item.tempId)
+          );
+          await patchCacheArray<WorkoutSession>(`sessions:${realWorkoutId}`, (items) => [...items, session]);
+        } else {
+          await patchCacheArray<WorkoutSession>(`sessions:${realWorkoutId}`, (items) =>
+            items.map((s) => (s.id === item.tempId ? session : s))
+          );
+        }
         await indexSessionWorkout(session.id, realWorkoutId);
         return 'ok';
       }
@@ -738,7 +798,11 @@ async function applyQueueItem(item: QueueItem, tempIdMap: Map<string, string>): 
     if (isNetworkError(err)) return 'network-error';
     // Cualquier otro error (violación de FK porque el workout padre ya no
     // existe, o cualquier fallo inesperado) se muestra como conflicto en
-    // vez de trabar el resto de la cola — ver sección 3.7 y 4 del spec.
+    // vez de trabar el resto de la cola — ver sección 3.7 y 4 del spec. Se
+    // deja un log porque este mismo camino también captura bugs reales, no
+    // solo conflictos legítimos, y así queda un rastro para diagnosticarlos.
+    console.error('[selfgains] no se pudo sincronizar un cambio offline, se guarda como conflicto', item, err);
+    if (item.tempId) await cancelDependentQueueItems(item.tempId);
     await addConflict(item, null);
     return 'ok';
   }
