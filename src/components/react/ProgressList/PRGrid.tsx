@@ -31,7 +31,7 @@ export default function PRGrid({ prs, exercises, onSelectExercise }: Props) {
                 key={pr.exerciseId}
                 type="button"
                 onClick={() => onSelectExercise(pr.exerciseId)}
-                className="card-brutal flex flex-col gap-1 text-left transition-colors hover:border-acid"
+                className="card-brutal card-brutal-tap flex flex-col gap-1 text-left transition-colors hover:border-acid"
               >
                 <span className="font-display text-xl text-paper">
                   {exerciseNameById.get(pr.exerciseId) ?? pr.exerciseId}

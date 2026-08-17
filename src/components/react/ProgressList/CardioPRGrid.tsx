@@ -27,7 +27,7 @@ export default function CardioPRGrid({ prs, activities, onSelectActivity }: Prop
                 key={pr.activityId}
                 type="button"
                 onClick={() => onSelectActivity(pr.activityId)}
-                className="card-brutal flex flex-col gap-1 text-left transition-colors hover:border-acid"
+                className="card-brutal card-brutal-tap flex flex-col gap-1 text-left transition-colors hover:border-acid"
               >
                 <span className="font-display text-xl text-paper">
                   {nameById.get(pr.activityId) ?? pr.activityId}

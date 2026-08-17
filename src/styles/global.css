@@ -93,8 +93,13 @@
 
   .btn-brutal-sm {
     @apply inline-flex items-center justify-center border-2 border-paper bg-surface-raised px-4 py-2
-      font-display text-base uppercase tracking-wide text-paper transition-colors duration-150
-      hover:bg-acid hover:text-on-accent disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-surface-raised disabled:hover:text-paper;
+      font-display text-base uppercase tracking-wide text-paper transition duration-150
+      hover:bg-acid hover:text-on-accent active:scale-95
+      disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-surface-raised disabled:hover:text-paper;
+  }
+
+  .card-brutal-tap {
+    @apply transition-transform duration-100 active:scale-[0.98];
   }
 
   .card-brutal {
