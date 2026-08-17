@@ -32,8 +32,11 @@ export async function writeCache<T>(key: string, value: T): Promise<void> {
 }
 
 export async function patchCacheArray<T>(key: string, updater: (items: T[]) => T[]): Promise<void> {
-  const current = (await readCache<T[]>(key)) ?? [];
-  await writeCache(key, updater(current));
+  const db = await getOfflineDb();
+  const tx = db.transaction('cache', 'readwrite');
+  const current = ((await tx.store.get(key)) as T[] | undefined) ?? [];
+  await tx.store.put(updater(current), key);
+  await tx.done;
 }
 
 export async function enqueue(item: Omit<QueueItem, 'id' | 'createdAt'>): Promise<QueueItem> {
@@ -45,9 +48,14 @@ export async function enqueue(item: Omit<QueueItem, 'id' | 'createdAt'>): Promis
 
 export async function updateQueueItem(id: number, updates: Partial<QueueItem>): Promise<void> {
   const db = await getOfflineDb();
-  const existing = await db.get('queue', id);
-  if (!existing) return;
-  await db.put('queue', { ...existing, ...updates });
+  const tx = db.transaction('queue', 'readwrite');
+  const existing = await tx.store.get(id);
+  if (!existing) {
+    await tx.done;
+    return;
+  }
+  await tx.store.put({ ...existing, ...updates });
+  await tx.done;
 }
 
 export async function getQueueItems(): Promise<QueueItem[]> {
@@ -71,9 +79,12 @@ export async function findQueuedCreateByTempId(tempId: string): Promise<QueueIte
 }
 
 export async function indexSetWorkout(setId: string, workoutId: string): Promise<void> {
-  const index = (await readCache<Record<string, string>>('setWorkoutIndex')) ?? {};
+  const db = await getOfflineDb();
+  const tx = db.transaction('cache', 'readwrite');
+  const index = ((await tx.store.get('setWorkoutIndex')) as Record<string, string> | undefined) ?? {};
   index[setId] = workoutId;
-  await writeCache('setWorkoutIndex', index);
+  await tx.store.put(index, 'setWorkoutIndex');
+  await tx.done;
 }
 
 export async function lookupSetWorkout(setId: string): Promise<string | undefined> {
@@ -82,9 +93,12 @@ export async function lookupSetWorkout(setId: string): Promise<string | undefine
 }
 
 export async function indexSessionWorkout(sessionId: string, workoutId: string): Promise<void> {
-  const index = (await readCache<Record<string, string>>('sessionWorkoutIndex')) ?? {};
+  const db = await getOfflineDb();
+  const tx = db.transaction('cache', 'readwrite');
+  const index = ((await tx.store.get('sessionWorkoutIndex')) as Record<string, string> | undefined) ?? {};
   index[sessionId] = workoutId;
-  await writeCache('sessionWorkoutIndex', index);
+  await tx.store.put(index, 'sessionWorkoutIndex');
+  await tx.done;
 }
 
 export async function lookupSessionWorkout(sessionId: string): Promise<string | undefined> {
