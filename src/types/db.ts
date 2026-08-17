@@ -18,6 +18,7 @@ export interface WorkoutSet {
   weight: number;
   rpe: number | null;
   created_at: string;
+  updated_at: string;
 }
 
 export interface Routine {
@@ -44,6 +45,7 @@ export interface WorkoutSession {
   duration_min: number;
   distance_km: number | null;
   created_at: string;
+  updated_at: string;
 }
 
 export interface Measurement {

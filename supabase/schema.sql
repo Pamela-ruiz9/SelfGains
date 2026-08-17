@@ -179,3 +179,21 @@ create policy "Users can manage their own measurements"
   with check (auth.uid() = user_id);
 
 create index idx_measurements_user_date on measurements(user_id, date);
+
+-- updated_at + trigger para detección de conflictos en la sincronización
+-- offline (docs/superpowers/specs/2026-08-16-logueo-offline-y-sync-design.md).
+-- workouts no lo necesita: no tiene UPDATE hoy, solo DELETE.
+alter table workout_sets add column updated_at timestamptz not null default now();
+alter table workout_sessions add column updated_at timestamptz not null default now();
+
+create or replace function set_updated_at() returns trigger as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$ language plpgsql;
+
+create trigger workout_sets_set_updated_at before update on workout_sets
+  for each row execute function set_updated_at();
+create trigger workout_sessions_set_updated_at before update on workout_sessions
+  for each row execute function set_updated_at();
