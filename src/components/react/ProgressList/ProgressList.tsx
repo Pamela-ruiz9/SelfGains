@@ -82,6 +82,14 @@ export default function ProgressList({ exerciseNames, exercises, activities }: P
     });
   }, []);
 
+  useEffect(() => {
+    function onSyncComplete() {
+      loadWorkouts();
+    }
+    window.addEventListener('selfgains:sync-complete', onSyncComplete);
+    return () => window.removeEventListener('selfgains:sync-complete', onSyncComplete);
+  }, []);
+
   const prs = calculatePRs(workouts);
   const muscleGroups = groupPRsByMuscle(prs, exercises);
 

@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import Nav from '../components/astro/Nav.astro';
+import SyncBanner from '../components/react/SyncBanner/SyncBanner';
 import { ClientRouter, fade } from 'astro:transitions';
 
 interface Props {
@@ -50,6 +51,7 @@ const base = import.meta.env.BASE_URL;
   </head>
   <body class="min-h-screen">
     <Nav />
+    <SyncBanner client:load />
     <main transition:animate={fade({ duration: '0.2s' })} class="mx-auto max-w-5xl px-4 py-10 pb-24 sm:px-6 sm:py-14">
       <slot />
     </main>

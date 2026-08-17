@@ -454,7 +454,8 @@ export default function WorkoutLogger({ activities, plans }: Props) {
   const [savedMessage, setSavedMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data }) => {
+    async function loadFromServer() {
+      const { data } = await supabase.auth.getSession();
       const loggedIn = data.session !== null;
       setIsLoggedIn(loggedIn);
       setAuthChecked(true);
@@ -481,7 +482,10 @@ export default function WorkoutLogger({ activities, plans }: Props) {
         const routine = await getRoutineById(active.routine_ref);
         setRoutineDaysMap(routine?.days ?? null);
       }
-    });
+    }
+    loadFromServer();
+    window.addEventListener('selfgains:sync-complete', loadFromServer);
+    return () => window.removeEventListener('selfgains:sync-complete', loadFromServer);
   }, [plans]);
 
   // Re-suggests the routine's activities for whichever weekday `date` falls
