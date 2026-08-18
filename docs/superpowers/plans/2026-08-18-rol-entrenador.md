@@ -4,7 +4,9 @@
 
 **Goal:** Cualquier usuario puede compartir un link corto de su perfil y conectarse con otro con consentimiento mutuo; si uno de los dos es entrenador (autodeclarado), puede además crearle rutinas directamente al otro, que quedan 100% de quien las recibe.
 
-**Architecture:** Una tabla de conexión genérica y simétrica (`connections`) más un código de invitación corto (`invite_codes`) resuelven el consentimiento una sola vez para dos capacidades: verse el perfil básico (siempre, entre conectados) y crear rutinas para el otro (solo si sos entrenador). Todo por RLS — sin funciones RPC de Postgres, siguiendo el patrón `supabase.from(...)` ya usado en todo el proyecto. Como el sitio es 100% estático (`output: 'static'`, GitHub Pages), el link de invitación usa un fragmento hash sobre una página fija (`/c/#CODIGO`) en vez de una ruta dinámica.
+**Architecture:** Una tabla de conexión genérica y simétrica (`connections`) más un código de invitación corto (`invite_codes`) resuelven el consentimiento una sola vez para dos capacidades: verse la identidad pública básica (siempre, entre conectados, vía la tabla `public_identities` — ver nota de cambio de alcance más abajo) y crear rutinas para el otro (solo si sos entrenador). Todo por RLS — sin funciones RPC de Postgres, siguiendo el patrón `supabase.from(...)` ya usado en todo el proyecto. Como el sitio es 100% estático (`output: 'static'`, GitHub Pages), el link de invitación usa un fragmento hash sobre una página fija (`/c/#CODIGO`) en vez de una ruta dinámica.
+
+**Nota sobre un cambio de alcance a mitad de implementación:** el diseño original de Task 1 (visible en el bloque SQL de abajo, tal como se ejecutó) daba a cualquier conexión una política de `select` sobre la fila completa de `profiles` del otro usuario. Un reviewer de calidad de código encontró que esto exponía columnas sensibles (medidas corporales) que la UI nunca pidió — RLS es por fila, no por columna. En vez de eso, Task 1 fue corregido con 3 commits de seguimiento (`3828919`, `8388d28`, `40787ec`) que: (a) reemplazaron `connections_no_self` por `connections_ordered check (user_a < user_b)` para que el orden canónico del par se garantice en la base, no solo en la app; (b) reemplazaron la política de `profiles` por una tabla física nueva, `public_identities` (solo `display_name`, `avatar_url`, `is_trainer` — sin ninguna columna sensible que filtrar); (c) actualizaron el spec para reflejar esto. El bloque SQL de Task 1 más abajo ya muestra el estado final corregido, no el original.
 
 **Tech Stack:** Astro 5 + React (patrón `client:load` ya establecido), Supabase (Postgres + RLS + Auth, ya en el stack), `crypto.getRandomValues` para generar el código corto — sin dependencias nuevas.
 
@@ -15,8 +17,9 @@
 ## File Structure
 
 - **Modify:** `supabase/schema.sql` — `profiles.is_trainer`, `routines.assigned_by_name`, tablas `invite_codes`/`connections`, políticas RLS nuevas.
-- **Modify:** `src/types/db.ts` — `Profile.is_trainer`, `Routine.assigned_by_name`, tipos `InviteCode`/`Connection`.
-- **Create:** `src/lib/connections.ts` — códigos de invitación, redención, listado y borrado de conexiones.
+- **Modify:** `src/types/db.ts` — `Profile.is_trainer`, `Routine.assigned_by_name`, tipos `InviteCode`/`Connection`/`PublicIdentity`.
+- **Modify:** `src/lib/profile.ts` — `upsertProfile` sincroniza `public_identities` en cada guardado.
+- **Create:** `src/lib/connections.ts` — códigos de invitación, redención, listado (leyendo `public_identities`) y borrado de conexiones.
 - **Modify:** `src/lib/routines.ts` — `assignRoutineToStudent`.
 - **Modify:** `src/components/react/Profile/ProfileForm.tsx` — checkbox "Soy entrenador".
 - **Create:** `src/components/react/Shared/Avatar.tsx` — avatar reusable con distintivo de entrenador.
@@ -34,7 +37,9 @@
 - Modify: `supabase/schema.sql`
 - Modify: `src/types/db.ts`
 
-- [ ] **Step 1: Agregar la migración al final de `supabase/schema.sql`**
+**Estado: ya ejecutado y committeado** (commits `78df461`, `9616013`, `3828919`, `8388d28`, `40787ec`). El bloque SQL de abajo es el estado final tal como quedó aplicado contra el proyecto Supabase real y reflejado en `supabase/schema.sql` — se deja íntegro acá solo como referencia histórica y por si hace falta reconstruir la migración desde cero; no hay que volver a ejecutar estos pasos.
+
+- [x] **Step 1: Migración agregada al final de `supabase/schema.sql`**
 
 ```sql
 
@@ -51,7 +56,7 @@ create table invite_codes (
 
 alter table invite_codes enable row level security;
 
-create policy "Cualquier usuario autenticado puede buscar un código para redimirlo"
+create policy "Cualquiera puede buscar un código para redimirlo"
   on invite_codes for select
   using (true);
 
@@ -69,7 +74,13 @@ create table connections (
   user_a uuid not null references auth.users(id) on delete cascade,
   user_b uuid not null references auth.users(id) on delete cascade,
   created_at timestamptz not null default now(),
-  constraint connections_no_self check (user_a <> user_b),
+  -- user_a < user_b (no self-connection since < excludes equality, plus
+  -- enforces canonical pair ordering so unique(user_a, user_b) catches a
+  -- duplicate regardless of which side redeemed whose invite code — see
+  -- docs/superpowers/specs/2026-08-18-rol-entrenador-design.md sección 1.
+  -- Verificado empíricamente: la comparación uuid < de Postgres coincide
+  -- con el orden de .sort() de JS sobre las mismas cadenas.
+  constraint connections_ordered check (user_a < user_b),
   unique (user_a, user_b)
 );
 
@@ -87,91 +98,39 @@ create policy "Cualquiera de los dos lados puede desvincularse"
   on connections for delete
   using (auth.uid() = user_a or auth.uid() = user_b);
 
-create policy "Usuarios conectados pueden verse el perfil básico entre sí"
-  on profiles for select
-  using (
-    exists (
-      select 1 from connections
-      where (connections.user_a = auth.uid() and connections.user_b = profiles.user_id)
-         or (connections.user_b = auth.uid() and connections.user_a = profiles.user_id)
-    )
-  );
-
-create policy "Un entrenador conectado puede crear rutinas para la otra persona"
-  on routines for insert
-  with check (
-    exists (
-      select 1 from profiles me
-      join connections c
-        on (c.user_a = auth.uid() and c.user_b = routines.user_id)
-        or (c.user_b = auth.uid() and c.user_a = routines.user_id)
-      where me.user_id = auth.uid() and me.is_trainer = true
-    )
-  );
-```
-
-- [ ] **Step 2: Aplicar la migración contra el proyecto real**
-
-```bash
-cat > /tmp/selfgains-trainer-migration.sql << 'EOF'
-alter table profiles add column is_trainer boolean not null default false;
-alter table routines add column assigned_by_name text;
-
-create table invite_codes (
+-- No se agrega una política de select entre conexiones directamente sobre
+-- profiles: RLS es por fila, no por columna — una política así expondría
+-- también las medidas corporales a cualquier conexión. En su lugar,
+-- public_identities es una tabla física separada que solo contiene los 3
+-- campos no sensibles necesarios para identificar una conexión en la UI
+-- (nombre, avatar, si es entrenador) — no hay ninguna columna sensible que
+-- filtrar porque no existe en esta tabla.
+create table public_identities (
   user_id uuid primary key references auth.users(id) on delete cascade,
-  code text not null unique,
-  created_at timestamptz not null default now()
+  display_name text,
+  avatar_url text,
+  is_trainer boolean not null default false,
+  updated_at timestamptz not null default now()
 );
 
-alter table invite_codes enable row level security;
+alter table public_identities enable row level security;
 
-create policy "Cualquier usuario autenticado puede buscar un código para redimirlo"
-  on invite_codes for select
-  using (true);
-
-create policy "Un usuario crea su propio código"
-  on invite_codes for insert
-  with check (auth.uid() = user_id);
-
-create policy "Un usuario puede regenerar su propio código"
-  on invite_codes for update
+create policy "Un usuario mantiene su propia identidad pública"
+  on public_identities for all
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
-create table connections (
-  id uuid primary key default gen_random_uuid(),
-  user_a uuid not null references auth.users(id) on delete cascade,
-  user_b uuid not null references auth.users(id) on delete cascade,
-  created_at timestamptz not null default now(),
-  constraint connections_no_self check (user_a <> user_b),
-  unique (user_a, user_b)
-);
-
-alter table connections enable row level security;
-
-create policy "Los dos lados de una conexión pueden verla"
-  on connections for select
-  using (auth.uid() = user_a or auth.uid() = user_b);
-
-create policy "Cualquiera puede conectarse a sí mismo con otro usuario"
-  on connections for insert
-  with check (auth.uid() = user_a or auth.uid() = user_b);
-
-create policy "Cualquiera de los dos lados puede desvincularse"
-  on connections for delete
-  using (auth.uid() = user_a or auth.uid() = user_b);
-
-create policy "Usuarios conectados pueden verse el perfil básico entre sí"
-  on profiles for select
+create policy "Usuarios conectados pueden ver la identidad pública del otro"
+  on public_identities for select
   using (
     exists (
       select 1 from connections
-      where (connections.user_a = auth.uid() and connections.user_b = profiles.user_id)
-         or (connections.user_b = auth.uid() and connections.user_a = profiles.user_id)
+      where (connections.user_a = auth.uid() and connections.user_b = public_identities.user_id)
+         or (connections.user_b = auth.uid() and connections.user_a = public_identities.user_id)
     )
   );
 
-create policy "Un entrenador conectado puede crear rutinas para la otra persona"
+create policy "Un entrenador conectado puede crearle rutinas al otro"
   on routines for insert
   with check (
     exists (
@@ -182,21 +141,13 @@ create policy "Un entrenador conectado puede crear rutinas para la otra persona"
       where me.user_id = auth.uid() and me.is_trainer = true
     )
   );
-EOF
-supabase db query --linked --file /tmp/selfgains-trainer-migration.sql
-rm /tmp/selfgains-trainer-migration.sql
 ```
-Expected: sin errores.
 
-- [ ] **Step 3: Verificar que las tablas y columnas existen**
+- [x] **Step 2: Migración aplicada contra el proyecto real** (vía `supabase db query --linked --file`, en varias tandas a medida que se corrigió el diseño — ver commits listados arriba)
 
-```bash
-supabase db query --linked "select table_name, column_name from information_schema.columns where (table_name = 'profiles' and column_name = 'is_trainer') or (table_name = 'routines' and column_name = 'assigned_by_name');"
-supabase db query --linked "select table_name from information_schema.tables where table_name in ('invite_codes', 'connections');"
-```
-Expected: dos filas en la primera consulta, dos filas en la segunda.
+- [x] **Step 3: Tablas y columnas verificadas** contra `information_schema` / `pg_policies` después de cada corrección — estado final confirmado en sincronía con el bloque SQL de arriba.
 
-- [ ] **Step 4: Actualizar `src/types/db.ts`**
+- [x] **Step 4: Actualizar `src/types/db.ts`** (nota: `PublicIdentity` no estaba en este paso original — se agrega en Task 2, Step 1, ya que ese task es el primero que necesita tipar la tabla `public_identities`)
 
 Reemplazar:
 
@@ -289,16 +240,115 @@ git commit -m "feat: add trainer role, invite codes, and connections to the sche
 
 ---
 
-### Task 2: `src/lib/connections.ts`
+### Task 2: `public_identities` (tipo + sync) y `src/lib/connections.ts`
+
+**Contexto:** el diseño cambió a mitad de implementación — ver "Nota sobre un cambio de alcance a mitad de implementación" en el spec. `public_identities` es una tabla física separada (ya creada en Task 1, commit `8388d28`) con solo 3 campos no sensibles (`display_name`, `avatar_url`, `is_trainer`) que un usuario conectado puede leer del otro. `profiles` completo (con medidas corporales) sigue siendo estrictamente privado — ninguna política de RLS lo expone entre conexiones. Este task agrega el tipo TS que falta, hace que `upsertProfile` mantenga `public_identities` sincronizada en cada guardado, y lee de ahí (no de `profiles`) al listar conexiones.
 
 **Files:**
+- Modify: `src/types/db.ts`
+- Modify: `src/lib/profile.ts`
 - Create: `src/lib/connections.ts`
 
-- [ ] **Step 1: Crear el archivo**
+- [ ] **Step 1: Agregar el tipo `PublicIdentity` en `src/types/db.ts`**
+
+Al final del archivo, después de `Connection`, agregar:
+
+```ts
+export interface PublicIdentity {
+  user_id: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  is_trainer: boolean;
+  updated_at: string;
+}
+```
+
+- [ ] **Step 2: Sincronizar `public_identities` en `upsertProfile` (`src/lib/profile.ts`)**
+
+Reemplazar el archivo completo:
 
 ```ts
 import { supabase } from './supabase';
 import type { Profile } from '../types/db';
+
+export async function getMyProfile(): Promise<Profile | null> {
+  const { data, error } = await supabase.from('profiles').select('*').maybeSingle();
+  if (error) throw error;
+  return data as Profile | null;
+}
+
+export async function upsertProfile(
+  changes: Partial<Omit<Profile, 'user_id' | 'updated_at'>>
+): Promise<Profile> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error('No hay sesión activa');
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .upsert({ user_id: user.id, ...changes, updated_at: new Date().toISOString() })
+    .select()
+    .single();
+
+  if (error) throw error;
+  const profile = data as Profile;
+
+  // public_identities es lo único que una conexión puede leer del otro lado
+  // (ver docs/superpowers/specs/2026-08-18-rol-entrenador-design.md sección
+  // 1) — se mantiene en espejo acá para que nunca quede desactualizada
+  // respecto al nombre/avatar/rol reales en `profiles`.
+  const { error: identityError } = await supabase.from('public_identities').upsert({
+    user_id: user.id,
+    display_name: profile.display_name,
+    avatar_url: profile.avatar_url,
+    is_trainer: profile.is_trainer,
+    updated_at: profile.updated_at,
+  });
+  if (identityError) throw identityError;
+
+  return profile;
+}
+
+// Always stored at a fixed path per user ({user_id}/avatar.<ext>) with
+// upsert:true, so a re-upload overwrites the previous file instead of
+// accumulating orphaned images — the storage RLS policies key off that same
+// {user_id}/... path prefix.
+export async function uploadAvatar(file: File): Promise<string> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error('No hay sesión activa');
+
+  const ext = file.name.split('.').pop()?.toLowerCase() ?? 'jpg';
+  const path = `${user.id}/avatar.${ext}`;
+  const { error } = await supabase.storage.from('avatars').upload(path, file, { upsert: true });
+  if (error) throw error;
+
+  const { data } = supabase.storage.from('avatars').getPublicUrl(path);
+  // Cache-bust: the path is stable across re-uploads, so without this the
+  // browser (and any cached <img>) would keep showing the old photo.
+  return `${data.publicUrl}?t=${Date.now()}`;
+}
+```
+
+- [ ] **Step 3: Verificar que compila**
+
+Run: `npm run build && npx tsc --noEmit`
+Expected: ambos limpios (mismo error preexistente de siempre).
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add src/types/db.ts src/lib/profile.ts
+git commit -m "feat: mirror display_name, avatar_url, and is_trainer into public_identities on save"
+```
+
+- [ ] **Step 5: Crear `src/lib/connections.ts`**
+
+```ts
+import { supabase } from './supabase';
+import type { PublicIdentity } from '../types/db';
 
 const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 
@@ -394,23 +444,27 @@ export async function getMyConnections(): Promise<ConnectionSummary[]> {
   if (rows.length === 0) return [];
 
   const otherIds = rows.map((r) => (r.user_a === user.id ? r.user_b : r.user_a));
-  const { data: profiles, error: profilesError } = await supabase
-    .from('profiles')
+  // public_identities, no profiles: es la única tabla que la política de
+  // RLS "Usuarios conectados pueden ver la identidad pública del otro"
+  // permite leer entre conexiones — profiles completo (con medidas
+  // corporales) nunca es legible fuera del dueño.
+  const { data: identities, error: identitiesError } = await supabase
+    .from('public_identities')
     .select('user_id, display_name, avatar_url, is_trainer')
     .in('user_id', otherIds);
 
-  if (profilesError) throw profilesError;
-  const profileById = new Map((profiles as Profile[]).map((p) => [p.user_id, p]));
+  if (identitiesError) throw identitiesError;
+  const identityById = new Map((identities as PublicIdentity[]).map((p) => [p.user_id, p]));
 
   return rows.map((r) => {
     const otherId = r.user_a === user.id ? r.user_b : r.user_a;
-    const profile = profileById.get(otherId);
+    const identity = identityById.get(otherId);
     return {
       connectionId: r.id,
       userId: otherId,
-      displayName: profile?.display_name ?? null,
-      avatarUrl: profile?.avatar_url ?? null,
-      isTrainer: profile?.is_trainer ?? false,
+      displayName: identity?.display_name ?? null,
+      avatarUrl: identity?.avatar_url ?? null,
+      isTrainer: identity?.is_trainer ?? false,
     };
   });
 }
@@ -421,12 +475,14 @@ export async function removeConnection(connectionId: string): Promise<void> {
 }
 ```
 
-- [ ] **Step 2: Verificar que compila**
+- [ ] **Step 6: Verificar que compila**
 
 Run: `npm run build && npx tsc --noEmit`
 Expected: ambos limpios (mismo error preexistente de siempre en `ProgressList.tsx`, nada más — nada importa este archivo todavía).
 
-- [ ] **Step 3: Commit**
+**Nota:** una conexión solo puede leer `public_identities` del otro lado una vez que la fila existe — la fila se crea la primera vez que ese usuario guarda su perfil (Step 2 de este task) después de este cambio. Un usuario que se registró en una sesión anterior y nunca vuelve a guardar su perfil no tendrá fila en `public_identities`; `getMyConnections` ya maneja esto con los `?? null` / `?? false` de arriba, mostrando nombre/avatar vacíos en vez de romper.
+
+- [ ] **Step 7: Commit**
 
 ```bash
 git add src/lib/connections.ts
@@ -1192,9 +1248,9 @@ npx astro preview --port 4331 &
 sleep 3
 ```
 
-- [ ] **Step 3: Antes de conectar, confirmar que la lectura cruzada de perfil falla (RLS)**
+- [ ] **Step 3: Antes de conectar, confirmar que la lectura cruzada de identidad pública falla (RLS)**
 
-Con Playwright, loguear como cuenta A, e intentar leer el perfil de la cuenta B por su `user_id` directamente vía el cliente de Supabase en la consola del navegador — confirmar que devuelve vacío (RLS bloquea, no hay conexión todavía). Obtener el `user_id` de B de antemano vía `supabase db query --linked "select id from auth.users where email = '<email de B>';"`.
+Con Playwright, loguear como cuenta A, e intentar leer `public_identities` de la cuenta B por su `user_id` directamente vía el cliente de Supabase en la consola del navegador — confirmar que devuelve vacío (RLS bloquea, no hay conexión todavía). Obtener el `user_id` de B de antemano vía `supabase db query --linked "select id from auth.users where email = '<email de B>';"`. Nota: esto solo funciona si B ya guardó su perfil al menos una vez después de Task 2 (así existe su fila en `public_identities`) — si no, confirmar en cambio que la fila directamente no existe (`.maybeSingle()` devuelve `null` sin error, no un error de RLS).
 
 - [ ] **Step 4: Generar y redimir un código de invitación**
 
@@ -1203,9 +1259,9 @@ Con Playwright, loguear como cuenta A, e intentar leer el perfil de la cuenta B 
 3. Confirmar que redirige a `/conexiones/` de B y que A aparece en la lista.
 4. Confirmar que en `/conexiones/` de A también aparece B (la conexión es simétrica).
 
-- [ ] **Step 5: Confirmar que la lectura cruzada de perfil ahora funciona**
+- [ ] **Step 5: Confirmar que la lectura cruzada de identidad pública ahora funciona**
 
-Repetir el chequeo del Step 3 (leer el perfil de B desde la sesión de A) — ahora debe devolver los datos básicos (`display_name`, `avatar_url`, `is_trainer`), confirmando que la política RLS nueva de `profiles` funciona.
+Repetir el chequeo del Step 3 (leer `public_identities` de B desde la sesión de A) — ahora debe devolver los datos básicos (`display_name`, `avatar_url`, `is_trainer`), confirmando que la política RLS "Usuarios conectados pueden ver la identidad pública del otro" funciona. Si B no había guardado su perfil todavía, guardarlo ahora en Perfil (aunque sea sin cambios) para que se cree su fila en `public_identities`, y recién entonces repetir la lectura.
 
 - [ ] **Step 6: Activar "Soy entrenador" y asignar una rutina**
 
