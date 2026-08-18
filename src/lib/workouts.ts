@@ -668,6 +668,11 @@ export function flushQueue(): Promise<void> {
 
 async function runFlushQueue(): Promise<void> {
   if (!navigator.onLine) return;
+  // Sin esto, un JWT vencido/ausente hace que la primera llamada de la cola
+  // falle en silencio con un error de auth en vez de simplemente esperar —
+  // se corta acá, antes de tocar la cola, para el próximo intento (mismo
+  // patrón usado por rastrum en su guard equivalente).
+  if (!(await getCurrentUserId())) return;
   const tempIdMap = new Map<string, string>();
   let processedAny = false;
 

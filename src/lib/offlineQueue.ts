@@ -11,7 +11,17 @@ export function isNetworkError(error: unknown): boolean {
   if (isAuthRetryableFetchError(error)) return true;
   if (error && typeof error === 'object') {
     const e = error as { code?: unknown; message?: unknown };
-    return e.code === '' && typeof e.message === 'string' && e.message.startsWith('TypeError:');
+    if (e.code === '' && typeof e.message === 'string' && e.message.startsWith('TypeError:')) {
+      return true;
+    }
+    // JWT vencido en medio de un flush — mismo tratamiento que "sin red":
+    // pausar y reintentar después, no tratarlo como conflicto de datos. El
+    // SDK de Supabase refresca el token solo en segundo plano; para cuando
+    // se reintente, ya debería estar renovado.
+    if (e.code === 'PGRST301') return true;
+    if (typeof e.message === 'string' && e.message.toLowerCase().includes('jwt expired')) {
+      return true;
+    }
   }
   return false;
 }
