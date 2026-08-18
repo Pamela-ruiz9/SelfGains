@@ -87,7 +87,7 @@ create policy "Cualquiera de los dos lados puede desvincularse"
   using (auth.uid() = user_a or auth.uid() = user_b);
 ```
 
-Al redimir un código, se inserta `(user_a: dueño_del_código, user_b: auth.uid())` — el orden no importa para ningún permiso (ver sección 2), solo queda registrado quién iba a ser el dueño del link por prolijidad de datos.
+Al redimir un código, se inserta la fila con **`user_a`/`user_b` ordenados canónicamente** (los dos UUIDs ordenados alfabéticamente, no "quién generó el código" / "quién lo redimió") — necesario porque `unique(user_a, user_b)` solo bloquea un duplicado exacto en ese orden. Sin canonizar, si A comparte su código con B y **después** B comparte el suyo con A, quedarían dos filas (`user_a: A, user_b: B` y `user_a: B, user_b: A`) representando la misma conexión dos veces. Ordenando siempre los dos ids antes de insertar, cualquiera de los dos que redima el código del otro cae en la misma fila, y el segundo intento simplemente falla por la restricción `unique` (tratado como "ya conectados", no como error).
 
 **Nota sobre el modelo de amenaza de esta política:** el `with check` de `insert` en `connections` (sección 2) solo exige que quien inserta sea una de las dos partes — no verifica criptográficamente que hubo un código real de por medio. En la práctica esto no importa: un `user_id` de Supabase es un UUID de 128 bits, imposible de adivinar; la única forma real de conocer el `user_id` de otra persona es resolviéndolo vía su código de invitación (o ya estando conectado). El código es la capa de descubrimiento/usabilidad, no un candado extra a nivel RLS — mismo modelo ya usado para el `insert` de `routines` en la sección 2.
 
