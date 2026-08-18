@@ -1,0 +1,9 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import RedeemInvite from '../components/react/Connections/RedeemInvite';
+---
+<BaseLayout title="Conectar">
+  <p class="label-brutal mb-3 text-acid">Invitación</p>
+  <h1 class="mb-8 font-display text-5xl text-paper sm:text-6xl">CONECTAR</h1>
+  <RedeemInvite client:load />
+</BaseLayout>
