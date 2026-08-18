@@ -116,7 +116,7 @@ export async function deactivateRoutine(): Promise<void> {
   if (error) throw error;
 }
 
-export async function assignRoutineToStudent(routineId: string, studentUserId: string): Promise<Routine> {
+export async function assignRoutineToStudent(routineId: string, studentUserId: string): Promise<void> {
   const source = await getRoutineById(routineId);
   if (!source) throw new Error('No se encontró la rutina a asignar.');
 
@@ -125,19 +125,20 @@ export async function assignRoutineToStudent(routineId: string, studentUserId: s
     .select('display_name')
     .maybeSingle();
 
-  const { data, error } = await supabase
-    .from('routines')
-    .insert({
-      user_id: studentUserId,
-      name: source.name,
-      days: source.days,
-      assigned_by_name: myProfile?.display_name ?? 'tu entrenador',
-    })
-    .select()
-    .single();
+  // Sin .select() a propósito: el entrenador puede INSERTAR una rutina para
+  // el alumno (política de RLS de "routines"), pero no puede LEER de vuelta
+  // filas que ya son 100% del alumno — pedir la fila insertada de vuelta
+  // (Prefer: return=representation) choca contra esa misma política de
+  // SELECT y Postgres responde con el mismo error de RLS que si el insert
+  // hubiera fallado, aunque el insert en sí se haya hecho con éxito.
+  const { error } = await supabase.from('routines').insert({
+    user_id: studentUserId,
+    name: source.name,
+    days: source.days,
+    assigned_by_name: myProfile?.display_name ?? 'tu entrenador',
+  });
 
   if (error) throw error;
-  return data as Routine;
 }
 
 export function weeksElapsed(startedAt: string): number {
