@@ -49,16 +49,28 @@ export async function patchCacheArray<T>(key: string, updater: (items: T[]) => T
   await tx.done;
 }
 
+function isQuotaExceededError(err: unknown): boolean {
+  return err instanceof DOMException && err.name === 'QuotaExceededError';
+}
+
 export async function enqueue(item: Omit<QueueItem, 'id' | 'createdAt'>): Promise<QueueItem> {
   const db = await getOfflineDb();
   const full: Omit<QueueItem, 'id'> = { ...item, createdAt: new Date().toISOString() };
-  const id = await db.add('queue', full as QueueItem);
+  let id: number;
+  try {
+    id = (await db.add('queue', full as QueueItem)) as number;
+  } catch (err) {
+    if (isQuotaExceededError(err)) {
+      throw new Error('No se pudo guardar sin conexión: el dispositivo se quedó sin espacio de almacenamiento.');
+    }
+    throw err;
+  }
   // A diferencia de un sync exitoso (que dispara selfgains:sync-complete al
   // terminar), nada más avisa cuando se agrega un item nuevo a la cola
   // mientras la página ya está montada offline — sin esto, el SyncBanner no
   // se entera de que hay algo pendiente hasta el próximo mount/reconexión.
   window.dispatchEvent(new CustomEvent('selfgains:queue-changed'));
-  return { ...full, id: id as number };
+  return { ...full, id };
 }
 
 export async function updateQueueItem(id: number, updates: Partial<QueueItem>): Promise<void> {
