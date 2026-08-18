@@ -4,13 +4,14 @@ Primer ítem del backlog de negocio (`docs/roadmap-ideas.md`) que se ataca, eleg
 
 **Pedido:**
 - Cualquier usuario puede activar "Soy entrenador" en su Perfil.
-- Cualquier usuario (entrenador o no) puede generar un link corto para compartir su perfil con otro usuario; el otro usuario lo abre y, con eso, quedan conectados.
-- Toda conexión otorga, por default, verse el perfil básico (nombre, avatar, medidas) entre los dos — sin importar quién generó el link.
+- Cualquier usuario (entrenador o no) puede generar un link corto para conectarse con otro usuario; el otro usuario lo abre y, con eso, quedan conectados, con consentimiento mutuo.
 - Si uno de los dos conectados es entrenador, además puede crearle rutinas directamente al otro — aparecen en "Mis rutinas" del receptor como una rutina más, totalmente editable/borrable por él, sin ningún vínculo de vuelta al entrenador salvo una leyenda "Compartida por: [nombre]" en la propia rutina.
 - El avatar de un entrenador lleva un distintivo visual donde se muestre.
 
+**Nota sobre un cambio de alcance a mitad de implementación:** la primera versión de este spec generalizaba "conexión" para que además otorgara, por default, ver el perfil básico completo del otro (nombre, avatar, medidas) — el usuario pidió explícitamente sacar esa capacidad durante la implementación ("quitemos eso de compartir el perfil"), dejando solo la identificación mínima indispensable para que la lista de conexiones y el distintivo de entrenador (ya pedidos) tengan sentido: nombre, avatar, y si es entrenador — ningún dato de medidas corporales. Cómo debería funcionar realmente "compartir perfil/dashboard entre usuarios" queda pendiente para una ronda de brainstorming aparte, después de esta.
+
 **Explícitamente fuera de esta ronda:**
-- Ver el historial de entrenamientos/Progreso del otro usuario — la conexión solo comparte perfil básico (nombre, avatar, medidas), no `workouts`/`workout_sets`/`workout_sessions`/`measurements`.
+- Compartir el perfil/dashboard completo entre conexiones (medidas, ver Progreso/historial) — capacidad sacada durante la implementación, ver nota arriba. Queda para una ronda de brainstorming aparte.
 - "Perfil enriquecido" (sexo, nivel de entrenamiento) — ítem separado del backlog, no se toca.
 - Buscador de entrenadores cercanos (mapa/geolocalización) — ítem separado del backlog.
 - Aprobación/moderación de quién puede ser entrenador — es autodeclarado, sin revisión.
@@ -68,7 +69,11 @@ create table connections (
   user_a uuid not null references auth.users(id) on delete cascade,
   user_b uuid not null references auth.users(id) on delete cascade,
   created_at timestamptz not null default now(),
-  constraint connections_no_self check (user_a <> user_b),
+  -- user_a < user_b: excluye la autoconexión (< excluye la igualdad) y de
+  -- paso fuerza el orden canónico a nivel de base de datos, no solo en la
+  -- aplicación — verificado empíricamente que el orden uuid < de Postgres
+  -- coincide con el de .sort() de JS sobre las mismas cadenas.
+  constraint connections_ordered check (user_a < user_b),
   unique (user_a, user_b)
 );
 
@@ -87,7 +92,38 @@ create policy "Cualquiera de los dos lados puede desvincularse"
   using (auth.uid() = user_a or auth.uid() = user_b);
 ```
 
-Al redimir un código, se inserta la fila con **`user_a`/`user_b` ordenados canónicamente** (los dos UUIDs ordenados alfabéticamente, no "quién generó el código" / "quién lo redimió") — necesario porque `unique(user_a, user_b)` solo bloquea un duplicado exacto en ese orden. Sin canonizar, si A comparte su código con B y **después** B comparte el suyo con A, quedarían dos filas (`user_a: A, user_b: B` y `user_a: B, user_b: A`) representando la misma conexión dos veces. Ordenando siempre los dos ids antes de insertar, cualquiera de los dos que redima el código del otro cae en la misma fila, y el segundo intento simplemente falla por la restricción `unique` (tratado como "ya conectados", no como error).
+Al redimir un código, se inserta la fila con **`user_a`/`user_b` ordenados canónicamente** (los dos UUIDs ordenados alfabéticamente, no "quién generó el código" / "quién lo redimió"). Sin canonizar, si A comparte su código con B y **después** B comparte el suyo con A, se intentarían insertar dos filas (`user_a: A, user_b: B` y `user_a: B, user_b: A`) representando la misma conexión dos veces. El orden se aplica dos veces, por las dudas: la aplicación ordena los dos ids antes de insertar, y la restricción `connections_ordered` (arriba) lo vuelve a exigir a nivel de base de datos — cualquiera de los dos que redima el código del otro cae en la misma fila, y un segundo intento simplemente falla por la restricción `unique` (tratado como "ya conectados", no como error).
+
+**Tabla nueva `public_identities`** — identificación mínima visible entre conexiones (nombre, avatar, si es entrenador), separada físicamente de `profiles` a propósito: RLS es por fila, no por columna, así que una política de lectura directamente sobre `profiles` para conexiones expondría también las medidas corporales aunque la UI nunca las pida (cualquiera podría leerlas vía la API directa de Supabase). Con una tabla que solo contiene estos 3 campos, no hay ninguna columna sensible que filtrar — no existe ahí.
+
+```sql
+create table public_identities (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  display_name text,
+  avatar_url text,
+  is_trainer boolean not null default false,
+  updated_at timestamptz not null default now()
+);
+
+alter table public_identities enable row level security;
+
+create policy "Un usuario mantiene su propia identidad pública"
+  on public_identities for all
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+create policy "Usuarios conectados pueden ver la identidad pública del otro"
+  on public_identities for select
+  using (
+    exists (
+      select 1 from connections
+      where (connections.user_a = auth.uid() and connections.user_b = public_identities.user_id)
+         or (connections.user_b = auth.uid() and connections.user_a = public_identities.user_id)
+    )
+  );
+```
+
+`public_identities` se mantiene sincronizada desde `upsertProfile()` (`src/lib/profile.ts`) — cada vez que se guarda el perfil, se espeja `display_name`/`avatar_url`/`is_trainer` a esta tabla también. `profiles` en sí queda sin ninguna política nueva — sigue siendo 100% privado, como antes de este spec.
 
 **Nota sobre el modelo de amenaza de esta política:** el `with check` de `insert` en `connections` (sección 2) solo exige que quien inserta sea una de las dos partes — no verifica criptográficamente que hubo un código real de por medio. En la práctica esto no importa: un `user_id` de Supabase es un UUID de 128 bits, imposible de adivinar; la única forma real de conocer el `user_id` de otra persona es resolviéndolo vía su código de invitación (o ya estando conectado). El código es la capa de descubrimiento/usabilidad, no un candado extra a nivel RLS — mismo modelo ya usado para el `insert` de `routines` en la sección 2.
 
@@ -103,19 +139,7 @@ alter table routines add column assigned_by_name text;
 
 **Nota sobre los nombres de las políticas:** los nombres de dos de las políticas de acá abajo se acortaron respecto a una primera versión de este spec (`"Cualquiera puede buscar un código para redimirlo"` y `"Un entrenador conectado puede crearle rutinas al otro"`) porque los nombres originales superaban el límite de 63 bytes de un identificador de Postgres (`NAMEDATALEN`) — Postgres los truncaba en silencio en vez de fallar, dejando el nombre real en la base distinto al que decía el SQL. Descubierto en la implementación, corregido acá para que el spec quede fiel a lo que realmente corre.
 
-**`profiles`** gana una política de lectura nueva — hoy es 100% privado, ni un entrenador puede ver el perfil de nadie:
-
-```sql
-create policy "Usuarios conectados pueden verse el perfil básico entre sí"
-  on profiles for select
-  using (
-    exists (
-      select 1 from connections
-      where (connections.user_a = auth.uid() and connections.user_b = profiles.user_id)
-         or (connections.user_b = auth.uid() and connections.user_a = profiles.user_id)
-    )
-  );
-```
+**`profiles`** no gana ninguna política nueva — sigue 100% privado, ni un entrenador puede ver el perfil de nadie. La identificación mínima entre conexiones (nombre, avatar, si es entrenador) vive en `public_identities`, una tabla física separada (ver sección 1) — no una política sobre `profiles`, justo para evitar el problema de que RLS es por fila y expondría también las medidas corporales.
 
 **`routines`** gana una política de `insert` nueva, que Postgres combina con la ya existente (`auth.uid() = user_id`) vía OR entre políticas permisivas del mismo comando — no hace falta tocar ni borrar la política vieja:
 
