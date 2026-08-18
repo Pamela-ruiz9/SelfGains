@@ -110,7 +110,13 @@ export default function Connections() {
       const loggedIn = data.session !== null;
       setIsLoggedIn(loggedIn);
       setAuthChecked(true);
-      if (loggedIn) await refresh();
+      if (loggedIn) {
+        try {
+          await refresh();
+        } catch (err) {
+          setError(err instanceof Error ? err.message : 'No se pudo cargar la información.');
+        }
+      }
     });
   }, []);
 
@@ -126,9 +132,13 @@ export default function Connections() {
 
   async function handleCopy() {
     if (!code) return;
-    await navigator.clipboard.writeText(inviteLink(code));
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(inviteLink(code));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo copiar el link.');
+    }
   }
 
   async function handleRedeem(e: FormEvent) {
@@ -177,7 +187,7 @@ export default function Connections() {
       {error && <p className="border-l-2 border-blood pl-3 font-mono text-sm text-blood">{error}</p>}
 
       <div className="card-brutal flex flex-col gap-3">
-        <p className="label-brutal text-acid">Compartir mi perfil</p>
+        <p className="label-brutal text-acid">Mi link de invitación</p>
         {code ? (
           <div className="flex flex-col gap-2">
             <p className="break-all font-mono text-sm text-paper">{inviteLink(code)}</p>
