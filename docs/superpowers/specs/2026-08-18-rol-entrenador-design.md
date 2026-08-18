@@ -163,7 +163,7 @@ Si el usuario no está logueado al abrir el link, se muestra un mensaje ("Inici�
 - Tarjeta "Conexiones": *"Tenés N conexiones →"* (o *"Compartí tu perfil o conectate con alguien →"* si `N === 0`), link a `/conexiones/`.
 
 **`/conexiones/`** (página nueva, `src/pages/conexiones.astro` + isla React `Connections.tsx`):
-- Lista cada conexión: `Avatar` (con distintivo si `is_trainer` de esa persona) + nombre + medidas básicas de `profiles`.
+- Lista cada conexión: `Avatar` (con distintivo si `is_trainer` de esa persona) + nombre.
 - Botón "Desvincular" por conexión (`delete` en `connections`, cualquiera de los dos lados).
 - Si el usuario actual es entrenador (`profiles.is_trainer` propio): botón extra "Asignar rutina" por conexión → abre un picker con las rutinas propias del entrenador (reusa `getMyRoutines()`, ya existe) → al elegir una, `assignRoutineToStudent(routineId, connectionUserId)` copia `name`/`days` a una fila nueva con `user_id: connectionUserId`, `assigned_by_name: miNombre ?? 'tu entrenador'`.
 
