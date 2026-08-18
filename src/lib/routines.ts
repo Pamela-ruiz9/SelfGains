@@ -116,6 +116,30 @@ export async function deactivateRoutine(): Promise<void> {
   if (error) throw error;
 }
 
+export async function assignRoutineToStudent(routineId: string, studentUserId: string): Promise<Routine> {
+  const source = await getRoutineById(routineId);
+  if (!source) throw new Error('No se encontró la rutina a asignar.');
+
+  const { data: myProfile } = await supabase
+    .from('profiles')
+    .select('display_name')
+    .maybeSingle();
+
+  const { data, error } = await supabase
+    .from('routines')
+    .insert({
+      user_id: studentUserId,
+      name: source.name,
+      days: source.days,
+      assigned_by_name: myProfile?.display_name ?? 'tu entrenador',
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as Routine;
+}
+
 export function weeksElapsed(startedAt: string): number {
   return Math.floor(daysElapsed(startedAt) / 7);
 }

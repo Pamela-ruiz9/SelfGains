@@ -33,6 +33,7 @@ export default function ProfileForm() {
   const [error, setError] = useState<string | null>(null);
   const [savedMessage, setSavedMessage] = useState<string | null>(null);
   const [routineExpired, setRoutineExpired] = useState(false);
+  const [isTrainer, setIsTrainer] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
@@ -54,6 +55,7 @@ export default function ProfileForm() {
       if (profile) {
         setTheme(profile.theme);
         setAccentColor(profile.accent_color);
+        setIsTrainer(profile.is_trainer);
         setMeasurements({
           weight_kg: profile.weight_kg?.toString() ?? '',
           height_cm: profile.height_cm?.toString() ?? '',
@@ -119,6 +121,15 @@ export default function ProfileForm() {
       await upsertProfile({ accent_color: next });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo guardar el color.');
+    }
+  }
+
+  async function handleTrainerToggle(next: boolean) {
+    setIsTrainer(next);
+    try {
+      await upsertProfile({ is_trainer: next });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo guardar el cambio.');
     }
   }
 
@@ -250,6 +261,16 @@ export default function ProfileForm() {
           </p>
         </div>
       )}
+
+      <label className="flex items-center gap-3 font-mono text-sm text-paper">
+        <input
+          type="checkbox"
+          checked={isTrainer}
+          onChange={(e) => handleTrainerToggle(e.target.checked)}
+          className="h-5 w-5 accent-acid"
+        />
+        Soy entrenador
+      </label>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         <label className="flex flex-col gap-2">
