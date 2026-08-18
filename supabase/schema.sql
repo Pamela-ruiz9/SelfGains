@@ -211,7 +211,7 @@ create table invite_codes (
 
 alter table invite_codes enable row level security;
 
-create policy "Cualquier usuario autenticado puede buscar un código para redimirlo"
+create policy "Cualquiera puede buscar un código para redimirlo"
   on invite_codes for select
   using (true);
 
@@ -257,7 +257,7 @@ create policy "Usuarios conectados pueden verse el perfil básico entre sí"
     )
   );
 
-create policy "Un entrenador conectado puede crear rutinas para la otra persona"
+create policy "Un entrenador conectado puede crearle rutinas al otro"
   on routines for insert
   with check (
     exists (
