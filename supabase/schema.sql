@@ -253,13 +253,35 @@ create policy "Cualquiera de los dos lados puede desvincularse"
   on connections for delete
   using (auth.uid() = user_a or auth.uid() = user_b);
 
-create policy "Usuarios conectados pueden verse el perfil básico entre sí"
-  on profiles for select
+-- No se agrega una política de select entre conexiones directamente sobre
+-- profiles: RLS es por fila, no por columna — una política así expondría
+-- también las medidas corporales a cualquier conexión. En su lugar,
+-- public_identities es una tabla física separada que solo contiene los 3
+-- campos no sensibles necesarios para identificar una conexión en la UI
+-- (nombre, avatar, si es entrenador) — no hay ninguna columna sensible que
+-- filtrar porque no existe en esta tabla.
+create table public_identities (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  display_name text,
+  avatar_url text,
+  is_trainer boolean not null default false,
+  updated_at timestamptz not null default now()
+);
+
+alter table public_identities enable row level security;
+
+create policy "Un usuario mantiene su propia identidad pública"
+  on public_identities for all
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+create policy "Usuarios conectados pueden ver la identidad pública del otro"
+  on public_identities for select
   using (
     exists (
       select 1 from connections
-      where (connections.user_a = auth.uid() and connections.user_b = profiles.user_id)
-         or (connections.user_b = auth.uid() and connections.user_a = profiles.user_id)
+      where (connections.user_a = auth.uid() and connections.user_b = public_identities.user_id)
+         or (connections.user_b = auth.uid() and connections.user_a = public_identities.user_id)
     )
   );
 
