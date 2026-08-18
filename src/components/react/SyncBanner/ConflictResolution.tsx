@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import type { ConflictItem } from '../../../lib/offlineDb';
 import { getConflicts, patchCacheArray, removeConflict } from '../../../lib/offlineQueue';
 import { updateSessionRemote, updateSetRemote } from '../../../lib/workouts';
-import type { WorkoutSession, WorkoutSet } from '../../../types/db';
+import type { Workout, WorkoutSession, WorkoutSet } from '../../../types/db';
 
 const TYPE_LABEL: Record<string, string> = {
   createWorkout: 'Entrenamiento nuevo',
@@ -24,6 +24,11 @@ function describeSessionPayload(payload: Record<string, unknown>): string {
   return payload.distanceKm ? `${payload.distanceKm} km en ${duration}` : duration;
 }
 
+function describeSessionSnapshot(snapshot: Record<string, unknown>): string {
+  const duration = `${snapshot.duration_min} min`;
+  return snapshot.distance_km ? `${snapshot.distance_km} km en ${duration}` : duration;
+}
+
 function describeMine(conflict: ConflictItem): string {
   const { type, payload } = conflict.queueItem;
   if (type === 'updateSet') return describeSetPayload(payload);
@@ -35,7 +40,7 @@ function describeTheirs(conflict: ConflictItem): string {
   if (!conflict.serverSnapshot) return 'Ya no existe en el servidor.';
   const { type } = conflict.queueItem;
   if (type === 'updateSet') return describeSetPayload(conflict.serverSnapshot);
-  if (type === 'updateSession') return describeSessionPayload(conflict.serverSnapshot);
+  if (type === 'updateSession') return describeSessionSnapshot(conflict.serverSnapshot);
   return JSON.stringify(conflict.serverSnapshot);
 }
 
@@ -76,6 +81,32 @@ export default function ConflictResolution() {
             ? items.map((s) => (s.id === p.sessionId ? (conflict.serverSnapshot as unknown as WorkoutSession) : s))
             : items.filter((s) => s.id !== p.sessionId)
         );
+      } else if (queueItem.type === 'createWorkout') {
+        // Un createWorkout offline que falló por una razón que no es de red
+        // deja un workout fantasma (id temporal) pegado en el caché — hay
+        // que sacarlo, además de cualquier set/sesión hijo que haya quedado
+        // huérfano bajo esa misma clave temporal.
+        const userId = (queueItem.payload as { userId?: string }).userId;
+        if (userId && queueItem.tempId) {
+          await patchCacheArray<Workout>(`workouts:${userId}`, (items) =>
+            items.filter((w) => w.id !== queueItem.tempId)
+          );
+        }
+        if (queueItem.tempId) {
+          await patchCacheArray<WorkoutSet>(`sets:${queueItem.tempId}`, () => []);
+          await patchCacheArray<WorkoutSession>(`sessions:${queueItem.tempId}`, () => []);
+        }
+      } else if (queueItem.type === 'deleteWorkout') {
+        // Un delete offline que falló por una razón que no es de red deja el
+        // caché creyendo que el workout ya no existe, sin forma de saber su
+        // estado real sin volver a pedirlo — se invalida la lista completa
+        // para que el próximo fetch online la reponga con la verdad.
+        const userId = (queueItem.payload as { userId?: string }).userId;
+        if (userId) await patchCacheArray<Workout>(`workouts:${userId}`, () => []);
+      } else if (queueItem.type === 'deleteSet' && workoutId) {
+        await patchCacheArray<WorkoutSet>(`sets:${workoutId}`, () => []);
+      } else if (queueItem.type === 'deleteSession' && workoutId) {
+        await patchCacheArray<WorkoutSession>(`sessions:${workoutId}`, () => []);
       }
       await removeConflict(conflict.id!);
       setConflicts((prev) => prev.filter((c) => c.id !== conflict.id));
