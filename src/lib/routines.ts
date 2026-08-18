@@ -30,10 +30,16 @@ export async function getMyRoutines(): Promise<Routine[]> {
 }
 
 export async function getRoutineById(id: string): Promise<Routine | null> {
-  const { data, error } = await supabase.from('routines').select('*').eq('id', id).maybeSingle();
-
-  if (error) throw error;
-  return data as Routine | null;
+  try {
+    const { data, error } = await supabase.from('routines').select('*').eq('id', id).maybeSingle().retry(false);
+    if (error) throw error;
+    const result = data as Routine | null;
+    await writeCache(`routine:${id}`, result);
+    return result;
+  } catch (err) {
+    if (!isNetworkError(err)) throw err;
+    return await readCache<Routine | null>(`routine:${id}`);
+  }
 }
 
 export async function activateRoutine(

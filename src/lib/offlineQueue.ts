@@ -76,6 +76,11 @@ export async function getQueueCount(): Promise<number> {
 export async function removeQueueItem(id: number): Promise<void> {
   const db = await getOfflineDb();
   await db.delete('queue', id);
+  // Centralizado acá (no solo en enqueue()) porque removeQueueItem se llama
+  // tanto desde flushQueue (ya cubierto por selfgains:sync-complete al
+  // terminar) como fuera de él — ej. cancelar/borrar algo offline todavía
+  // sin sincronizar — donde nada más avisaba que el conteo pendiente bajó.
+  window.dispatchEvent(new CustomEvent('selfgains:queue-changed'));
 }
 
 export async function findQueuedCreateByTempId(tempId: string): Promise<QueueItem | undefined> {
