@@ -90,3 +90,11 @@ export interface Connection {
   user_b: string;
   created_at: string;
 }
+
+export interface PublicIdentity {
+  user_id: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  is_trainer: boolean;
+  updated_at: string;
+}

@@ -22,7 +22,22 @@ export async function upsertProfile(
     .single();
 
   if (error) throw error;
-  return data as Profile;
+  const profile = data as Profile;
+
+  // public_identities es lo único que una conexión puede leer del otro lado
+  // (ver docs/superpowers/specs/2026-08-18-rol-entrenador-design.md sección
+  // 1) — se mantiene en espejo acá para que nunca quede desactualizada
+  // respecto al nombre/avatar/rol reales en `profiles`.
+  const { error: identityError } = await supabase.from('public_identities').upsert({
+    user_id: user.id,
+    display_name: profile.display_name,
+    avatar_url: profile.avatar_url,
+    is_trainer: profile.is_trainer,
+    updated_at: profile.updated_at,
+  });
+  if (identityError) throw identityError;
+
+  return profile;
 }
 
 // Always stored at a fixed path per user ({user_id}/avatar.<ext>) with
