@@ -87,6 +87,16 @@ configuradas en Settings → Secrets and variables → Actions → Variables.
       — detalle en `docs/agents/mobile-nav-y-registro-ux-status.md`)
 - [x] Logo / favicon / ícono de app (detalle en
       `docs/agents/logo-identidad-status.md`)
+- [x] PWA instalable + fluidez de navegación (manifest, service worker,
+      transiciones de página — detalle en
+      `docs/agents/pwa-instalable-status.md`)
+- [x] Logueo offline + sincronización con detección de conflictos (detalle en
+      `docs/agents/offline-sync-status.md`)
+- [x] Endurecimiento offline: refresco de sesión, cuota de IndexedDB,
+      coordinación entre pestañas (detalle en
+      `docs/agents/offline-sync-hardening-status.md`)
+- [x] Rol de entrenador + conexiones entre usuarios, asignación de rutinas
+      (detalle en `docs/agents/rol-entrenador-status.md`)
 - [ ] Suite de tests automatizada — toda la verificación hoy es manual vía
       Playwright contra Supabase real (ver
       `docs/agents/notas-de-entorno-y-lecciones.md`)
