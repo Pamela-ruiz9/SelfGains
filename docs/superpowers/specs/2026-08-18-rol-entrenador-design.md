@@ -153,7 +153,7 @@ useEffect(() => {
 
 `redeemInviteCode(code)`: busca `invite_codes` por `code` (mayúscula-insensible, se normaliza a mayúsculas antes de comparar); si no existe, error "Código inválido"; si existe y `owner_id === auth.uid()` (usuario intentando conectarse consigo mismo), error "No podés conectarte con vos mismo"; si ya existe la conexión, no hace nada (no falla, simplemente redirige); si no, `insert` en `connections`.
 
-Si el usuario no está logueado al abrir el link, la página redirige primero a `/login/` guardando el hash en `sessionStorage` para retomar la redención después del login (mismo patrón de "guardar y continuar" que ya usa el flujo de auth existente, sin inventar uno nuevo).
+Si el usuario no está logueado al abrir el link, se muestra un mensaje ("Iniciá sesión y volvé a abrir este link") con un link a `/login/`, sin intentar retomar la redención automáticamente después — el proyecto no tiene hoy ningún mecanismo genérico de "volvé a donde estabas" tras el login (cada formulario de auth redirige a una ruta fija), e inventar uno nuevo solo para este flujo sería más infraestructura de la que amerita: el usuario simplemente vuelve a abrir el link que ya tiene (en el chat/mensaje donde se lo compartieron) una vez logueado.
 
 ## 4. Pantallas
 
