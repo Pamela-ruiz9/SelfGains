@@ -44,7 +44,7 @@ create table invite_codes (
 
 alter table invite_codes enable row level security;
 
-create policy "Cualquier usuario autenticado puede buscar un código para redimirlo"
+create policy "Cualquiera puede buscar un código para redimirlo"
   on invite_codes for select
   using (true);
 
@@ -101,6 +101,8 @@ alter table routines add column assigned_by_name text;
 
 ## 2. Políticas RLS que se agregan (sin tocar las existentes)
 
+**Nota sobre los nombres de las políticas:** los nombres de dos de las políticas de acá abajo se acortaron respecto a una primera versión de este spec (`"Cualquiera puede buscar un código para redimirlo"` y `"Un entrenador conectado puede crearle rutinas al otro"`) porque los nombres originales superaban el límite de 63 bytes de un identificador de Postgres (`NAMEDATALEN`) — Postgres los truncaba en silencio en vez de fallar, dejando el nombre real en la base distinto al que decía el SQL. Descubierto en la implementación, corregido acá para que el spec quede fiel a lo que realmente corre.
+
 **`profiles`** gana una política de lectura nueva — hoy es 100% privado, ni un entrenador puede ver el perfil de nadie:
 
 ```sql
@@ -118,7 +120,7 @@ create policy "Usuarios conectados pueden verse el perfil básico entre sí"
 **`routines`** gana una política de `insert` nueva, que Postgres combina con la ya existente (`auth.uid() = user_id`) vía OR entre políticas permisivas del mismo comando — no hace falta tocar ni borrar la política vieja:
 
 ```sql
-create policy "Un entrenador conectado puede crear rutinas para la otra persona"
+create policy "Un entrenador conectado puede crearle rutinas al otro"
   on routines for insert
   with check (
     exists (
