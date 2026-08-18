@@ -1,0 +1,243 @@
+import { useEffect, useState, type FormEvent } from 'react';
+import { supabase } from '../../../lib/supabase';
+import { getMyProfile } from '../../../lib/profile';
+import {
+  createOrRegenerateInviteCode,
+  getMyConnections,
+  getMyInviteCode,
+  redeemInviteCode,
+  removeConnection,
+  type ConnectionSummary,
+} from '../../../lib/connections';
+import { assignRoutineToStudent, getMyRoutines } from '../../../lib/routines';
+import type { Routine } from '../../../types/db';
+import Avatar from '../Shared/Avatar';
+
+function inviteLink(code: string): string {
+  return `${window.location.origin}${import.meta.env.BASE_URL}c/#${code}`;
+}
+
+function AssignRoutinePicker({
+  studentId,
+  routines,
+  onAssigned,
+}: {
+  studentId: string;
+  routines: Routine[];
+  onAssigned: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleAssign(routineId: string) {
+    setSaving(true);
+    setError(null);
+    try {
+      await assignRoutineToStudent(routineId, studentId);
+      setOpen(false);
+      onAssigned();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo asignar la rutina.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (!open) {
+    return (
+      <button type="button" onClick={() => setOpen(true)} className="btn-brutal-sm">
+        Asignar rutina
+      </button>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      {routines.length === 0 ? (
+        <p className="font-mono text-xs text-paper-dim">No tenés rutinas propias para asignar todavía.</p>
+      ) : (
+        routines.map((r) => (
+          <button
+            key={r.id}
+            type="button"
+            disabled={saving}
+            onClick={() => handleAssign(r.id)}
+            className="btn-brutal-sm text-left"
+          >
+            {r.name}
+          </button>
+        ))
+      )}
+      {error && <p className="font-mono text-xs text-blood">{error}</p>}
+      <button
+        type="button"
+        onClick={() => setOpen(false)}
+        className="font-mono text-xs text-paper-dim hover:text-paper"
+      >
+        Cancelar
+      </button>
+    </div>
+  );
+}
+
+export default function Connections() {
+  const [authChecked, setAuthChecked] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isTrainer, setIsTrainer] = useState(false);
+  const [code, setCode] = useState<string | null>(null);
+  const [connections, setConnections] = useState<ConnectionSummary[]>([]);
+  const [myRoutines, setMyRoutines] = useState<Routine[]>([]);
+  const [redeemInput, setRedeemInput] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  async function refresh() {
+    const [profile, myCode, myConnections, routines] = await Promise.all([
+      getMyProfile(),
+      getMyInviteCode(),
+      getMyConnections(),
+      getMyRoutines(),
+    ]);
+    setIsTrainer(profile?.is_trainer ?? false);
+    setCode(myCode);
+    setConnections(myConnections);
+    setMyRoutines(routines);
+  }
+
+  useEffect(() => {
+    supabase.auth.getSession().then(async ({ data }) => {
+      const loggedIn = data.session !== null;
+      setIsLoggedIn(loggedIn);
+      setAuthChecked(true);
+      if (loggedIn) await refresh();
+    });
+  }, []);
+
+  async function handleShare() {
+    setError(null);
+    try {
+      const newCode = await createOrRegenerateInviteCode();
+      setCode(newCode);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo generar el código.');
+    }
+  }
+
+  async function handleCopy() {
+    if (!code) return;
+    await navigator.clipboard.writeText(inviteLink(code));
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  async function handleRedeem(e: FormEvent) {
+    e.preventDefault();
+    setError(null);
+    try {
+      await redeemInviteCode(redeemInput);
+      setRedeemInput('');
+      await refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo conectar con ese código.');
+    }
+  }
+
+  async function handleRemove(connectionId: string) {
+    if (!confirm('¿Desvincularte de esta persona?')) return;
+    try {
+      await removeConnection(connectionId);
+      await refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo desvincular.');
+    }
+  }
+
+  if (!authChecked) {
+    return <p className="font-mono text-sm text-paper-dim">Cargando...</p>;
+  }
+
+  if (!isLoggedIn) {
+    return (
+      <p className="font-mono text-sm text-paper-dim">
+        Debes{' '}
+        <a
+          href={`${import.meta.env.BASE_URL}login/`}
+          className="text-acid underline underline-offset-4 hover:text-paper"
+        >
+          iniciar sesión
+        </a>{' '}
+        para ver tus conexiones.
+      </p>
+    );
+  }
+
+  return (
+    <div className="flex max-w-2xl flex-col gap-10">
+      {error && <p className="border-l-2 border-blood pl-3 font-mono text-sm text-blood">{error}</p>}
+
+      <div className="card-brutal flex flex-col gap-3">
+        <p className="label-brutal text-acid">Compartir mi perfil</p>
+        {code ? (
+          <div className="flex flex-col gap-2">
+            <p className="break-all font-mono text-sm text-paper">{inviteLink(code)}</p>
+            <div className="flex gap-2">
+              <button type="button" onClick={handleCopy} className="btn-brutal-sm">
+                {copied ? 'Copiado' : 'Copiar link'}
+              </button>
+              <button type="button" onClick={handleShare} className="btn-brutal-sm opacity-60">
+                Regenerar
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button type="button" onClick={handleShare} className="btn-brutal-sm self-start">
+            Generar mi link
+          </button>
+        )}
+      </div>
+
+      <form onSubmit={handleRedeem} className="card-brutal flex flex-col gap-3">
+        <p className="label-brutal text-acid">Conectarme con un código</p>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={redeemInput}
+            onChange={(e) => setRedeemInput(e.target.value)}
+            placeholder="AB3F9K"
+            className="input-brutal"
+          />
+          <button type="submit" className="btn-brutal-sm shrink-0">
+            Conectar
+          </button>
+        </div>
+      </form>
+
+      <div className="flex flex-col gap-3">
+        <p className="label-brutal text-acid">Mis conexiones</p>
+        {connections.length === 0 ? (
+          <p className="font-mono text-sm text-paper-dim">Todavía no tenés ninguna conexión.</p>
+        ) : (
+          connections.map((c) => (
+            <div key={c.connectionId} className="card-brutal flex items-center gap-4">
+              <Avatar avatarUrl={c.avatarUrl} displayName={c.displayName} isTrainer={c.isTrainer} />
+              <p className="flex-1 font-display text-xl text-paper">{c.displayName ?? 'Sin nombre'}</p>
+              <div className="flex flex-col items-end gap-2">
+                {isTrainer && (
+                  <AssignRoutinePicker studentId={c.userId} routines={myRoutines} onAssigned={refresh} />
+                )}
+                <button
+                  type="button"
+                  onClick={() => handleRemove(c.connectionId)}
+                  className="font-mono text-xs text-blood hover:text-paper"
+                >
+                  Desvincular
+                </button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
