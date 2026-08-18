@@ -659,11 +659,26 @@ let flushInFlight: Promise<void> | null = null;
 
 export function flushQueue(): Promise<void> {
   if (!flushInFlight) {
-    flushInFlight = runFlushQueue().finally(() => {
+    flushInFlight = withSyncLock(runFlushQueue).finally(() => {
       flushInFlight = null;
     });
   }
   return flushInFlight;
+}
+
+// Si otra pestaña del mismo origen ya está corriendo runFlushQueue(), esta
+// pestaña ESPERA a que termine en vez de rendirse (sin `ifAvailable`) — con
+// `ifAvailable` un cambio podía quedar sin sincronizar hasta el próximo
+// trigger si la otra pestaña no volvía a intentarlo. El guard en memoria de
+// flushInFlight de arriba sigue evitando pedir el lock si esta misma
+// pestaña ya tiene un flush en curso. Sin Web Locks (ningún navegador
+// objetivo hoy) cae de vuelta a correr runFlushQueue() directo, sin lock —
+// el mismo comportamiento que había antes de esta tarea.
+function withSyncLock(fn: () => Promise<void>): Promise<void> {
+  if (typeof navigator !== 'undefined' && navigator.locks?.request) {
+    return navigator.locks.request('selfgains-flush-queue', { mode: 'exclusive' }, fn);
+  }
+  return fn();
 }
 
 async function runFlushQueue(): Promise<void> {
@@ -838,4 +853,13 @@ async function applyQueueItem(item: QueueItem, tempIdMap: Map<string, string>): 
     return 'ok';
   }
   return 'ok';
+}
+
+declare global {
+  interface LockManager {
+    request<T>(name: string, options: { mode: 'exclusive' | 'shared' }, callback: () => Promise<T>): Promise<T>;
+  }
+  interface Navigator {
+    locks?: LockManager;
+  }
 }
