@@ -24,9 +24,11 @@ export default function SyncBanner() {
 
     window.addEventListener('online', trySync);
     window.addEventListener('selfgains:sync-complete', refresh);
+    window.addEventListener('selfgains:queue-changed', refresh);
     return () => {
       window.removeEventListener('online', trySync);
       window.removeEventListener('selfgains:sync-complete', refresh);
+      window.removeEventListener('selfgains:queue-changed', refresh);
     };
   }, []);
 

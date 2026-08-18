@@ -31,7 +31,13 @@ async function getCurrentUserId(): Promise<string | undefined> {
 async function createWorkoutRemote(date: string, notes?: string, planId?: string): Promise<Workout> {
   const {
     data: { user },
+    error: userError,
   } = await supabase.auth.getUser();
+  // getUser() no lanza en un fallo de red: lo captura internamente y lo
+  // devuelve como `error` (AuthRetryableFetchError) con `user: null` — hay
+  // que propagarlo explícitamente para que isNetworkError() lo detecte y
+  // esto se encole en vez de mostrar "No hay sesión activa" estando offline.
+  if (userError) throw userError;
   if (!user) throw new Error('No hay sesión activa');
 
   const { data, error } = await supabase
@@ -90,11 +96,18 @@ async function addSessionRemote(
   return data as WorkoutSession;
 }
 
+// .retry(false): sin esto, un GET falla recién después de reintentar hasta
+// 3 veces con backoff exponencial (1s, 2s, 4s — comportamiento default de
+// postgrest-js), lo que deja el spinner de "Cargando..." pegado varios
+// segundos antes de caer al caché offline. Confirmado en verificación
+// manual real: sin este flag, una lista de 3 entrenamientos offline tardaba
+// ~20s en mostrar el contenido cacheado.
 async function getWorkoutsRemote(): Promise<Workout[]> {
   const { data, error } = await supabase
     .from('workouts')
     .select('*')
-    .order('date', { ascending: false });
+    .order('date', { ascending: false })
+    .retry(false);
 
   if (error) throw error;
   return data as Workout[];
@@ -106,7 +119,8 @@ async function getSetsRemote(workoutId: string): Promise<WorkoutSet[]> {
     .select('*')
     .eq('workout_id', workoutId)
     .order('exercise_id', { ascending: true })
-    .order('set_number', { ascending: true });
+    .order('set_number', { ascending: true })
+    .retry(false);
 
   if (error) throw error;
   return data as WorkoutSet[];
@@ -117,7 +131,8 @@ async function getSessionsRemote(workoutId: string): Promise<WorkoutSession[]> {
     .from('workout_sessions')
     .select('*')
     .eq('workout_id', workoutId)
-    .order('created_at', { ascending: true });
+    .order('created_at', { ascending: true })
+    .retry(false);
 
   if (error) throw error;
   return data as WorkoutSession[];

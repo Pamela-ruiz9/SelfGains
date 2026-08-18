@@ -64,7 +64,10 @@ export async function activateRoutine(
 
 export async function getActiveRoutine(): Promise<ActiveRoutine | null> {
   try {
-    const { data, error } = await supabase.from('active_routines').select('*').maybeSingle();
+    // .retry(false): sin esto, offline recién falla después de reintentar
+    // varias veces con backoff exponencial — ver el mismo comentario en
+    // src/lib/workouts.ts (getWorkoutsRemote).
+    const { data, error } = await supabase.from('active_routines').select('*').maybeSingle().retry(false);
     if (error) throw error;
     const result = data as ActiveRoutine | null;
     const { data: session } = await supabase.auth.getSession();

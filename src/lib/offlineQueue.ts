@@ -43,6 +43,11 @@ export async function enqueue(item: Omit<QueueItem, 'id' | 'createdAt'>): Promis
   const db = await getOfflineDb();
   const full: Omit<QueueItem, 'id'> = { ...item, createdAt: new Date().toISOString() };
   const id = await db.add('queue', full as QueueItem);
+  // A diferencia de un sync exitoso (que dispara selfgains:sync-complete al
+  // terminar), nada más avisa cuando se agrega un item nuevo a la cola
+  // mientras la página ya está montada offline — sin esto, el SyncBanner no
+  // se entera de que hay algo pendiente hasta el próximo mount/reconexión.
+  window.dispatchEvent(new CustomEvent('selfgains:queue-changed'));
   return { ...full, id: id as number };
 }
 
@@ -132,4 +137,9 @@ export async function getConflictCount(): Promise<number> {
 export async function removeConflict(id: number): Promise<void> {
   const db = await getOfflineDb();
   await db.delete('conflicts', id);
+  // Igual que en enqueue(): sin esto, el SyncBanner global (montado en
+  // BaseLayout, no en /sincronizacion/) no se entera de que un conflicto se
+  // resolvió hasta el próximo mount/reconexión, y sigue mostrando el
+  // conteo viejo en la misma página donde se acaba de resolver.
+  window.dispatchEvent(new CustomEvent('selfgains:queue-changed'));
 }
