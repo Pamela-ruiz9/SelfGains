@@ -27,6 +27,7 @@ export interface Routine {
   name: string;
   days: RoutineDays;
   created_at: string;
+  assigned_by_name: string | null;
 }
 
 export interface ActiveRoutine {
@@ -73,5 +74,19 @@ export interface Profile {
   leg_cm: number | null;
   accent_color: string;
   theme: 'light' | 'dark';
+  is_trainer: boolean;
   updated_at: string;
+}
+
+export interface InviteCode {
+  user_id: string;
+  code: string;
+  created_at: string;
+}
+
+export interface Connection {
+  id: string;
+  user_a: string;
+  user_b: string;
+  created_at: string;
 }

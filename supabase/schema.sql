@@ -197,3 +197,74 @@ create trigger workout_sets_set_updated_at before update on workout_sets
   for each row execute function set_updated_at();
 create trigger workout_sessions_set_updated_at before update on workout_sessions
   for each row execute function set_updated_at();
+
+-- Rol de entrenador + conexiones entre usuarios
+-- (docs/superpowers/specs/2026-08-18-rol-entrenador-design.md).
+alter table profiles add column is_trainer boolean not null default false;
+alter table routines add column assigned_by_name text;
+
+create table invite_codes (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  code text not null unique,
+  created_at timestamptz not null default now()
+);
+
+alter table invite_codes enable row level security;
+
+create policy "Cualquier usuario autenticado puede buscar un código para redimirlo"
+  on invite_codes for select
+  using (true);
+
+create policy "Un usuario crea su propio código"
+  on invite_codes for insert
+  with check (auth.uid() = user_id);
+
+create policy "Un usuario puede regenerar su propio código"
+  on invite_codes for update
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+create table connections (
+  id uuid primary key default gen_random_uuid(),
+  user_a uuid not null references auth.users(id) on delete cascade,
+  user_b uuid not null references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  constraint connections_no_self check (user_a <> user_b),
+  unique (user_a, user_b)
+);
+
+alter table connections enable row level security;
+
+create policy "Los dos lados de una conexión pueden verla"
+  on connections for select
+  using (auth.uid() = user_a or auth.uid() = user_b);
+
+create policy "Cualquiera puede conectarse a sí mismo con otro usuario"
+  on connections for insert
+  with check (auth.uid() = user_a or auth.uid() = user_b);
+
+create policy "Cualquiera de los dos lados puede desvincularse"
+  on connections for delete
+  using (auth.uid() = user_a or auth.uid() = user_b);
+
+create policy "Usuarios conectados pueden verse el perfil básico entre sí"
+  on profiles for select
+  using (
+    exists (
+      select 1 from connections
+      where (connections.user_a = auth.uid() and connections.user_b = profiles.user_id)
+         or (connections.user_b = auth.uid() and connections.user_a = profiles.user_id)
+    )
+  );
+
+create policy "Un entrenador conectado puede crear rutinas para la otra persona"
+  on routines for insert
+  with check (
+    exists (
+      select 1 from profiles me
+      join connections c
+        on (c.user_a = auth.uid() and c.user_b = routines.user_id)
+        or (c.user_b = auth.uid() and c.user_a = routines.user_id)
+      where me.user_id = auth.uid() and me.is_trainer = true
+    )
+  );
