@@ -2,11 +2,17 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ProfileForm from '../components/react/Profile/ProfileForm';
 import InstallPrompt from '../components/react/InstallPrompt/InstallPrompt';
+const base = import.meta.env.BASE_URL;
 ---
 <BaseLayout title="Perfil">
   <p class="label-brutal mb-3 text-acid">Tu cuenta</p>
   <h1 class="mb-8 font-display text-5xl text-paper sm:text-6xl">PERFIL</h1>
   <ProfileForm client:load />
+  <div class="card-brutal mt-6">
+    <a href={`${base}conexiones/`} class="font-mono text-sm text-acid underline underline-offset-4 hover:text-paper">
+      Conexiones →
+    </a>
+  </div>
   <div class="mt-6">
     <InstallPrompt client:load variant="card" />
   </div>

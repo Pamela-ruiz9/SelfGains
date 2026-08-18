@@ -163,6 +163,7 @@ export default function RoutineManager({ predefinedRoutines, activities }: Props
     ref: r.id,
     name: r.name,
     days: r.days,
+    assignedByName: r.assigned_by_name,
   }));
 
   return (
