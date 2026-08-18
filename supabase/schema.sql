@@ -229,7 +229,13 @@ create table connections (
   user_a uuid not null references auth.users(id) on delete cascade,
   user_b uuid not null references auth.users(id) on delete cascade,
   created_at timestamptz not null default now(),
-  constraint connections_no_self check (user_a <> user_b),
+  -- user_a < user_b (no self-connection since < excludes equality, plus
+  -- enforces canonical pair ordering so unique(user_a, user_b) catches a
+  -- duplicate regardless of which side redeemed whose invite code — see
+  -- docs/superpowers/specs/2026-08-18-rol-entrenador-design.md sección 1.
+  -- Verificado empíricamente: la comparación uuid < de Postgres coincide
+  -- con el orden de .sort() de JS sobre las mismas cadenas.
+  constraint connections_ordered check (user_a < user_b),
   unique (user_a, user_b)
 );
 
