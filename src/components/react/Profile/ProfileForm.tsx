@@ -4,6 +4,9 @@ import { getMyProfile, uploadAvatar, upsertProfile } from '../../../lib/profile'
 import { logMeasurement } from '../../../lib/measurements';
 import { applyTheme, DEFAULT_ACCENT, type ThemeMode } from '../../../lib/theme';
 import { getActiveRoutine, weeksElapsed } from '../../../lib/routines';
+import { DEFAULT_MAP_CENTER, getMyTrainerProfile, upsertTrainerProfile } from '../../../lib/trainerProfiles';
+import { DISCIPLINES } from '../ActivityPicker/ActivityPicker';
+import MapPicker from '../Shared/MapPicker';
 import type { Profile } from '../../../types/db';
 
 const MEASUREMENT_FIELDS: { key: keyof Profile; label: string }[] = [
@@ -35,6 +38,15 @@ export default function ProfileForm() {
   const [routineExpired, setRoutineExpired] = useState(false);
   const [isTrainer, setIsTrainer] = useState(false);
 
+  const [trainerVisible, setTrainerVisible] = useState(false);
+  const [trainerPin, setTrainerPin] = useState<[number, number] | null>(null);
+  const [trainerDisciplines, setTrainerDisciplines] = useState<string[]>([]);
+  const [trainerBio, setTrainerBio] = useState('');
+  const [trainerRateAmount, setTrainerRateAmount] = useState('');
+  const [trainerRateCurrency, setTrainerRateCurrency] = useState('ARS');
+  const [trainerRatePeriod, setTrainerRatePeriod] = useState<'clase' | 'mes' | 'hora'>('clase');
+  const [savingTrainerProfile, setSavingTrainerProfile] = useState(false);
+
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
       const loggedIn = data.session !== null;
@@ -56,6 +68,20 @@ export default function ProfileForm() {
         setTheme(profile.theme);
         setAccentColor(profile.accent_color);
         setIsTrainer(profile.is_trainer);
+        if (profile.is_trainer) {
+          const trainerProfile = await getMyTrainerProfile();
+          if (trainerProfile) {
+            setTrainerVisible(trainerProfile.is_visible);
+            if (trainerProfile.lat !== null && trainerProfile.lng !== null) {
+              setTrainerPin([trainerProfile.lat, trainerProfile.lng]);
+            }
+            setTrainerDisciplines(trainerProfile.disciplines);
+            setTrainerBio(trainerProfile.bio ?? '');
+            setTrainerRateAmount(trainerProfile.rate_amount?.toString() ?? '');
+            setTrainerRateCurrency(trainerProfile.rate_currency ?? 'ARS');
+            setTrainerRatePeriod(trainerProfile.rate_period ?? 'clase');
+          }
+        }
         setMeasurements({
           weight_kg: profile.weight_kg?.toString() ?? '',
           height_cm: profile.height_cm?.toString() ?? '',
@@ -130,6 +156,40 @@ export default function ProfileForm() {
       await upsertProfile({ is_trainer: next });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo guardar el cambio.');
+    }
+  }
+
+  function toggleTrainerDiscipline(id: string) {
+    setTrainerDisciplines((prev) => (prev.includes(id) ? prev.filter((d) => d !== id) : [...prev, id]));
+  }
+
+  async function handleSaveTrainerProfile() {
+    setError(null);
+    setSavedMessage(null);
+    setSavingTrainerProfile(true);
+    try {
+      const amount = trainerRateAmount === '' ? null : Number(trainerRateAmount);
+      if (amount !== null && (!Number.isFinite(amount) || amount < 0)) {
+        throw new Error('La tarifa debe ser un número válido.');
+      }
+      if (trainerVisible && !trainerPin) {
+        throw new Error('Poné tu pin en el mapa antes de activar la visibilidad.');
+      }
+      await upsertTrainerProfile({
+        is_visible: trainerVisible,
+        lat: trainerPin?.[0] ?? null,
+        lng: trainerPin?.[1] ?? null,
+        disciplines: trainerDisciplines,
+        bio: trainerBio.trim() || null,
+        rate_amount: amount,
+        rate_currency: trainerRateCurrency.trim() || null,
+        rate_period: trainerRatePeriod,
+      });
+      setSavedMessage('Buscador de entrenadores guardado.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo guardar.');
+    } finally {
+      setSavingTrainerProfile(false);
     }
   }
 
@@ -271,6 +331,95 @@ export default function ProfileForm() {
         />
         Soy entrenador
       </label>
+
+      {isTrainer && (
+        <div className="card-brutal flex flex-col gap-4">
+          <p className="label-brutal text-acid">Buscador de entrenadores</p>
+          <MapPicker
+            center={trainerPin ?? DEFAULT_MAP_CENTER}
+            draggableMarker={trainerPin ?? DEFAULT_MAP_CENTER}
+            onDraggableMarkerMove={(lat, lng) => setTrainerPin([lat, lng])}
+            height={220}
+          />
+          <p className="font-mono text-xs text-paper-dim">Arrastrá el pin hasta tu zona de trabajo.</p>
+          <label className="flex items-center gap-3 font-mono text-sm text-paper">
+            <input
+              type="checkbox"
+              checked={trainerVisible}
+              onChange={(e) => setTrainerVisible(e.target.checked)}
+              className="h-5 w-5 accent-acid"
+            />
+            Visible en el buscador
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {DISCIPLINES.map((d) => (
+              <button
+                key={d.id}
+                type="button"
+                onClick={() => toggleTrainerDiscipline(d.id)}
+                className={
+                  trainerDisciplines.includes(d.id)
+                    ? 'btn-brutal-sm border-acid bg-acid text-on-accent'
+                    : 'btn-brutal-sm'
+                }
+              >
+                {d.label}
+              </button>
+            ))}
+          </div>
+          <label className="flex flex-col gap-2">
+            <span className="label-brutal">Bio corta</span>
+            <textarea
+              value={trainerBio}
+              onChange={(e) => setTrainerBio(e.target.value)}
+              rows={3}
+              className="input-brutal"
+            />
+          </label>
+          <div className="grid grid-cols-3 gap-3">
+            <label className="flex flex-col gap-2">
+              <span className="label-brutal">Monto</span>
+              <input
+                type="number"
+                value={trainerRateAmount}
+                onChange={(e) => setTrainerRateAmount(e.target.value)}
+                min={0}
+                className="input-brutal"
+              />
+            </label>
+            <label className="flex flex-col gap-2">
+              <span className="label-brutal">Moneda</span>
+              <input
+                type="text"
+                value={trainerRateCurrency}
+                onChange={(e) => setTrainerRateCurrency(e.target.value)}
+                placeholder="ARS"
+                className="input-brutal"
+              />
+            </label>
+            <label className="flex flex-col gap-2">
+              <span className="label-brutal">Período</span>
+              <select
+                value={trainerRatePeriod}
+                onChange={(e) => setTrainerRatePeriod(e.target.value as 'clase' | 'mes' | 'hora')}
+                className="input-brutal"
+              >
+                <option value="clase">Por clase</option>
+                <option value="mes">Por mes</option>
+                <option value="hora">Por hora</option>
+              </select>
+            </label>
+          </div>
+          <button
+            type="button"
+            onClick={handleSaveTrainerProfile}
+            disabled={savingTrainerProfile}
+            className="btn-brutal-sm self-start"
+          >
+            {savingTrainerProfile ? 'Guardando...' : 'Guardar buscador'}
+          </button>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         <label className="flex flex-col gap-2">
