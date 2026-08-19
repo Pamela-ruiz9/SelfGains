@@ -80,7 +80,11 @@ function ShareRoutinePicker({ routineId }: { routineId: string }) {
 
   if (!open) {
     return (
-      <button type="button" onClick={handleOpen} className="text-acid hover:text-paper">
+      <button
+        type="button"
+        onClick={handleOpen}
+        className="border-2 border-paper-dim/60 bg-transparent px-2 py-1 font-mono text-xs uppercase tracking-wide text-paper transition duration-150 hover:border-paper hover:bg-paper hover:text-ink active:scale-95"
+      >
         Compartir
       </button>
     );
@@ -96,7 +100,7 @@ function ShareRoutinePicker({ routineId }: { routineId: string }) {
         <p className="font-mono text-xs text-paper-dim">Cargando...</p>
       )}
       {connections !== null && connections.length === 0 && (
-        <p className="font-mono text-xs text-paper-dim">No tenés conexiones todavía.</p>
+        <p className="font-mono text-xs text-paper-dim">No tienes conexiones todavía.</p>
       )}
       {connections !== null &&
         connections.length > 0 &&
@@ -115,7 +119,7 @@ function ShareRoutinePicker({ routineId }: { routineId: string }) {
       <button
         type="button"
         onClick={() => setOpen(false)}
-        className="font-mono text-xs text-paper-dim hover:text-paper"
+        className="border-2 border-paper-dim/60 bg-transparent px-2 py-1 font-mono text-xs uppercase tracking-wide text-paper-dim transition duration-150 hover:border-paper hover:text-paper active:scale-95"
       >
         Cancelar
       </button>
@@ -156,14 +160,14 @@ function RoutineCard({
               <button
                 type="button"
                 onClick={() => onEdit?.(routine.ref)}
-                className="text-acid hover:text-paper"
+                className="border-2 border-paper-dim/60 bg-transparent px-2 py-1 font-mono text-xs uppercase tracking-wide text-paper transition duration-150 hover:border-paper hover:bg-paper hover:text-ink active:scale-95"
               >
                 Editar
               </button>
               <button
                 type="button"
                 onClick={() => onDelete?.(routine.ref)}
-                className="text-blood hover:text-paper"
+                className="border-2 border-blood bg-transparent px-2 py-1 font-mono text-xs uppercase tracking-wide text-blood transition duration-150 hover:bg-blood hover:text-paper active:scale-95"
               >
                 Eliminar
               </button>

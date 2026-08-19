@@ -445,11 +445,11 @@ export default function WorkoutLogger({ activities, plans }: Props) {
   // Independientes, no acordeón exclusivo: a diferencia de Progreso (una
   // pantalla de solo consulta), acá se suele necesitar tener "Hoy toca" y
   // "Agregar otra actividad" abiertas al mismo tiempo dentro del mismo
-  // registro. "Copiar" arranca cerrada — es la que menos se usa y la que
-  // tapaba "Hoy toca" antes de este cambio.
-  const [todaySectionOpen, setTodaySectionOpen] = useState(true);
+  // registro. Todas arrancan cerradas al entrar a la pantalla — el usuario
+  // elige qué abrir, nada se le impone expandido de entrada.
+  const [todaySectionOpen, setTodaySectionOpen] = useState(false);
   const [copySectionOpen, setCopySectionOpen] = useState(false);
-  const [addActivitySectionOpen, setAddActivitySectionOpen] = useState(true);
+  const [addActivitySectionOpen, setAddActivitySectionOpen] = useState(false);
 
   const [selectedActivity, setSelectedActivity] = useState<ActivityOption | null>(null);
   const [reps, setReps] = useState('');
@@ -742,12 +742,14 @@ export default function WorkoutLogger({ activities, plans }: Props) {
           }
         >
           <div className="flex flex-col gap-4">
-            <div className="h-3 w-full border-2 border-paper-dim/30">
-              <div
-                className="h-full bg-acid transition-all duration-300"
-                style={{ width: `${progressPct}%` }}
-              />
-            </div>
+            {totalTodayCount > 1 && (
+              <div className="h-3 w-full overflow-hidden rounded-full border-2 border-paper-dim/30 bg-surface-raised">
+                <div
+                  className="h-full bg-acid transition-all duration-300"
+                  style={{ width: `${progressPct}%` }}
+                />
+              </div>
+            )}
             <div className="grid gap-4 sm:grid-cols-2">
               {todayActivities.map(({ activity, target }) => {
                 const count = loggedCountFor(activity);

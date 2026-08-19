@@ -51,9 +51,9 @@ export default function ProgressList({ exerciseNames, exercises, activities }: P
   const [selectedCardioActivityId, setSelectedCardioActivityId] = useState<string | null>(null);
   const [selectedDiscipline, setSelectedDiscipline] = useState<string | null>(null);
   const [selectedMeasurement, setSelectedMeasurement] = useState<string | null>(null);
-  const [openSection, setOpenSection] = useState<'medidas' | 'disciplina' | 'entrenamientos' | null>(
-    'disciplina'
-  );
+  // Todas arrancan cerradas al entrar a la pestaña — el usuario elige qué
+  // abrir, nada se le impone expandido de entrada.
+  const [openSection, setOpenSection] = useState<'medidas' | 'disciplina' | 'entrenamientos' | null>(null);
 
   function toggleSection(section: 'medidas' | 'disciplina' | 'entrenamientos') {
     setOpenSection((prev) => (prev === section ? null : section));

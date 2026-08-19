@@ -112,10 +112,18 @@ function SetRow({
         {set.rpe !== null ? ` (RPE ${set.rpe})` : ''}
       </span>
       <span className="ml-auto flex gap-3 font-mono text-xs">
-        <button type="button" onClick={() => setEditing(true)} className="text-acid hover:text-paper">
+        <button
+          type="button"
+          onClick={() => setEditing(true)}
+          className="border-2 border-paper-dim/60 bg-transparent px-2 py-1 text-paper transition duration-150 hover:border-paper hover:bg-paper hover:text-ink active:scale-95"
+        >
           Editar
         </button>
-        <button type="button" onClick={handleDelete} className="text-blood hover:text-paper">
+        <button
+          type="button"
+          onClick={handleDelete}
+          className="border-2 border-blood bg-transparent px-2 py-1 text-blood transition duration-150 hover:bg-blood hover:text-paper active:scale-95"
+        >
           Eliminar
         </button>
       </span>
@@ -209,10 +217,18 @@ function SessionRow({
         {session.duration_min} min
       </span>
       <span className="ml-auto flex gap-3 font-mono text-xs">
-        <button type="button" onClick={() => setEditing(true)} className="text-acid hover:text-paper">
+        <button
+          type="button"
+          onClick={() => setEditing(true)}
+          className="border-2 border-paper-dim/60 bg-transparent px-2 py-1 text-paper transition duration-150 hover:border-paper hover:bg-paper hover:text-ink active:scale-95"
+        >
           Editar
         </button>
-        <button type="button" onClick={handleDelete} className="text-blood hover:text-paper">
+        <button
+          type="button"
+          onClick={handleDelete}
+          className="border-2 border-blood bg-transparent px-2 py-1 text-blood transition duration-150 hover:bg-blood hover:text-paper active:scale-95"
+        >
           Eliminar
         </button>
       </span>
@@ -296,7 +312,7 @@ export default function WorkoutHistory({
             <button
               type="button"
               onClick={() => handleDeleteWorkout(w.id)}
-              className="font-mono text-xs text-blood hover:text-paper"
+              className="border-2 border-blood bg-transparent px-2 py-1 font-mono text-xs uppercase tracking-wide text-blood transition duration-150 hover:bg-blood hover:text-paper active:scale-95"
             >
               Eliminar día
             </button>

@@ -80,7 +80,7 @@ function AssignRoutinePicker({
   return (
     <div className="flex flex-col gap-2">
       {routines.length === 0 ? (
-        <p className="font-mono text-xs text-paper-dim">No tenés rutinas propias para asignar todavía.</p>
+        <p className="font-mono text-xs text-paper-dim">No tienes rutinas propias para asignar todavía.</p>
       ) : (
         routines.map((r) => (
           <button
@@ -98,7 +98,7 @@ function AssignRoutinePicker({
       <button
         type="button"
         onClick={() => setOpen(false)}
-        className="font-mono text-xs text-paper-dim hover:text-paper"
+        className="border-2 border-paper-dim/60 bg-transparent px-2 py-1 font-mono text-xs uppercase tracking-wide text-paper-dim transition duration-150 hover:border-paper hover:text-paper active:scale-95"
       >
         Cancelar
       </button>
@@ -482,7 +482,7 @@ export default function Connections({ activities }: Props) {
       <div className="flex flex-col gap-3">
         <p className="label-brutal text-acid">Solicitudes de conexión</p>
         {incomingRequests.length === 0 ? (
-          <p className="font-mono text-sm text-paper-dim">No tenés solicitudes pendientes.</p>
+          <p className="font-mono text-sm text-paper-dim">No tienes solicitudes pendientes.</p>
         ) : (
           incomingRequests.map((req) => (
             <div key={req.requestId} className="card-brutal flex items-center gap-4">
@@ -499,7 +499,7 @@ export default function Connections({ activities }: Props) {
                 <button
                   type="button"
                   onClick={() => handleRejectIncoming(req.requestId)}
-                  className="font-mono text-xs text-blood hover:text-paper"
+                  className="border-2 border-blood bg-transparent px-2 py-1 font-mono text-xs uppercase tracking-wide text-blood transition duration-150 hover:bg-blood hover:text-paper active:scale-95"
                 >
                   Rechazar
                 </button>
@@ -520,7 +520,7 @@ export default function Connections({ activities }: Props) {
             <button
               type="button"
               onClick={() => setShowTrainerSearch(false)}
-              className="font-mono text-xs text-paper-dim hover:text-paper"
+              className="border-2 border-paper-dim/60 bg-transparent px-2 py-1 font-mono text-xs uppercase tracking-wide text-paper-dim transition duration-150 hover:border-paper hover:text-paper active:scale-95"
             >
               Cerrar
             </button>
@@ -615,7 +615,7 @@ export default function Connections({ activities }: Props) {
         <p className="label-brutal text-acid">Rutinas compartidas pendientes</p>
         {shareActionError && <p className="font-mono text-xs text-blood">{shareActionError}</p>}
         {pendingShares.length === 0 ? (
-          <p className="font-mono text-sm text-paper-dim">No tenés propuestas de rutina pendientes.</p>
+          <p className="font-mono text-sm text-paper-dim">No tienes propuestas de rutina pendientes.</p>
         ) : (
           pendingShares.map((share) => (
             <div key={share.shareId} className="card-brutal flex flex-col gap-3">
@@ -647,7 +647,7 @@ export default function Connections({ activities }: Props) {
                   type="button"
                   onClick={() => handleRejectShare(share.shareId)}
                   disabled={actingShareId === share.shareId}
-                  className="font-mono text-xs text-blood hover:text-paper"
+                  className="border-2 border-blood bg-transparent px-2 py-1 font-mono text-xs uppercase tracking-wide text-blood transition duration-150 hover:bg-blood hover:text-paper active:scale-95"
                 >
                   Rechazar
                 </button>
@@ -660,7 +660,7 @@ export default function Connections({ activities }: Props) {
       <div className="flex flex-col gap-3">
         <p className="label-brutal text-acid">Mis conexiones</p>
         {connections.length === 0 ? (
-          <p className="font-mono text-sm text-paper-dim">Todavía no tenés ninguna conexión.</p>
+          <p className="font-mono text-sm text-paper-dim">Todavía no tienes ninguna conexión.</p>
         ) : (
           connections.map((c) => (
             <div key={c.connectionId} className="card-brutal flex items-center gap-4">
@@ -673,7 +673,7 @@ export default function Connections({ activities }: Props) {
                 <button
                   type="button"
                   onClick={() => handleRemove(c.connectionId)}
-                  className="font-mono text-xs text-blood hover:text-paper"
+                  className="border-2 border-blood bg-transparent px-2 py-1 font-mono text-xs uppercase tracking-wide text-blood transition duration-150 hover:bg-blood hover:text-paper active:scale-95"
                 >
                   Desvincular
                 </button>

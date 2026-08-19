@@ -131,7 +131,7 @@ function DayActivityPicker({
                     onClick={() => onMove(activityId, -1)}
                     disabled={index === 0}
                     aria-label="Mover arriba"
-                    className="text-acid hover:text-paper disabled:pointer-events-none disabled:opacity-30"
+                    className="flex h-7 w-7 items-center justify-center border-2 border-paper-dim/60 text-acid transition duration-150 hover:border-paper hover:text-paper active:scale-95 disabled:pointer-events-none disabled:opacity-30"
                   >
                     ↑
                   </button>
@@ -140,14 +140,14 @@ function DayActivityPicker({
                     onClick={() => onMove(activityId, 1)}
                     disabled={index === dayEntries.length - 1}
                     aria-label="Mover abajo"
-                    className="text-acid hover:text-paper disabled:pointer-events-none disabled:opacity-30"
+                    className="flex h-7 w-7 items-center justify-center border-2 border-paper-dim/60 text-acid transition duration-150 hover:border-paper hover:text-paper active:scale-95 disabled:pointer-events-none disabled:opacity-30"
                   >
                     ↓
                   </button>
                   <button
                     type="button"
                     onClick={() => onRemove(activityId)}
-                    className="text-blood hover:text-paper"
+                    className="border-2 border-blood bg-transparent px-2 py-1 font-mono text-xs uppercase tracking-wide text-blood transition duration-150 hover:bg-blood hover:text-paper active:scale-95"
                   >
                     Quitar
                   </button>

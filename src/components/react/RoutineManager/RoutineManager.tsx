@@ -172,7 +172,7 @@ export default function RoutineManager({ predefinedRoutines, activities }: Props
         <p className="label-brutal text-acid">Rutina activa</p>
         {!activeRoutine ? (
           <p className="font-mono text-sm text-paper-dim">
-            No tenés ninguna rutina activa todavía. Elegí una predefinida o creá la tuya abajo.
+            No tienes ninguna rutina activa todavía. Elige una predefinida o crea la tuya abajo.
           </p>
         ) : expired ? (
           <div className="card-brutal border-blood/60">
@@ -211,7 +211,7 @@ export default function RoutineManager({ predefinedRoutines, activities }: Props
             <button
               type="button"
               onClick={handleDeactivate}
-              className="shrink-0 font-mono text-xs text-blood hover:text-paper"
+              className="shrink-0 border-2 border-blood bg-transparent px-3 py-2 font-mono text-xs uppercase tracking-wide text-blood transition duration-150 hover:bg-blood hover:text-paper active:scale-95"
             >
               Desactivar
             </button>
@@ -250,7 +250,7 @@ export default function RoutineManager({ predefinedRoutines, activities }: Props
                 setShowAddRoutine(false);
                 setEditingRoutine(null);
               }}
-              className="font-mono text-xs text-paper-dim hover:text-paper"
+              className="border-2 border-paper-dim/60 bg-transparent px-2 py-1 font-mono text-xs uppercase tracking-wide text-paper-dim transition duration-150 hover:border-paper hover:text-paper active:scale-95"
             >
               Cerrar
             </button>
