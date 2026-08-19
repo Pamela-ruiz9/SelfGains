@@ -39,7 +39,7 @@ export default function RedeemInvite() {
   if (status === 'needs-login') {
     return (
       <p className="font-mono text-sm text-paper-dim">
-        Iniciá sesión y volvé a abrir este link para conectarte.{' '}
+        Inicia sesión y vuelve a abrir este link para conectarte.{' '}
         <a
           href={`${import.meta.env.BASE_URL}login/`}
           className="text-acid underline underline-offset-4 hover:text-paper"

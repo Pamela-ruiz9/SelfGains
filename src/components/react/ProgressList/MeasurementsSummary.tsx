@@ -1,8 +1,10 @@
 import type { Measurement } from '../../../types/db';
 
+// Sin estatura a propósito: no cambia para un adulto, así que no tiene
+// sentido como tarjeta de progreso en el tiempo — sigue existiendo como
+// campo en Perfil, solo se saca de acá.
 export const MEASUREMENT_DISPLAY_FIELDS: { key: keyof Measurement; label: string; unit: string }[] = [
   { key: 'weight_kg', label: 'Peso', unit: 'kg' },
-  { key: 'height_cm', label: 'Estatura', unit: 'cm' },
   { key: 'waist_cm', label: 'Cintura', unit: 'cm' },
   { key: 'hip_cm', label: 'Cadera', unit: 'cm' },
   { key: 'arm_cm', label: 'Brazo', unit: 'cm' },

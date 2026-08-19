@@ -27,7 +27,7 @@ const activities = activityEntries
   .sort((a, b) => a.name.localeCompare(b.name));
 ---
 <BaseLayout title="Rutinas">
-  <p class="label-brutal mb-3 text-acid">Elegí o armá tu plan</p>
+  <p class="label-brutal mb-3 text-acid">Elige o arma tu plan</p>
   <h1 class="mb-8 font-display text-5xl text-paper sm:text-6xl">RUTINAS</h1>
   <RoutineManager client:load predefinedRoutines={predefinedRoutines} activities={activities} />
 </BaseLayout>

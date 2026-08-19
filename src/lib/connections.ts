@@ -37,7 +37,7 @@ export async function createOrRegenerateInviteCode(): Promise<string> {
     if (!error) return code;
     if (error.code !== '23505') throw error; // no es una colisión de código único, algo más falló
   }
-  throw new Error('No se pudo generar un código único, probá de nuevo.');
+  throw new Error('No se pudo generar un código único, prueba de nuevo.');
 }
 
 export async function redeemInviteCode(rawCode: string): Promise<void> {
@@ -57,7 +57,7 @@ export async function redeemInviteCode(rawCode: string): Promise<void> {
 
   if (inviteError) throw inviteError;
   if (!invite) throw new Error('Código inválido.');
-  if (invite.user_id === user.id) throw new Error('No podés conectarte con vos mismo.');
+  if (invite.user_id === user.id) throw new Error('No puedes conectarte contigo mismo.');
 
   // Orden canónico (alfabético) de los dos ids — no "quién generó el código"
   // — para que la restricción unique(user_a, user_b) detecte una conexión
