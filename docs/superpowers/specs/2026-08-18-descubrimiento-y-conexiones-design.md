@@ -70,7 +70,14 @@ create policy "El receptor puede aceptar o rechazar una solicitud"
 
 create policy "Cualquiera de los dos lados puede cancelar una solicitud"
   on connection_requests for delete
-  using (auth.uid() = from_user_id or auth.uid() = to_user_id);
+  using ((auth.uid() = from_user_id or auth.uid() = to_user_id) and status = 'pending');
+
+-- Sin esto, un receptor podría reapuntar `from_user_id` en su propia
+-- solicitud pendiente a un tercero no involucrado y luego aceptarla,
+-- forzando una fila en `connections` sin el consentimiento real de esa
+-- persona — la política de UPDATE de arriba solo fija `to_user_id`
+-- (auth.uid() = to_user_id en using/with check), no las demás columnas.
+revoke update (from_user_id) on connection_requests from authenticated;
 ```
 
 `unique(from_user_id, to_user_id)` evita que el mismo usuario mande la misma solicitud dos veces, pero no evita que A le mande una solicitud a B mientras B ya le había mandado una a A (dos filas válidas, direcciones opuestas). No se resuelve a nivel de base de datos — la UI lo evita mostrando "Aceptar" en vez de "Enviar solicitud" cuando ya existe una entrante del otro lado (ver sección 3). Si igualmente se crean las dos, aceptar cualquiera de las dos genera la misma fila en `connections` (el `insert` ya tolera el duplicado vía el manejo de conflicto `23505` que usa `redeemInviteCode`), así que no es un estado roto, solo una solicitud sobrante que se puede rechazar o ignorar.
@@ -147,6 +154,15 @@ create policy "El receptor puede aceptar o rechazar la propuesta"
 create policy "Quien propuso puede cancelarla mientras esté pendiente"
   on routine_shares for delete
   using (auth.uid() = from_user_id and status = 'pending');
+
+-- Mismo motivo que la línea equivalente sobre connection_requests más
+-- arriba: sin esto, el receptor de una propuesta pendiente podría reapuntar
+-- `routine_id`/`from_user_id` a una fila arbitraria y ganar lectura sobre
+-- una rutina ajena vía la política de "El receptor de una rutina compartida
+-- pendiente puede verla" que sigue debajo — esa política de SELECT sobre
+-- `routines` confía en `routine_shares.routine_id` sin poder saber si fue
+-- manipulado después del insert original.
+revoke update (routine_id, from_user_id) on routine_shares from authenticated;
 ```
 
 ## 2. Política RLS nueva sobre `routines` (sin tocar las existentes)
