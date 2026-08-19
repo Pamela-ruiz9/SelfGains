@@ -2655,6 +2655,7 @@ export default function Connections({ activities }: Props) {
   const [previewShareId, setPreviewShareId] = useState<string | null>(null);
   const [previewDays, setPreviewDays] = useState<RoutineDays | null>(null);
   const [shareActionError, setShareActionError] = useState<string | null>(null);
+  const [actingShareId, setActingShareId] = useState<string | null>(null);
 
   async function refresh() {
     const [profile, myCode, myConnections, routines, incoming, shares] = await Promise.all([
@@ -2832,23 +2833,29 @@ export default function Connections({ activities }: Props) {
 
   async function handleAcceptShare(share: PendingRoutineShare) {
     setShareActionError(null);
+    setActingShareId(share.shareId);
     try {
       await acceptRoutineShare(share.shareId);
-      setPreviewShareId(null);
+      setPreviewShareId((id) => (id === share.shareId ? null : id));
       await refresh();
     } catch (err) {
       setShareActionError(err instanceof Error ? err.message : 'No se pudo agregar la rutina.');
+    } finally {
+      setActingShareId(null);
     }
   }
 
   async function handleRejectShare(shareId: string) {
     setShareActionError(null);
+    setActingShareId(shareId);
     try {
       await rejectRoutineShare(shareId);
-      setPreviewShareId(null);
+      setPreviewShareId((id) => (id === shareId ? null : id));
       await refresh();
     } catch (err) {
       setShareActionError(err instanceof Error ? err.message : 'No se pudo rechazar.');
+    } finally {
+      setActingShareId(null);
     }
   }
 
@@ -3102,19 +3109,26 @@ export default function Connections({ activities }: Props) {
                 <RoutinePreview days={previewDays} activities={activities} />
               )}
               <div className="flex gap-3">
-                <button type="button" onClick={() => handlePreviewShare(share)} className="btn-brutal-sm">
+                <button
+                  type="button"
+                  onClick={() => handlePreviewShare(share)}
+                  disabled={actingShareId === share.shareId}
+                  className="btn-brutal-sm"
+                >
                   Ver
                 </button>
                 <button
                   type="button"
                   onClick={() => handleAcceptShare(share)}
+                  disabled={actingShareId === share.shareId}
                   className="btn-brutal-sm border-acid bg-acid text-on-accent"
                 >
-                  Agregar a mis rutinas
+                  {actingShareId === share.shareId ? 'Agregando...' : 'Agregar a mis rutinas'}
                 </button>
                 <button
                   type="button"
                   onClick={() => handleRejectShare(share.shareId)}
+                  disabled={actingShareId === share.shareId}
                   className="font-mono text-xs text-blood hover:text-paper"
                 >
                   Rechazar
