@@ -648,6 +648,16 @@ export default function Connections() {
     }
   }
 
+  async function handleConnectTrainer(userId: string) {
+    setError(null);
+    try {
+      await sendConnectionRequest(userId);
+      setSentTrainerRequests((prev) => new Set(prev).add(userId));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo enviar la solicitud.');
+    }
+  }
+
   async function handleAcceptFromSearch(userId: string, requestId: string) {
     setError(null);
     try {
@@ -951,10 +961,16 @@ export async function getVisibleTrainersNear(
   centerLng: number,
   radiusKm: number
 ): Promise<VisibleTrainer[]> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error('No hay sesión activa');
+
   const { data, error } = await supabase
     .from('trainer_profiles')
     .select('*')
     .eq('is_visible', true)
+    .neq('user_id', user.id)
     .not('lat', 'is', null)
     .not('lng', 'is', null);
   if (error) throw error;
@@ -1150,7 +1166,16 @@ export default function MapPicker({
   }, [ready, markers]);
 
   useEffect(() => {
-    mapRef.current?.setView(center, zoom);
+    const map = mapRef.current;
+    if (!map) return;
+    const current = map.getCenter();
+    // Sin este chequeo, un center que llega desde el propio onMapMove del
+    // mapa (el usuario paneó) dispara un setView redundante, que Leaflet
+    // vuelve a resolver como un nuevo moveend — duplicando el fetch de
+    // entrenadores cercanos en Connections.tsx por cada pan.
+    const EPSILON = 1e-6;
+    if (Math.abs(current.lat - center[0]) < EPSILON && Math.abs(current.lng - center[1]) < EPSILON) return;
+    map.setView(center, zoom);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [center[0], center[1], zoom]);
 
@@ -1608,6 +1633,7 @@ export default function Connections() {
   const [trainerRadiusKm, setTrainerRadiusKm] = useState(10);
   const [nearbyTrainers, setNearbyTrainers] = useState<VisibleTrainer[]>([]);
   const [selectedTrainerId, setSelectedTrainerId] = useState<string | null>(null);
+  const [sentTrainerRequests, setSentTrainerRequests] = useState<Set<string>>(new Set());
 
   async function refresh() {
     const [profile, myCode, myConnections, routines, incoming] = await Promise.all([
@@ -1641,6 +1667,10 @@ export default function Connections() {
 
   useEffect(() => {
     if (!showTrainerSearch || trainerCenter) return;
+    if (!navigator.geolocation) {
+      setTrainerCenter(DEFAULT_MAP_CENTER);
+      return;
+    }
     navigator.geolocation.getCurrentPosition(
       (pos) => setTrainerCenter([pos.coords.latitude, pos.coords.longitude]),
       () => setTrainerCenter(DEFAULT_MAP_CENTER)
@@ -1718,6 +1748,16 @@ export default function Connections() {
       setSearchResults((prev) =>
         prev.map((r) => (r.userId === userId ? { ...r, status: 'request-sent' } : r))
       );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo enviar la solicitud.');
+    }
+  }
+
+  async function handleConnectTrainer(userId: string) {
+    setError(null);
+    try {
+      await sendConnectionRequest(userId);
+      setSentTrainerRequests((prev) => new Set(prev).add(userId));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo enviar la solicitud.');
     }
@@ -1969,16 +2009,21 @@ export default function Connections() {
                 {t.bio && <p className="font-mono text-sm text-paper">{t.bio}</p>}
                 {t.rate_amount !== null && (
                   <p className="font-mono text-xs text-paper-dim">
-                    {t.rate_amount} {t.rate_currency} / {t.rate_period}
+                    {t.rate_amount}
+                    {t.rate_currency ? ` ${t.rate_currency}` : ''} / {t.rate_period}
                   </p>
                 )}
-                <button
-                  type="button"
-                  onClick={() => handleSendRequest(t.user_id)}
-                  className="btn-brutal-sm self-start"
-                >
-                  Conectar
-                </button>
+                {sentTrainerRequests.has(t.user_id) ? (
+                  <p className="font-mono text-xs text-paper-dim">Solicitud enviada</p>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => handleConnectTrainer(t.user_id)}
+                    className="btn-brutal-sm self-start"
+                  >
+                    Conectar
+                  </button>
+                )}
               </div>
             ))
           )}
@@ -2575,6 +2620,7 @@ export default function Connections({ activities }: Props) {
   const [trainerRadiusKm, setTrainerRadiusKm] = useState(10);
   const [nearbyTrainers, setNearbyTrainers] = useState<VisibleTrainer[]>([]);
   const [selectedTrainerId, setSelectedTrainerId] = useState<string | null>(null);
+  const [sentTrainerRequests, setSentTrainerRequests] = useState<Set<string>>(new Set());
 
   const [pendingShares, setPendingShares] = useState<PendingRoutineShare[]>([]);
   const [previewShareId, setPreviewShareId] = useState<string | null>(null);
@@ -2615,6 +2661,10 @@ export default function Connections({ activities }: Props) {
 
   useEffect(() => {
     if (!showTrainerSearch || trainerCenter) return;
+    if (!navigator.geolocation) {
+      setTrainerCenter(DEFAULT_MAP_CENTER);
+      return;
+    }
     navigator.geolocation.getCurrentPosition(
       (pos) => setTrainerCenter([pos.coords.latitude, pos.coords.longitude]),
       () => setTrainerCenter(DEFAULT_MAP_CENTER)
@@ -2692,6 +2742,16 @@ export default function Connections({ activities }: Props) {
       setSearchResults((prev) =>
         prev.map((r) => (r.userId === userId ? { ...r, status: 'request-sent' } : r))
       );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo enviar la solicitud.');
+    }
+  }
+
+  async function handleConnectTrainer(userId: string) {
+    setError(null);
+    try {
+      await sendConnectionRequest(userId);
+      setSentTrainerRequests((prev) => new Set(prev).add(userId));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo enviar la solicitud.');
     }
@@ -2976,16 +3036,21 @@ export default function Connections({ activities }: Props) {
                 {t.bio && <p className="font-mono text-sm text-paper">{t.bio}</p>}
                 {t.rate_amount !== null && (
                   <p className="font-mono text-xs text-paper-dim">
-                    {t.rate_amount} {t.rate_currency} / {t.rate_period}
+                    {t.rate_amount}
+                    {t.rate_currency ? ` ${t.rate_currency}` : ''} / {t.rate_period}
                   </p>
                 )}
-                <button
-                  type="button"
-                  onClick={() => handleSendRequest(t.user_id)}
-                  className="btn-brutal-sm self-start"
-                >
-                  Conectar
-                </button>
+                {sentTrainerRequests.has(t.user_id) ? (
+                  <p className="font-mono text-xs text-paper-dim">Solicitud enviada</p>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => handleConnectTrainer(t.user_id)}
+                    className="btn-brutal-sm self-start"
+                  >
+                    Conectar
+                  </button>
+                )}
               </div>
             ))
           )}
