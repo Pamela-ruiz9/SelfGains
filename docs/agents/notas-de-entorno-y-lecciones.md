@@ -63,6 +63,31 @@ Cuando una política de RLS te deja **insertar** una fila en una tabla ajena (ej
 
 Cómo diagnosticarlo cuando el policy check "debería" pasar y no pasa: probar el mismo INSERT por REST directo (`fetch` con el JWT real del usuario, no `supabase db query --linked` que corre como rol privilegiado y no reproduce RLS fielmente) **con y sin** el header `Prefer: return=representation`. Si sin el header devuelve `201` limpio y con el header devuelve `403`, el problema es el `RETURNING`, no la política de INSERT — no tiene sentido seguir reescribiendo la política. Fix: no pedir `.select()` si nada del lado del cliente necesita la fila insertada de vuelta (verificar primero si algún caller usa el valor de retorno).
 
+## RLS: un `revoke update` a nivel de columna no alcanza contra el `grant` de tabla completa por defecto
+
+Cuando una política de UPDATE solo fija una columna en `using`/`with check` (ej. `auth.uid() = to_user_id`) pero la fila tiene otras columnas que no deberían poder tocarse (ej. `from_user_id`, `routine_id`), la reacción natural es `revoke update (columna) on tabla from authenticated;` para cerrar esas columnas puntuales. **Esto no funciona por sí solo.** Supabase le da a `authenticated` un `grant update` a nivel de **tabla completa** por defecto en cualquier tabla nueva (parte de su setup de privilegios estándar), y ese grant amplio sigue permitiendo escribir cualquier columna sin importar qué se revoque a nivel de columna — un `revoke` de columna sobre un grant que nunca existió a nivel de columna (porque el grant real es de tabla) es un no-op silencioso. Se descubrió esto empíricamente en la feature de descubrimiento y conexiones: un primer fix con `revoke update (columna)` pasó dos revisiones de código (una humana-simulada por subagente, otra de re-verificación) que razonaron correctamente sobre la lógica pero nunca lo probaron contra la base real — recién se detectó consultando `information_schema.column_privileges` contra el proyecto Supabase real después de aplicar la migración.
+
+**El patrón que sí funciona:** revocar `update` de tabla completa primero, y recién ahí otorgar `update` solo sobre la(s) columna(s) que sí deben ser editables:
+
+```sql
+revoke update on connection_requests from authenticated;
+grant update (status) on connection_requests to authenticated;
+```
+
+Verificar siempre contra la base real después de aplicar (no confiar en que la lógica del SQL "se ve bien"):
+
+```sql
+select table_name, column_name, privilege_type
+from information_schema.column_privileges
+where grantee = 'authenticated' and table_name = 'mi_tabla' and privilege_type = 'UPDATE';
+```
+
+## RLS + funciones sin RPC: derivar de una fila verificada, nunca de un segundo parámetro del llamador
+
+Un patrón repetido en `acceptConnectionRequest`/`acceptRoutineShare` (feature de descubrimiento y conexiones): una función que "acepta una propuesta" necesita tanto el id de la propuesta (`requestId`/`shareId`) como el dato relacionado que esa propuesta referencia (de quién es, o qué rutina copiar). La tentación es pasar los dos como parámetros separados desde el cliente — pero si el segundo parámetro no se verifica contra la fila real, un llamador puede pasar un id de propuesta legítimo (que sí le pertenece, pasa RLS) junto con un dato relacionado que no le corresponde a esa propuesta, y la función procede igual. Concretamente: `acceptConnectionRequest(requestId, fromUserId)` permitía forjar una conexión con cualquier `fromUserId` arbitrario mientras `requestId` fuera una fila propia real — no hacía falta que los dos coincidieran.
+
+**El fix, dos veces en la misma feature:** sacar el segundo parámetro por completo y derivarlo de una lectura a la base acotada por RLS al llamador (ej. `.eq('id', requestId).eq('to_user_id', auth.uid()).single()`), usando `.single()` para que un id inválido o ajeno falle con un error claro en vez de un no-op silencioso. Esto es seguro (no choca con el problema de RETURNING/RLS de la sección de arriba) siempre que el llamador ya tenga permiso de SELECT sobre esa fila por otra política — típicamente sí, porque para "aceptar" algo primero hay que poder verlo.
+
 ## Preguntar en vez de adivinar en decisiones subjetivas
 
 Para trabajo de diseño/creativo genuinamente subjetivo (dirección de un logo, estilo visual), usar `AskUserQuestion` con opciones concretas *antes* de invertir tiempo construyendo, y de nuevo entre rondas cuando el feedback es ambiguo ("no me gusta nada" sin más detalle) — preguntar qué específicamente no funciona y si conviene seguir afinando la misma dirección o abrir a algo distinto ahorra rondas completas de exploración en la dirección equivocada. En este repo, ver `docs/agents/logo-identidad-status.md` para un caso concreto de 3 rondas donde cada una se ajustó a partir de una pregunta de una sola vez, no de adivinar.
