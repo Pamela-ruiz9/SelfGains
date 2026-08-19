@@ -63,10 +63,16 @@ export async function getVisibleTrainersNear(
   centerLng: number,
   radiusKm: number
 ): Promise<VisibleTrainer[]> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error('No hay sesión activa');
+
   const { data, error } = await supabase
     .from('trainer_profiles')
     .select('*')
     .eq('is_visible', true)
+    .neq('user_id', user.id)
     .not('lat', 'is', null)
     .not('lng', 'is', null);
   if (error) throw error;

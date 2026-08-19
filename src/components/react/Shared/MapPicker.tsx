@@ -136,7 +136,16 @@ export default function MapPicker({
   }, [ready, markers]);
 
   useEffect(() => {
-    mapRef.current?.setView(center, zoom);
+    const map = mapRef.current;
+    if (!map) return;
+    const current = map.getCenter();
+    // Sin este chequeo, un center que llega desde el propio onMapMove del
+    // mapa (el usuario paneó) dispara un setView redundante, que Leaflet
+    // vuelve a resolver como un nuevo moveend — duplicando el fetch de
+    // entrenadores cercanos en Connections.tsx por cada pan.
+    const EPSILON = 1e-6;
+    if (Math.abs(current.lat - center[0]) < EPSILON && Math.abs(current.lng - center[1]) < EPSILON) return;
+    map.setView(center, zoom);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [center[0], center[1], zoom]);
 
