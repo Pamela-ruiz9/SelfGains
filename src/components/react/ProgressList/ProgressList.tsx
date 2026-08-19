@@ -16,6 +16,7 @@ import {
 } from '../../../lib/prs';
 import type { ActivityOption } from '../ActivityPicker/ActivityPicker';
 import type { Measurement } from '../../../types/db';
+import CollapsibleSection from './CollapsibleSection';
 import DisciplineSummary from './DisciplineSummary';
 import MeasurementsSummary, { MEASUREMENT_DISPLAY_FIELDS } from './MeasurementsSummary';
 import MeasurementsChart from './MeasurementsChart';
@@ -50,6 +51,13 @@ export default function ProgressList({ exerciseNames, exercises, activities }: P
   const [selectedCardioActivityId, setSelectedCardioActivityId] = useState<string | null>(null);
   const [selectedDiscipline, setSelectedDiscipline] = useState<string | null>(null);
   const [selectedMeasurement, setSelectedMeasurement] = useState<string | null>(null);
+  const [openSection, setOpenSection] = useState<'medidas' | 'disciplina' | 'entrenamientos' | null>(
+    'disciplina'
+  );
+
+  function toggleSection(section: 'medidas' | 'disciplina' | 'entrenamientos') {
+    setOpenSection((prev) => (prev === section ? null : section));
+  }
 
   async function loadWorkouts() {
     try {
@@ -157,66 +165,81 @@ export default function ProgressList({ exerciseNames, exercises, activities }: P
   const selectedMeasurementField = MEASUREMENT_DISPLAY_FIELDS.find((f) => f.key === selectedMeasurement);
 
   return (
-    <div className="flex flex-col gap-10">
-      <MeasurementsSummary
-        latest={latestMeasurement}
-        selected={selectedMeasurement}
-        onSelect={setSelectedMeasurement}
-      />
-      {selectedMeasurementField && (
-        <MeasurementsChart
-          label={selectedMeasurementField.label}
-          unit={selectedMeasurementField.unit}
-          points={progressForMeasurement(measurements, selectedMeasurementField.key)}
+    <div className="flex flex-col gap-6">
+      <CollapsibleSection
+        title="Medidas corporales"
+        open={openSection === 'medidas'}
+        onToggle={() => toggleSection('medidas')}
+      >
+        <MeasurementsSummary
+          latest={latestMeasurement}
+          selected={selectedMeasurement}
+          onSelect={setSelectedMeasurement}
         />
-      )}
-
-      <DisciplineSummary
-        summaries={disciplineSummaries}
-        selected={selectedDiscipline}
-        onSelect={setSelectedDiscipline}
-      />
-
-      {selectedDiscipline === 'gym' && (
-        <>
-          <PRGrid prs={prs} exercises={exercises} onSelectExercise={setSelectedExerciseId} />
-          {selectedExerciseId && (
-            <ProgressChart
-              exerciseId={selectedExerciseId}
-              points={progressForExercise(workouts, selectedExerciseId)}
-              exercises={exercises}
-              onSelectExercise={setSelectedExerciseId}
-            />
-          )}
-        </>
-      )}
-
-      {(selectedDiscipline === 'running' || selectedDiscipline === 'natacion') && (
-        <>
-          <CardioPRGrid
-            prs={cardioPrsForSelected}
-            activities={cardioActivitiesForSelected}
-            onSelectActivity={setSelectedCardioActivityId}
+        {selectedMeasurementField && (
+          <MeasurementsChart
+            label={selectedMeasurementField.label}
+            unit={selectedMeasurementField.unit}
+            points={progressForMeasurement(measurements, selectedMeasurementField.key)}
           />
-          {selectedCardioActivityId && (
-            <CardioProgressChart
-              activityId={selectedCardioActivityId}
-              points={progressForCardioActivity(workouts, selectedCardioActivityId)}
+        )}
+      </CollapsibleSection>
+
+      <CollapsibleSection
+        title="Resumen por disciplina"
+        open={openSection === 'disciplina'}
+        onToggle={() => toggleSection('disciplina')}
+      >
+        <DisciplineSummary
+          summaries={disciplineSummaries}
+          selected={selectedDiscipline}
+          onSelect={setSelectedDiscipline}
+        />
+
+        {selectedDiscipline === 'gym' && (
+          <>
+            <PRGrid prs={prs} exercises={exercises} onSelectExercise={setSelectedExerciseId} />
+            {selectedExerciseId && (
+              <ProgressChart
+                exerciseId={selectedExerciseId}
+                points={progressForExercise(workouts, selectedExerciseId)}
+                exercises={exercises}
+                onSelectExercise={setSelectedExerciseId}
+              />
+            )}
+          </>
+        )}
+
+        {(selectedDiscipline === 'running' || selectedDiscipline === 'natacion') && (
+          <>
+            <CardioPRGrid
+              prs={cardioPrsForSelected}
               activities={cardioActivitiesForSelected}
               onSelectActivity={setSelectedCardioActivityId}
             />
-          )}
-        </>
-      )}
+            {selectedCardioActivityId && (
+              <CardioProgressChart
+                activityId={selectedCardioActivityId}
+                points={progressForCardioActivity(workouts, selectedCardioActivityId)}
+                activities={cardioActivitiesForSelected}
+                onSelectActivity={setSelectedCardioActivityId}
+              />
+            )}
+          </>
+        )}
 
-      {selectedDiscipline === 'combate' && (
-        <p className="font-mono text-sm text-paper-dim">
-          Combate no tiene récords de ritmo — solo se registra el tiempo total (ya lo ves arriba).
-        </p>
-      )}
+        {selectedDiscipline === 'combate' && (
+          <p className="font-mono text-sm text-paper-dim">
+            Combate no tiene récords de ritmo — solo se registra el tiempo total (ya lo ves arriba).
+          </p>
+        )}
+      </CollapsibleSection>
 
-      <div className="flex flex-col gap-3">
-        <p className="label-brutal text-acid">Entrenamientos</p>
+      <CollapsibleSection
+        title="Entrenamientos"
+        open={openSection === 'entrenamientos'}
+        onToggle={() => toggleSection('entrenamientos')}
+      >
         <WorkoutHistory
           workouts={workouts}
           exerciseNames={exerciseNames}
@@ -224,7 +247,7 @@ export default function ProgressList({ exerciseNames, exercises, activities }: P
           onChanged={loadWorkouts}
           filterDiscipline={selectedDiscipline}
         />
-      </div>
+      </CollapsibleSection>
     </div>
   );
 }

@@ -32,12 +32,22 @@ const base = import.meta.env.BASE_URL;
     <title>{title} · SelfGains</title>
     <script is:inline>
       (function () {
-        try {
-          var theme = localStorage.getItem('selfgains-theme') || 'dark';
-          var accent = localStorage.getItem('selfgains-accent') || '#d7ff3f';
-          document.documentElement.dataset.theme = theme;
-          document.documentElement.style.setProperty('--color-acid', accent);
-        } catch (e) {}
+        function applyStoredTheme() {
+          try {
+            var theme = localStorage.getItem('selfgains-theme') || 'dark';
+            var accent = localStorage.getItem('selfgains-accent') || '#d7ff3f';
+            document.documentElement.dataset.theme = theme;
+            document.documentElement.style.setProperty('--color-acid', accent);
+          } catch (e) {}
+        }
+        applyStoredTheme();
+        // Astro's ClientRouter (View Transitions) swaps document.documentElement
+        // on every internal nav to the fresh SSG markup, which has no inline
+        // style/dataset — this script only runs once on the initial hard load,
+        // so without re-running it here the theme/accent silently reverts to
+        // the CSS default on the very next nav click. astro:after-swap fires
+        // right after the swap but before paint, so there's no visible flash.
+        document.addEventListener('astro:after-swap', applyStoredTheme);
       })();
     </script>
     <script is:inline define:vars={{ swUrl: `${base}sw.js` }}>

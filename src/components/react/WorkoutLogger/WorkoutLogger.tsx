@@ -721,42 +721,6 @@ export default function WorkoutLogger({ activities, plans }: Props) {
         />
       </label>
 
-      {pastWorkouts.length > 0 && (
-        <div className="card-brutal flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <label className="flex flex-1 flex-col gap-2">
-            <span className="label-brutal">Copiar un entrenamiento anterior</span>
-            <select
-              value={copySourceId}
-              onChange={(e) => setCopySourceId(e.target.value)}
-              className="input-brutal"
-            >
-              <option value="">
-                {todayActivities.length === 0
-                  ? 'Elige un día para copiar aquí (sin rutina asignada hoy)'
-                  : 'Elige un día para sumar otra disciplina hoy'}
-              </option>
-              {pastWorkouts.map((w) => {
-                const labels = disciplinesForPastWorkout(w).map((id) => LABEL_BY_DISCIPLINE[id] ?? id);
-                return (
-                  <option key={w.id} value={w.id}>
-                    {w.date}
-                    {labels.length > 0 ? ` — ${labels.join(', ')}` : ''}
-                  </option>
-                );
-              })}
-            </select>
-          </label>
-          <button
-            type="button"
-            onClick={() => copyWorkout(copySourceId)}
-            disabled={!copySourceId}
-            className="btn-brutal-sm shrink-0"
-          >
-            Copiar a este día
-          </button>
-        </div>
-      )}
-
       {todayActivities.length > 0 && (
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between gap-3">
@@ -794,6 +758,42 @@ export default function WorkoutLogger({ activities, plans }: Props) {
               );
             })}
           </div>
+        </div>
+      )}
+
+      {pastWorkouts.length > 0 && (
+        <div className="card-brutal flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <label className="flex flex-1 flex-col gap-2">
+            <span className="label-brutal">Copiar un entrenamiento anterior</span>
+            <select
+              value={copySourceId}
+              onChange={(e) => setCopySourceId(e.target.value)}
+              className="input-brutal"
+            >
+              <option value="">
+                {todayActivities.length === 0
+                  ? 'Elige un día para copiar aquí (sin rutina asignada hoy)'
+                  : 'Elige un día para sumar otra disciplina hoy'}
+              </option>
+              {pastWorkouts.map((w) => {
+                const labels = disciplinesForPastWorkout(w).map((id) => LABEL_BY_DISCIPLINE[id] ?? id);
+                return (
+                  <option key={w.id} value={w.id}>
+                    {w.date}
+                    {labels.length > 0 ? ` — ${labels.join(', ')}` : ''}
+                  </option>
+                );
+              })}
+            </select>
+          </label>
+          <button
+            type="button"
+            onClick={() => copyWorkout(copySourceId)}
+            disabled={!copySourceId}
+            className="btn-brutal-sm shrink-0"
+          >
+            Copiar a este día
+          </button>
         </div>
       )}
 
