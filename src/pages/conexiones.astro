@@ -16,7 +16,7 @@ const activities = activityEntries
   .sort((a, b) => a.name.localeCompare(b.name));
 ---
 <BaseLayout title="Conexiones">
-  <p class="label-brutal mb-3 text-acid">Perfil compartido</p>
+  <p class="label-brutal mb-3 text-acid">Tu red</p>
   <h1 class="mb-8 font-display text-5xl text-paper sm:text-6xl">CONEXIONES</h1>
   <Connections client:load activities={activities} />
 </BaseLayout>

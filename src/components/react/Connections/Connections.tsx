@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { supabase } from '../../../lib/supabase';
 import { getMyProfile } from '../../../lib/profile';
 import {
@@ -270,6 +270,19 @@ export default function Connections({ activities }: Props) {
     }
   }
 
+  async function handleAcceptTrainerRequest(requestId: string) {
+    setError(null);
+    try {
+      await acceptConnectionRequest(requestId);
+      await refresh();
+      setNearbyTrainers((prev) =>
+        prev.map((t) => (t.requestId === requestId ? { ...t, status: 'connected', requestId: null } : t))
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo aceptar la solicitud.');
+    }
+  }
+
   async function handleAcceptFromSearch(userId: string, requestId: string) {
     setError(null);
     try {
@@ -341,6 +354,17 @@ export default function Connections({ activities }: Props) {
       setActingShareId(null);
     }
   }
+
+  const trainerMarkers = useMemo(
+    () =>
+      nearbyTrainers.map((t) => ({
+        id: t.user_id,
+        lat: t.lat!,
+        lng: t.lng!,
+        label: t.displayName ?? 'Entrenador',
+      })),
+    [nearbyTrainers]
+  );
 
   if (!authChecked) {
     return <p className="font-mono text-sm text-paper-dim">Cargando...</p>;
@@ -519,12 +543,7 @@ export default function Connections({ activities }: Props) {
           {trainerCenter && (
             <MapPicker
               center={trainerCenter}
-              markers={nearbyTrainers.map((t) => ({
-                id: t.user_id,
-                lat: t.lat!,
-                lng: t.lng!,
-                label: t.displayName ?? 'Entrenador',
-              }))}
+              markers={trainerMarkers}
               onMarkerClick={setSelectedTrainerId}
               onMapMove={(lat, lng) => setTrainerCenter([lat, lng])}
               height={280}
@@ -533,45 +552,61 @@ export default function Connections({ activities }: Props) {
           {nearbyTrainers.length === 0 ? (
             <p className="font-mono text-sm text-paper-dim">No hay entrenadores visibles en este radio.</p>
           ) : (
-            nearbyTrainers.map((t) => (
-              <div
-                key={t.user_id}
-                className={
-                  selectedTrainerId === t.user_id
-                    ? 'card-brutal flex flex-col gap-2 border-acid'
-                    : 'card-brutal flex flex-col gap-2'
-                }
-              >
-                <div className="flex items-center gap-3">
-                  <Avatar avatarUrl={t.avatarUrl} displayName={t.displayName} isTrainer />
-                  <div>
-                    <p className="font-display text-lg text-paper">{t.displayName ?? 'Sin nombre'}</p>
-                    <p className="font-mono text-xs text-paper-dim">{t.distanceKm.toFixed(1)} km</p>
+            nearbyTrainers.map((t) => {
+              const effectiveStatus = sentTrainerRequests.has(t.user_id) ? 'request-sent' : t.status;
+              return (
+                <div
+                  key={t.user_id}
+                  className={
+                    selectedTrainerId === t.user_id
+                      ? 'card-brutal flex flex-col gap-2 border-acid'
+                      : 'card-brutal flex flex-col gap-2'
+                  }
+                >
+                  <div className="flex items-center gap-3">
+                    <Avatar avatarUrl={t.avatarUrl} displayName={t.displayName} isTrainer />
+                    <div>
+                      <p className="font-display text-lg text-paper">{t.displayName ?? 'Sin nombre'}</p>
+                      <p className="font-mono text-xs text-paper-dim">{t.distanceKm.toFixed(1)} km</p>
+                    </div>
                   </div>
+                  {t.disciplines.length > 0 && (
+                    <p className="font-mono text-xs text-paper-dim">{t.disciplines.join(', ')}</p>
+                  )}
+                  {t.bio && <p className="font-mono text-sm text-paper">{t.bio}</p>}
+                  {t.rate_amount !== null && (
+                    <p className="font-mono text-xs text-paper-dim">
+                      {t.rate_amount}
+                      {t.rate_currency ? ` ${t.rate_currency}` : ''} / {t.rate_period}
+                    </p>
+                  )}
+                  {effectiveStatus === 'connected' && (
+                    <p className="font-mono text-xs text-paper-dim">Ya conectado</p>
+                  )}
+                  {effectiveStatus === 'request-sent' && (
+                    <p className="font-mono text-xs text-paper-dim">Solicitud enviada</p>
+                  )}
+                  {effectiveStatus === 'request-received' && t.requestId && (
+                    <button
+                      type="button"
+                      onClick={() => handleAcceptTrainerRequest(t.requestId!)}
+                      className="btn-brutal-sm"
+                    >
+                      Aceptar
+                    </button>
+                  )}
+                  {effectiveStatus === 'none' && (
+                    <button
+                      type="button"
+                      onClick={() => handleConnectTrainer(t.user_id)}
+                      className="btn-brutal-sm self-start"
+                    >
+                      Conectar
+                    </button>
+                  )}
                 </div>
-                {t.disciplines.length > 0 && (
-                  <p className="font-mono text-xs text-paper-dim">{t.disciplines.join(', ')}</p>
-                )}
-                {t.bio && <p className="font-mono text-sm text-paper">{t.bio}</p>}
-                {t.rate_amount !== null && (
-                  <p className="font-mono text-xs text-paper-dim">
-                    {t.rate_amount}
-                    {t.rate_currency ? ` ${t.rate_currency}` : ''} / {t.rate_period}
-                  </p>
-                )}
-                {sentTrainerRequests.has(t.user_id) ? (
-                  <p className="font-mono text-xs text-paper-dim">Solicitud enviada</p>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => handleConnectTrainer(t.user_id)}
-                    className="btn-brutal-sm self-start"
-                  >
-                    Conectar
-                  </button>
-                )}
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       )}
