@@ -151,21 +151,30 @@ export async function sendConnectionRequest(toUserId: string): Promise<void> {
   if (error.code !== '23505') throw error;
 
   // Ya existe una fila para este par (from_user_id, to_user_id) — puede ser
-  // una solicitud pendiente (doble click, no-op real) o una fila resuelta
-  // ('accepted' de una conexión ya desvinculada, o 'rejected') que el
-  // remitente no puede borrar ni tocar de otra forma (la política de DELETE
-  // exige status = 'pending', y solo el receptor podía hacer UPDATE). Sin
-  // este paso, un segundo intento en la misma dirección quedaba
-  // descartado en silencio para siempre por la restricción unique, con la
-  // UI mostrando "Solicitud enviada" sin que se mandara nada de verdad — ver
-  // docs/agents/notas-de-entorno-y-lecciones.md. Reactivarla a 'pending' es
-  // indistinguible de una solicitud nueva desde la perspectiva del receptor.
-  const { error: reviveError } = await supabase
+  // una solicitud pendiente (doble click, no-op real) o una fila 'accepted'
+  // de una conexión ya desvinculada, que el remitente no podía tocar de otra
+  // forma (la política de DELETE exige status = 'pending', y solo el
+  // receptor podía hacer UPDATE). Sin este paso, un segundo intento en la
+  // misma dirección quedaba descartado en silencio para siempre por la
+  // restricción unique, con la UI mostrando "Solicitud enviada" sin que se
+  // mandara nada de verdad — ver docs/agents/notas-de-entorno-y-lecciones.md.
+  //
+  // La política de RLS solo deja reactivar una fila 'accepted' (no una
+  // 'rejected' — un rechazo explícito del receptor es definitivo, mismo
+  // motivo por el que la política de DELETE exige status = 'pending'). Si la
+  // fila estaba 'rejected', este update no toca ninguna fila (RLS la
+  // bloquea) y no tira error — hay que revisar explícitamente si algo se
+  // actualizó de verdad para no mostrar un falso "enviada".
+  const { data: revived, error: reviveError } = await supabase
     .from('connection_requests')
     .update({ status: 'pending' })
     .eq('from_user_id', user.id)
-    .eq('to_user_id', toUserId);
+    .eq('to_user_id', toUserId)
+    .select('id');
   if (reviveError) throw reviveError;
+  if (!revived || revived.length === 0) {
+    throw new Error('Esa persona ya rechazó tu solicitud.');
+  }
 }
 
 export async function acceptConnectionRequest(requestId: string): Promise<void> {

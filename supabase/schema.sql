@@ -439,27 +439,31 @@ create policy "El receptor de una rutina compartida pendiente puede verla"
     )
   );
 
--- Fix: reenviar una solicitud de conexión después de un rechazo o de
--- desvincularse quedaba descartado en silencio. Encontrado en la
--- verificación manual E2E final (Task 11 del plan de descubrimiento y
--- conexiones), caso "solicitudes simultáneas": `sendConnectionRequest`
--- inserta con `unique(from_user_id, to_user_id)`, y ante un conflicto
--- (23505) asumía que ya había una solicitud pendiente idéntica (no-op
--- inofensivo) — pero si la fila existente ya estaba resuelta ('accepted' de
--- una conexión ya desvinculada, o 'rejected'), el remitente no podía
--- tocarla: la política de UPDATE de arriba solo dejaba escribir al receptor
--- (`to_user_id = auth.uid()`), y la de DELETE exige `status = 'pending'`. El
--- conflicto se tragaba en silencio y la UI mostraba "Solicitud enviada" sin
--- haber mandado nada de verdad — el receptor nunca veía la solicitud.
--- Fix: el remitente también puede actualizar su propia fila, pero
--- únicamente para reactivarla a 'pending' — nunca para aceptarla él mismo
--- (eso lo sigue exigiendo `to_user_id = auth.uid()` en el primer término del
--- with check).
+-- Fix: reenviar una solicitud de conexión después de desvincularse quedaba
+-- descartado en silencio. Encontrado en la verificación manual E2E final
+-- (Task 11 del plan de descubrimiento y conexiones), caso "solicitudes
+-- simultáneas": `sendConnectionRequest` inserta con
+-- `unique(from_user_id, to_user_id)`, y ante un conflicto (23505) asumía que
+-- ya había una solicitud pendiente idéntica (no-op inofensivo) — pero si la
+-- fila existente ya estaba en 'accepted' (de una conexión ya desvinculada),
+-- el remitente no podía tocarla: la política de UPDATE de arriba solo
+-- dejaba escribir al receptor (`to_user_id = auth.uid()`), y la de DELETE
+-- exige `status = 'pending'`. El conflicto se tragaba en silencio y la UI
+-- mostraba "Solicitud enviada" sin haber mandado nada de verdad.
+-- Fix: el remitente también puede reactivar su propia fila a 'pending',
+-- pero únicamente si estaba en 'accepted' — nunca desde 'rejected'. Una
+-- primera versión de este fix (durante la misma verificación E2E) permitía
+-- reactivar desde cualquier estado, incluido 'rejected', lo que anulaba en
+-- silencio el rechazo explícito del receptor con solo tocar "Conectar" de
+-- nuevo — exactamente el vector de spam que la política de DELETE
+-- (`status = 'pending'`, ver más arriba en este archivo) ya existía para
+-- evitar. Corregido acá antes de que este spec quedara cerrado.
 drop policy "El receptor puede aceptar o rechazar una solicitud" on connection_requests;
+drop policy if exists "El receptor decide, el remitente puede reintentar" on connection_requests;
 
-create policy "El receptor decide, el remitente puede reintentar"
+create policy "El receptor decide, el remitente puede reconectar tras desvincularse"
   on connection_requests for update
-  using (auth.uid() = to_user_id or auth.uid() = from_user_id)
+  using (auth.uid() = to_user_id or (auth.uid() = from_user_id and status = 'accepted'))
   with check (
     auth.uid() = to_user_id
     or (auth.uid() = from_user_id and status = 'pending')
