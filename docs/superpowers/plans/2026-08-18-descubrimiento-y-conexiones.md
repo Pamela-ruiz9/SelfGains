@@ -892,7 +892,19 @@ import type { TrainerProfile } from '../types/db';
 export const DEFAULT_MAP_CENTER: [number, number] = [-34.6037, -58.3816];
 
 export async function getMyTrainerProfile(): Promise<TrainerProfile | null> {
-  const { data, error } = await supabase.from('trainer_profiles').select('*').maybeSingle();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error('No hay sesión activa');
+
+  // trainer_profiles combina dos políticas de SELECT permisivas por OR ("mi
+  // fila" y "cualquier fila visible") — sin este filtro, esta consulta lee
+  // "mi fila O la de cualquier entrenador visible", no solo la propia.
+  const { data, error } = await supabase
+    .from('trainer_profiles')
+    .select('*')
+    .eq('user_id', user.id)
+    .maybeSingle();
   if (error) throw error;
   return data as TrainerProfile | null;
 }
@@ -1305,13 +1317,15 @@ por:
       if (amount !== null && (!Number.isFinite(amount) || amount < 0)) {
         throw new Error('La tarifa debe ser un número válido.');
       }
-      if (trainerVisible && !trainerPin) {
-        throw new Error('Poné tu pin en el mapa antes de activar la visibilidad.');
-      }
+      // El mapa siempre muestra algún pin (el guardado, o el default de
+      // Buenos Aires si nunca se arrastró) — se guarda esa misma
+      // coordenada en vez de bloquear con un error que contradiría lo que
+      // el usuario ya ve puesto en el mapa.
+      const pin = trainerPin ?? DEFAULT_MAP_CENTER;
       await upsertTrainerProfile({
         is_visible: trainerVisible,
-        lat: trainerPin?.[0] ?? null,
-        lng: trainerPin?.[1] ?? null,
+        lat: pin[0],
+        lng: pin[1],
         disciplines: trainerDisciplines,
         bio: trainerBio.trim() || null,
         rate_amount: amount,
@@ -1444,6 +1458,8 @@ por:
           >
             {savingTrainerProfile ? 'Guardando...' : 'Guardar buscador'}
           </button>
+          {error && <p className="font-mono text-xs text-blood">{error}</p>}
+          {savedMessage && <p className="font-mono text-xs text-acid">{savedMessage}</p>}
         </div>
       )}
 
