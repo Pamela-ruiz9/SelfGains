@@ -8,6 +8,8 @@ import {
   type RoutineDays,
 } from '../../../lib/weekdays';
 import { fullActivityName } from '../../../lib/activities';
+import { getMyConnections, type ConnectionSummary } from '../../../lib/connections';
+import { proposeRoutineShare } from '../../../lib/routineShares';
 import type { ActivityOption } from '../ActivityPicker/ActivityPicker';
 
 export interface RoutineOption {
@@ -44,6 +46,81 @@ function daysSummary(days: RoutineDays, activities: ActivityOption[]): string {
     .join(' · ');
 }
 
+function ShareRoutinePicker({ routineId }: { routineId: string }) {
+  const [open, setOpen] = useState(false);
+  const [connections, setConnections] = useState<ConnectionSummary[] | null>(null);
+  const [sharing, setSharing] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [done, setDone] = useState(false);
+
+  async function handleOpen() {
+    setOpen(true);
+    if (connections === null) {
+      try {
+        setConnections(await getMyConnections());
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'No se pudieron cargar tus conexiones.');
+        setConnections([]);
+      }
+    }
+  }
+
+  async function handleShare(toUserId: string) {
+    setSharing(toUserId);
+    setError(null);
+    try {
+      await proposeRoutineShare(routineId, toUserId);
+      setDone(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo compartir la rutina.');
+    } finally {
+      setSharing(null);
+    }
+  }
+
+  if (!open) {
+    return (
+      <button type="button" onClick={handleOpen} className="text-acid hover:text-paper">
+        Compartir
+      </button>
+    );
+  }
+
+  if (done) {
+    return <p className="font-mono text-xs text-paper-dim">Propuesta enviada.</p>;
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      {connections === null ? (
+        <p className="font-mono text-xs text-paper-dim">Cargando...</p>
+      ) : connections.length === 0 ? (
+        <p className="font-mono text-xs text-paper-dim">No tenés conexiones todavía.</p>
+      ) : (
+        connections.map((c) => (
+          <button
+            key={c.userId}
+            type="button"
+            disabled={sharing !== null}
+            onClick={() => handleShare(c.userId)}
+            className="text-left font-mono text-xs text-paper hover:text-acid"
+          >
+            {sharing === c.userId ? 'Compartiendo...' : c.displayName ?? 'Sin nombre'}
+          </button>
+        ))
+      )}
+      {error && <p className="font-mono text-xs text-blood">{error}</p>}
+      <button
+        type="button"
+        onClick={() => setOpen(false)}
+        className="font-mono text-xs text-paper-dim hover:text-paper"
+      >
+        Cancelar
+      </button>
+    </div>
+  );
+}
+
 function RoutineCard({
   routine,
   source,
@@ -72,21 +149,24 @@ function RoutineCard({
           )}
         </div>
         {source === 'custom' && (
-          <div className="flex shrink-0 gap-3 font-mono text-xs">
-            <button
-              type="button"
-              onClick={() => onEdit?.(routine.ref)}
-              className="text-acid hover:text-paper"
-            >
-              Editar
-            </button>
-            <button
-              type="button"
-              onClick={() => onDelete?.(routine.ref)}
-              className="text-blood hover:text-paper"
-            >
-              Eliminar
-            </button>
+          <div className="flex shrink-0 flex-col items-end gap-2 font-mono text-xs">
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => onEdit?.(routine.ref)}
+                className="text-acid hover:text-paper"
+              >
+                Editar
+              </button>
+              <button
+                type="button"
+                onClick={() => onDelete?.(routine.ref)}
+                className="text-blood hover:text-paper"
+              >
+                Eliminar
+              </button>
+            </div>
+            {!routine.assignedByName && <ShareRoutinePicker routineId={routine.ref} />}
           </div>
         )}
       </div>
