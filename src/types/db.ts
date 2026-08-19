@@ -98,3 +98,33 @@ export interface PublicIdentity {
   is_trainer: boolean;
   updated_at: string;
 }
+
+export interface ConnectionRequest {
+  id: string;
+  from_user_id: string;
+  to_user_id: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  created_at: string;
+}
+
+export interface TrainerProfile {
+  user_id: string;
+  is_visible: boolean;
+  lat: number | null;
+  lng: number | null;
+  disciplines: string[];
+  bio: string | null;
+  rate_amount: number | null;
+  rate_currency: string | null;
+  rate_period: 'clase' | 'mes' | 'hora' | null;
+  updated_at: string;
+}
+
+export interface RoutineShare {
+  id: string;
+  routine_id: string;
+  from_user_id: string;
+  to_user_id: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  created_at: string;
+}

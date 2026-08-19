@@ -296,3 +296,116 @@ create policy "Un entrenador conectado puede crearle rutinas al otro"
       where me.user_id = auth.uid() and me.is_trainer = true
     )
   );
+
+-- Descubrimiento y conexiones entre usuarios
+-- (docs/superpowers/specs/2026-08-18-descubrimiento-y-conexiones-design.md).
+
+drop policy "Usuarios conectados pueden ver la identidad pública del otro" on public_identities;
+
+create policy "Cualquier usuario autenticado puede buscar identidades públicas"
+  on public_identities for select
+  using (true);
+
+create table connection_requests (
+  id uuid primary key default gen_random_uuid(),
+  from_user_id uuid not null references auth.users(id) on delete cascade,
+  to_user_id uuid not null references auth.users(id) on delete cascade,
+  status text not null default 'pending' check (status in ('pending', 'accepted', 'rejected')),
+  created_at timestamptz not null default now(),
+  constraint connection_requests_no_self check (from_user_id <> to_user_id),
+  unique (from_user_id, to_user_id)
+);
+
+alter table connection_requests enable row level security;
+
+create policy "Los dos lados de una solicitud pueden verla"
+  on connection_requests for select
+  using (auth.uid() = from_user_id or auth.uid() = to_user_id);
+
+create policy "Un usuario puede enviar una solicitud"
+  on connection_requests for insert
+  with check (auth.uid() = from_user_id);
+
+create policy "El receptor puede aceptar o rechazar una solicitud"
+  on connection_requests for update
+  using (auth.uid() = to_user_id)
+  with check (auth.uid() = to_user_id);
+
+create policy "Cualquiera de los dos lados puede cancelar una solicitud"
+  on connection_requests for delete
+  using (auth.uid() = from_user_id or auth.uid() = to_user_id);
+
+create table trainer_profiles (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  is_visible boolean not null default false,
+  lat double precision,
+  lng double precision,
+  disciplines text[] not null default '{}',
+  bio text,
+  rate_amount numeric,
+  rate_currency text,
+  rate_period text check (rate_period in ('clase', 'mes', 'hora')),
+  updated_at timestamptz not null default now()
+);
+
+alter table trainer_profiles enable row level security;
+
+create policy "Un entrenador administra su propio perfil de mapa"
+  on trainer_profiles for all
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+create policy "Cualquiera puede ver perfiles de entrenadores visibles"
+  on trainer_profiles for select
+  using (is_visible = true);
+
+create table routine_shares (
+  id uuid primary key default gen_random_uuid(),
+  routine_id uuid not null references routines(id) on delete cascade,
+  from_user_id uuid not null references auth.users(id) on delete cascade,
+  to_user_id uuid not null references auth.users(id) on delete cascade,
+  status text not null default 'pending' check (status in ('pending', 'accepted', 'rejected')),
+  created_at timestamptz not null default now(),
+  constraint routine_shares_no_self check (from_user_id <> to_user_id)
+);
+
+alter table routine_shares enable row level security;
+
+create policy "Los dos lados de una rutina compartida pueden verla"
+  on routine_shares for select
+  using (auth.uid() = from_user_id or auth.uid() = to_user_id);
+
+create policy "El dueño conectado puede proponer compartir su rutina"
+  on routine_shares for insert
+  with check (
+    auth.uid() = from_user_id
+    and exists (
+      select 1 from routines
+      where routines.id = routine_id and routines.user_id = auth.uid()
+    )
+    and exists (
+      select 1 from connections
+      where (connections.user_a = auth.uid() and connections.user_b = to_user_id)
+         or (connections.user_b = auth.uid() and connections.user_a = to_user_id)
+    )
+  );
+
+create policy "El receptor puede aceptar o rechazar la propuesta"
+  on routine_shares for update
+  using (auth.uid() = to_user_id)
+  with check (auth.uid() = to_user_id);
+
+create policy "Quien propuso puede cancelarla mientras esté pendiente"
+  on routine_shares for delete
+  using (auth.uid() = from_user_id and status = 'pending');
+
+create policy "El receptor de una rutina compartida pendiente puede verla"
+  on routines for select
+  using (
+    exists (
+      select 1 from routine_shares
+      where routine_shares.routine_id = routines.id
+        and routine_shares.to_user_id = auth.uid()
+        and routine_shares.status = 'pending'
+    )
+  );
