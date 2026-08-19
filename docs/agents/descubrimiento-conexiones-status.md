@@ -50,3 +50,7 @@ Cada uno se encontró en revisión de código o en verificación E2E, no en prod
 
 - Antes de sumar una séptima sección a `Connections.tsx`, extraer al menos el buscador de entrenadores y las rutinas compartidas pendientes a componentes hermanos propios.
 - Si el borde de concurrencia de `acceptRoutineShare` importa en la práctica (uso multi-dispositivo real), la solución limpia requeriría relajar la restricción de "sin funciones RPC de Postgres" para esa única operación específica.
+
+## Ronda de pulido post-lanzamiento
+
+Ver `docs/agents/pulido-ux-post-conexiones-status.md` (2026-08-19): bugs reportados por Pam después de probar esta feature en el navegador (tema que se reseteaba al navegar, secciones colapsables en Progreso/Registrar, afordancia táctil en toda la app, defaults de Argentina→México, rediseño de Perfil) más una limpieza final de acentos argentinos en el resto de la app.
