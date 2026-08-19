@@ -172,13 +172,11 @@ export default function ProfileForm() {
       if (amount !== null && (!Number.isFinite(amount) || amount < 0)) {
         throw new Error('La tarifa debe ser un número válido.');
       }
-      if (trainerVisible && !trainerPin) {
-        throw new Error('Poné tu pin en el mapa antes de activar la visibilidad.');
-      }
+      const pin = trainerPin ?? DEFAULT_MAP_CENTER;
       await upsertTrainerProfile({
         is_visible: trainerVisible,
-        lat: trainerPin?.[0] ?? null,
-        lng: trainerPin?.[1] ?? null,
+        lat: pin[0],
+        lng: pin[1],
         disciplines: trainerDisciplines,
         bio: trainerBio.trim() || null,
         rate_amount: amount,
@@ -418,6 +416,8 @@ export default function ProfileForm() {
           >
             {savingTrainerProfile ? 'Guardando...' : 'Guardar buscador'}
           </button>
+          {error && <p className="font-mono text-xs text-blood">{error}</p>}
+          {savedMessage && <p className="font-mono text-xs text-acid">{savedMessage}</p>}
         </div>
       )}
 

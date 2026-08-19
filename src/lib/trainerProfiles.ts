@@ -7,7 +7,16 @@ import type { TrainerProfile } from '../types/db';
 export const DEFAULT_MAP_CENTER: [number, number] = [-34.6037, -58.3816];
 
 export async function getMyTrainerProfile(): Promise<TrainerProfile | null> {
-  const { data, error } = await supabase.from('trainer_profiles').select('*').maybeSingle();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error('No hay sesión activa');
+
+  const { data, error } = await supabase
+    .from('trainer_profiles')
+    .select('*')
+    .eq('user_id', user.id)
+    .maybeSingle();
   if (error) throw error;
   return data as TrainerProfile | null;
 }
