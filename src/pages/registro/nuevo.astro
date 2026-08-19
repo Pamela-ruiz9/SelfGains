@@ -22,6 +22,9 @@ const plans = planEntries.map((p) => ({ id: p.id, days: p.data.days }));
 <BaseLayout title="Registrar entrenamiento">
   <p class="label-brutal mb-3 text-acid">Sesión de hoy</p>
   <h1 class="mb-8 font-display text-5xl text-paper sm:text-6xl">REGISTRAR ENTRENAMIENTO</h1>
+  <p class="card-brutal mb-6 border-acid font-mono text-sm text-paper">
+    Calienta siempre antes de entrenar — unos minutos de movilidad y activación reducen el riesgo de lesión.
+  </p>
   <InstallPrompt client:load variant="banner" />
   <WorkoutLogger client:load activities={activities} plans={plans} />
 </BaseLayout>
