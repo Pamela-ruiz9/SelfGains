@@ -1,10 +1,9 @@
 import { supabase } from './supabase';
 import type { TrainerProfile } from '../types/db';
 
-// Buenos Aires como centro por defecto del mapa cuando no hay geolocalización
-// ni pin propio todavía — razonable dado que la copy de la app es en español
-// rioplatense.
-export const DEFAULT_MAP_CENTER: [number, number] = [-34.6037, -58.3816];
+// Ciudad de México como centro por defecto del mapa cuando no hay
+// geolocalización ni pin propio todavía.
+export const DEFAULT_MAP_CENTER: [number, number] = [19.4326, -99.1332];
 
 export async function getMyTrainerProfile(): Promise<TrainerProfile | null> {
   const {

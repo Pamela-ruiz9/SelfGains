@@ -7,6 +7,7 @@ import { getActiveRoutine, weeksElapsed } from '../../../lib/routines';
 import { DEFAULT_MAP_CENTER, getMyTrainerProfile, upsertTrainerProfile } from '../../../lib/trainerProfiles';
 import { DISCIPLINES } from '../ActivityPicker/ActivityPicker';
 import MapPicker from '../Shared/MapPicker';
+import Avatar from '../Shared/Avatar';
 import type { Profile } from '../../../types/db';
 
 const MEASUREMENT_FIELDS: { key: keyof Profile; label: string }[] = [
@@ -43,7 +44,7 @@ export default function ProfileForm() {
   const [trainerDisciplines, setTrainerDisciplines] = useState<string[]>([]);
   const [trainerBio, setTrainerBio] = useState('');
   const [trainerRateAmount, setTrainerRateAmount] = useState('');
-  const [trainerRateCurrency, setTrainerRateCurrency] = useState('ARS');
+  const [trainerRateCurrency, setTrainerRateCurrency] = useState('MXN');
   const [trainerRatePeriod, setTrainerRatePeriod] = useState<'clase' | 'mes' | 'hora'>('clase');
   const [savingTrainerProfile, setSavingTrainerProfile] = useState(false);
 
@@ -78,7 +79,7 @@ export default function ProfileForm() {
             setTrainerDisciplines(trainerProfile.disciplines);
             setTrainerBio(trainerProfile.bio ?? '');
             setTrainerRateAmount(trainerProfile.rate_amount?.toString() ?? '');
-            setTrainerRateCurrency(trainerProfile.rate_currency ?? 'ARS');
+            setTrainerRateCurrency(trainerProfile.rate_currency ?? 'MXN');
             setTrainerRatePeriod(trainerProfile.rate_period ?? 'clase');
           }
         }
@@ -247,15 +248,7 @@ export default function ProfileForm() {
   return (
     <div className="flex max-w-sm flex-col gap-10">
       <div className="flex items-center gap-4">
-        <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-paper-dim/40 bg-surface">
-          {avatarUrl ? (
-            <img src={avatarUrl} alt="Foto de perfil" className="h-full w-full object-cover" />
-          ) : (
-            <span className="font-display text-3xl text-paper-dim">
-              {(displayName || email).charAt(0).toUpperCase()}
-            </span>
-          )}
-        </div>
+        <Avatar avatarUrl={avatarUrl} displayName={displayName || email} isTrainer={isTrainer} size={80} />
         <div className="flex flex-col gap-1">
           <label className="btn-brutal-outline w-fit cursor-pointer px-4 py-2 text-sm">
             {uploadingPhoto ? 'Subiendo...' : 'Cambiar foto'}
@@ -320,15 +313,18 @@ export default function ProfileForm() {
         </div>
       )}
 
-      <label className="flex items-center gap-3 font-mono text-sm text-paper">
-        <input
-          type="checkbox"
-          checked={isTrainer}
-          onChange={(e) => handleTrainerToggle(e.target.checked)}
-          className="h-5 w-5 accent-acid"
-        />
-        Soy entrenador
-      </label>
+      <button
+        type="button"
+        onClick={() => handleTrainerToggle(!isTrainer)}
+        aria-pressed={isTrainer}
+        className={
+          isTrainer
+            ? 'btn-brutal-sm self-start border-acid bg-acid text-on-accent'
+            : 'btn-brutal-sm self-start'
+        }
+      >
+        {isTrainer ? '★ Soy entrenador' : 'Soy entrenador'}
+      </button>
 
       {isTrainer && (
         <div className="card-brutal flex flex-col gap-4">
@@ -340,15 +336,18 @@ export default function ProfileForm() {
             height={220}
           />
           <p className="font-mono text-xs text-paper-dim">Arrastrá el pin hasta tu zona de trabajo.</p>
-          <label className="flex items-center gap-3 font-mono text-sm text-paper">
-            <input
-              type="checkbox"
-              checked={trainerVisible}
-              onChange={(e) => setTrainerVisible(e.target.checked)}
-              className="h-5 w-5 accent-acid"
-            />
-            Visible en el buscador
-          </label>
+          <button
+            type="button"
+            onClick={() => setTrainerVisible(!trainerVisible)}
+            aria-pressed={trainerVisible}
+            className={
+              trainerVisible
+                ? 'btn-brutal-sm self-start border-acid bg-acid text-on-accent'
+                : 'btn-brutal-sm self-start'
+            }
+          >
+            {trainerVisible ? '✓ Visible en el buscador' : 'Visible en el buscador'}
+          </button>
           <div className="flex flex-wrap gap-2">
             {DISCIPLINES.map((d) => (
               <button
@@ -391,7 +390,7 @@ export default function ProfileForm() {
                 type="text"
                 value={trainerRateCurrency}
                 onChange={(e) => setTrainerRateCurrency(e.target.value)}
-                placeholder="ARS"
+                placeholder="MXN"
                 className="input-brutal"
               />
             </label>
@@ -463,7 +462,7 @@ export default function ProfileForm() {
       <button
         type="button"
         onClick={handleLogout}
-        className="self-start font-mono text-sm text-blood underline underline-offset-4 hover:text-paper"
+        className="self-start border-2 border-blood bg-transparent px-4 py-2 font-mono text-sm uppercase tracking-wide text-blood transition duration-150 hover:bg-blood hover:text-paper active:scale-95"
       >
         Cerrar sesión
       </button>
