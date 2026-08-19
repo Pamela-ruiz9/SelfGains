@@ -50,10 +50,15 @@ function DayActivityPicker({
   const [targetSets, setTargetSets] = useState('');
   const [targetReps, setTargetReps] = useState('');
   const [targetDistance, setTargetDistance] = useState('');
+  const [duplicateError, setDuplicateError] = useState<string | null>(null);
   const activityById = new Map(activities.map((a) => [a.id, a]));
 
   function handleAdd() {
     if (!selected) return;
+    if (dayEntries.some((entry) => entryActivityId(entry) === selected.id)) {
+      setDuplicateError(`"${selected.name}" ya está agregado este día.`);
+      return;
+    }
     const entry: RoutineActivityTarget = { activityId: selected.id };
     if (selected.metricType === 'sets') {
       if (targetSets !== '') entry.targetSets = Number(targetSets);
@@ -62,6 +67,7 @@ function DayActivityPicker({
       entry.targetDistanceKm = metersToKm(Number(targetDistance));
     }
     onAdd(entry);
+    setDuplicateError(null);
     setTargetSets('');
     setTargetReps('');
     setTargetDistance('');
@@ -69,7 +75,13 @@ function DayActivityPicker({
 
   return (
     <div className="flex flex-col gap-2">
-      <ActivityPicker activities={activities} onSelect={setSelected} />
+      <ActivityPicker
+        activities={activities}
+        onSelect={(activity) => {
+          setSelected(activity);
+          setDuplicateError(null);
+        }}
+      />
       {selected?.description && (
         <p className="font-mono text-xs text-paper-dim">{selected.description}</p>
       )}
@@ -112,6 +124,7 @@ function DayActivityPicker({
       >
         + Agregar
       </button>
+      {duplicateError && <p className="font-mono text-xs text-blood">{duplicateError}</p>}
       {dayEntries.length > 0 && (
         <ul className="flex flex-col gap-1 font-mono text-sm">
           {dayEntries.map((entry, index) => {
