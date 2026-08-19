@@ -152,21 +152,24 @@ export async function sendConnectionRequest(toUserId: string): Promise<void> {
   if (error && error.code !== '23505') throw error;
 }
 
-export async function acceptConnectionRequest(requestId: string, fromUserId: string): Promise<void> {
+export async function acceptConnectionRequest(requestId: string): Promise<void> {
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) throw new Error('No hay sesión activa');
 
-  const { error: updateError } = await supabase
+  const { data, error: updateError } = await supabase
     .from('connection_requests')
     .update({ status: 'accepted' })
-    .eq('id', requestId);
+    .eq('id', requestId)
+    .eq('to_user_id', user.id)
+    .select('from_user_id')
+    .single();
   if (updateError) throw updateError;
 
   // Mismo orden canónico y manejo de duplicado que redeemInviteCode en
   // src/lib/connections.ts.
-  const [userA, userB] = [fromUserId, user.id].sort();
+  const [userA, userB] = [data.from_user_id, user.id].sort();
   const { error: insertError } = await supabase.from('connections').insert({ user_a: userA, user_b: userB });
   if (insertError && insertError.code !== '23505') throw insertError;
 }
