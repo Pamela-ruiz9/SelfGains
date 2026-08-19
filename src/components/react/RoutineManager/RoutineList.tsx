@@ -56,11 +56,11 @@ function ShareRoutinePicker({ routineId }: { routineId: string }) {
   async function handleOpen() {
     setOpen(true);
     if (connections === null) {
+      setError(null);
       try {
         setConnections(await getMyConnections());
       } catch (err) {
         setError(err instanceof Error ? err.message : 'No se pudieron cargar tus conexiones.');
-        setConnections([]);
       }
     }
   }
@@ -92,11 +92,14 @@ function ShareRoutinePicker({ routineId }: { routineId: string }) {
 
   return (
     <div className="flex flex-col gap-2">
-      {connections === null ? (
+      {connections === null && !error && (
         <p className="font-mono text-xs text-paper-dim">Cargando...</p>
-      ) : connections.length === 0 ? (
+      )}
+      {connections !== null && connections.length === 0 && (
         <p className="font-mono text-xs text-paper-dim">No tenés conexiones todavía.</p>
-      ) : (
+      )}
+      {connections !== null &&
+        connections.length > 0 &&
         connections.map((c) => (
           <button
             key={c.userId}
@@ -107,8 +110,7 @@ function ShareRoutinePicker({ routineId }: { routineId: string }) {
           >
             {sharing === c.userId ? 'Compartiendo...' : c.displayName ?? 'Sin nombre'}
           </button>
-        ))
-      )}
+        ))}
       {error && <p className="font-mono text-xs text-blood">{error}</p>}
       <button
         type="button"
