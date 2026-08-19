@@ -147,9 +147,25 @@ export async function sendConnectionRequest(toUserId: string): Promise<void> {
     .from('connection_requests')
     .insert({ from_user_id: user.id, to_user_id: toUserId });
 
-  // Ya existe la misma solicitud: el insert falla por la restricción
-  // unique(from_user_id, to_user_id) — no es un error real.
-  if (error && error.code !== '23505') throw error;
+  if (!error) return;
+  if (error.code !== '23505') throw error;
+
+  // Ya existe una fila para este par (from_user_id, to_user_id) — puede ser
+  // una solicitud pendiente (doble click, no-op real) o una fila resuelta
+  // ('accepted' de una conexión ya desvinculada, o 'rejected') que el
+  // remitente no puede borrar ni tocar de otra forma (la política de DELETE
+  // exige status = 'pending', y solo el receptor podía hacer UPDATE). Sin
+  // este paso, un segundo intento en la misma dirección quedaba
+  // descartado en silencio para siempre por la restricción unique, con la
+  // UI mostrando "Solicitud enviada" sin que se mandara nada de verdad — ver
+  // docs/agents/notas-de-entorno-y-lecciones.md. Reactivarla a 'pending' es
+  // indistinguible de una solicitud nueva desde la perspectiva del receptor.
+  const { error: reviveError } = await supabase
+    .from('connection_requests')
+    .update({ status: 'pending' })
+    .eq('from_user_id', user.id)
+    .eq('to_user_id', toUserId);
+  if (reviveError) throw reviveError;
 }
 
 export async function acceptConnectionRequest(requestId: string): Promise<void> {

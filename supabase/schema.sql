@@ -438,3 +438,29 @@ create policy "El receptor de una rutina compartida pendiente puede verla"
         and routine_shares.status = 'pending'
     )
   );
+
+-- Fix: reenviar una solicitud de conexión después de un rechazo o de
+-- desvincularse quedaba descartado en silencio. Encontrado en la
+-- verificación manual E2E final (Task 11 del plan de descubrimiento y
+-- conexiones), caso "solicitudes simultáneas": `sendConnectionRequest`
+-- inserta con `unique(from_user_id, to_user_id)`, y ante un conflicto
+-- (23505) asumía que ya había una solicitud pendiente idéntica (no-op
+-- inofensivo) — pero si la fila existente ya estaba resuelta ('accepted' de
+-- una conexión ya desvinculada, o 'rejected'), el remitente no podía
+-- tocarla: la política de UPDATE de arriba solo dejaba escribir al receptor
+-- (`to_user_id = auth.uid()`), y la de DELETE exige `status = 'pending'`. El
+-- conflicto se tragaba en silencio y la UI mostraba "Solicitud enviada" sin
+-- haber mandado nada de verdad — el receptor nunca veía la solicitud.
+-- Fix: el remitente también puede actualizar su propia fila, pero
+-- únicamente para reactivarla a 'pending' — nunca para aceptarla él mismo
+-- (eso lo sigue exigiendo `to_user_id = auth.uid()` en el primer término del
+-- with check).
+drop policy "El receptor puede aceptar o rechazar una solicitud" on connection_requests;
+
+create policy "El receptor decide, el remitente puede reintentar"
+  on connection_requests for update
+  using (auth.uid() = to_user_id or auth.uid() = from_user_id)
+  with check (
+    auth.uid() = to_user_id
+    or (auth.uid() = from_user_id and status = 'pending')
+  );
