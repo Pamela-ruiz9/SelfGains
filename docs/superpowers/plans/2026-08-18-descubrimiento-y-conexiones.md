@@ -664,7 +664,7 @@ export default function Connections() {
     try {
       await acceptConnectionRequest(requestId);
       await refresh();
-      if (searchQuery.trim()) setSearchResults(await searchUsers(searchQuery));
+      if (hasSearched) setSearchResults(await searchUsers(searchQuery));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo aceptar la solicitud.');
     }
@@ -675,7 +675,7 @@ export default function Connections() {
     try {
       await rejectConnectionRequest(requestId);
       await refresh();
-      if (searchQuery.trim()) setSearchResults(await searchUsers(searchQuery));
+      if (hasSearched) setSearchResults(await searchUsers(searchQuery));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo rechazar la solicitud.');
     }
@@ -1711,7 +1711,7 @@ export default function Connections() {
     try {
       await acceptConnectionRequest(requestId);
       await refresh();
-      if (searchQuery.trim()) setSearchResults(await searchUsers(searchQuery));
+      if (hasSearched) setSearchResults(await searchUsers(searchQuery));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo aceptar la solicitud.');
     }
@@ -1722,7 +1722,7 @@ export default function Connections() {
     try {
       await rejectConnectionRequest(requestId);
       await refresh();
-      if (searchQuery.trim()) setSearchResults(await searchUsers(searchQuery));
+      if (hasSearched) setSearchResults(await searchUsers(searchQuery));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo rechazar la solicitud.');
     }
@@ -2685,7 +2685,7 @@ export default function Connections({ activities }: Props) {
     try {
       await acceptConnectionRequest(requestId);
       await refresh();
-      if (searchQuery.trim()) setSearchResults(await searchUsers(searchQuery));
+      if (hasSearched) setSearchResults(await searchUsers(searchQuery));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo aceptar la solicitud.');
     }
@@ -2696,7 +2696,7 @@ export default function Connections({ activities }: Props) {
     try {
       await rejectConnectionRequest(requestId);
       await refresh();
-      if (searchQuery.trim()) setSearchResults(await searchUsers(searchQuery));
+      if (hasSearched) setSearchResults(await searchUsers(searchQuery));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo rechazar la solicitud.');
     }
