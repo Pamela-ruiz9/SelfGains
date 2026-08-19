@@ -23,10 +23,20 @@ import {
   getVisibleTrainersNear,
   type VisibleTrainer,
 } from '../../../lib/trainerProfiles';
+import {
+  acceptRoutineShare,
+  getPendingRoutineShares,
+  getSharedRoutinePreview,
+  rejectRoutineShare,
+  type PendingRoutineShare,
+} from '../../../lib/routineShares';
 import { assignRoutineToStudent, getMyRoutines } from '../../../lib/routines';
 import type { Routine } from '../../../types/db';
+import type { RoutineDays } from '../../../lib/weekdays';
+import type { ActivityOption } from '../ActivityPicker/ActivityPicker';
 import Avatar from '../Shared/Avatar';
 import MapPicker from '../Shared/MapPicker';
+import RoutinePreview from '../RoutineManager/RoutinePreview';
 
 function inviteLink(code: string): string {
   return `${window.location.origin}${import.meta.env.BASE_URL}c/#${code}`;
@@ -96,7 +106,11 @@ function AssignRoutinePicker({
   );
 }
 
-export default function Connections() {
+interface Props {
+  activities: ActivityOption[];
+}
+
+export default function Connections({ activities }: Props) {
   const [authChecked, setAuthChecked] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isTrainer, setIsTrainer] = useState(false);
@@ -120,19 +134,26 @@ export default function Connections() {
   const [selectedTrainerId, setSelectedTrainerId] = useState<string | null>(null);
   const [sentTrainerRequests, setSentTrainerRequests] = useState<Set<string>>(new Set());
 
+  const [pendingShares, setPendingShares] = useState<PendingRoutineShare[]>([]);
+  const [previewShareId, setPreviewShareId] = useState<string | null>(null);
+  const [previewDays, setPreviewDays] = useState<RoutineDays | null>(null);
+  const [shareActionError, setShareActionError] = useState<string | null>(null);
+
   async function refresh() {
-    const [profile, myCode, myConnections, routines, incoming] = await Promise.all([
+    const [profile, myCode, myConnections, routines, incoming, shares] = await Promise.all([
       getMyProfile(),
       getMyInviteCode(),
       getMyConnections(),
       getMyRoutines(),
       getIncomingRequests(),
+      getPendingRoutineShares(),
     ]);
     setIsTrainer(profile?.is_trainer ?? false);
     setCode(myCode);
     setConnections(myConnections);
     setMyRoutines(routines);
     setIncomingRequests(incoming);
+    setPendingShares(shares);
   }
 
   useEffect(() => {
@@ -278,6 +299,39 @@ export default function Connections() {
       if (hasSearched) setSearchResults(await searchUsers(searchQuery));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo rechazar la solicitud.');
+    }
+  }
+
+  async function handlePreviewShare(share: PendingRoutineShare) {
+    setShareActionError(null);
+    try {
+      const routine = await getSharedRoutinePreview(share.routineId);
+      setPreviewDays(routine?.days ?? null);
+      setPreviewShareId(share.shareId);
+    } catch (err) {
+      setShareActionError(err instanceof Error ? err.message : 'No se pudo cargar la rutina.');
+    }
+  }
+
+  async function handleAcceptShare(share: PendingRoutineShare) {
+    setShareActionError(null);
+    try {
+      await acceptRoutineShare(share.shareId);
+      setPreviewShareId(null);
+      await refresh();
+    } catch (err) {
+      setShareActionError(err instanceof Error ? err.message : 'No se pudo agregar la rutina.');
+    }
+  }
+
+  async function handleRejectShare(shareId: string) {
+    setShareActionError(null);
+    try {
+      await rejectRoutineShare(shareId);
+      setPreviewShareId(null);
+      await refresh();
+    } catch (err) {
+      setShareActionError(err instanceof Error ? err.message : 'No se pudo rechazar.');
     }
   }
 
@@ -514,6 +568,45 @@ export default function Connections() {
           )}
         </div>
       )}
+
+      <div className="flex flex-col gap-3">
+        <p className="label-brutal text-acid">Rutinas compartidas pendientes</p>
+        {shareActionError && <p className="font-mono text-xs text-blood">{shareActionError}</p>}
+        {pendingShares.length === 0 ? (
+          <p className="font-mono text-sm text-paper-dim">No tenés propuestas de rutina pendientes.</p>
+        ) : (
+          pendingShares.map((share) => (
+            <div key={share.shareId} className="card-brutal flex flex-col gap-3">
+              <p className="font-mono text-sm text-paper">
+                <span className="text-acid">{share.fromDisplayName ?? 'Alguien'}</span> te propuso "
+                {share.routineName}"
+              </p>
+              {previewShareId === share.shareId && previewDays && (
+                <RoutinePreview days={previewDays} activities={activities} />
+              )}
+              <div className="flex gap-3">
+                <button type="button" onClick={() => handlePreviewShare(share)} className="btn-brutal-sm">
+                  Ver
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleAcceptShare(share)}
+                  className="btn-brutal-sm border-acid bg-acid text-on-accent"
+                >
+                  Agregar a mis rutinas
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleRejectShare(share.shareId)}
+                  className="font-mono text-xs text-blood hover:text-paper"
+                >
+                  Rechazar
+                </button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
 
       <div className="flex flex-col gap-3">
         <p className="label-brutal text-acid">Mis conexiones</p>

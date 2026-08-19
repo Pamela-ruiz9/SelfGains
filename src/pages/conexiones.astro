@@ -1,9 +1,22 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Connections from '../components/react/Connections/Connections';
+import { getCollection } from 'astro:content';
+
+const activityEntries = await getCollection('activities');
+const activities = activityEntries
+  .map((e) => ({
+    id: e.id,
+    name: e.data.name,
+    discipline: e.data.discipline,
+    metricType: e.data.metricType,
+    group: e.data.metricType === 'session' ? e.data.group : undefined,
+    description: e.body?.trim() ?? '',
+  }))
+  .sort((a, b) => a.name.localeCompare(b.name));
 ---
 <BaseLayout title="Conexiones">
-  <p class="label-brutal mb-3 text-acid">Invitaciones</p>
+  <p class="label-brutal mb-3 text-acid">Perfil compartido</p>
   <h1 class="mb-8 font-display text-5xl text-paper sm:text-6xl">CONEXIONES</h1>
-  <Connections client:load />
+  <Connections client:load activities={activities} />
 </BaseLayout>
