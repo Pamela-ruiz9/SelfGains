@@ -14,6 +14,7 @@ import {
   SessionFields,
   SetFields,
 } from '../WorkoutLogger/WorkoutLogger';
+import { getWeightUnit, kgToDisplay } from '../../../lib/weightUnit';
 import type { WorkoutSession, WorkoutSet } from '../../../types/db';
 import type { WorkoutWithSessions, WorkoutWithSets } from '../../../lib/prs';
 import type { ActivityOption } from '../ActivityPicker/ActivityPicker';
@@ -38,14 +39,15 @@ function SetRow({
   onChanged: () => void;
 }) {
   const [editing, setEditing] = useState(false);
+  const [weightUnit] = useState(() => getWeightUnit());
   const [reps, setReps] = useState(String(set.reps));
-  const [weight, setWeight] = useState(String(set.weight));
+  const [weight, setWeight] = useState(String(kgToDisplay(set.weight, weightUnit)));
   const [rpe, setRpe] = useState(set.rpe !== null ? String(set.rpe) : '');
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   async function handleSave() {
-    const parsed = parseSetInput(reps, weight, rpe);
+    const parsed = parseSetInput(reps, weight, rpe, weightUnit);
     if ('error' in parsed) {
       setError(parsed.error);
       return;
@@ -83,6 +85,7 @@ function SetRow({
           reps={reps}
           weight={weight}
           rpe={rpe}
+          weightUnit={weightUnit}
           onRepsChange={setReps}
           onWeightChange={setWeight}
           onRpeChange={setRpe}
@@ -108,7 +111,7 @@ function SetRow({
     <li className="flex flex-wrap items-baseline gap-x-2 py-2">
       <span className="font-body text-paper">{exerciseName}</span>
       <span className="text-paper-dim">
-        — serie {set.set_number}: {set.reps} reps x {set.weight} kg
+        — serie {set.set_number}: {set.reps} reps x {kgToDisplay(set.weight, weightUnit)} {weightUnit}
         {set.rpe !== null ? ` (RPE ${set.rpe})` : ''}
       </span>
       <span className="ml-auto flex gap-3 font-mono text-xs">

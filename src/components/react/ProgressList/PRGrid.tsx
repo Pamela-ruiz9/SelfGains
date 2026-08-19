@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { muscleLabel } from '../../../lib/muscles';
 import { groupPRsByMuscle, type ExercisePR } from '../../../lib/prs';
+import { getWeightUnit, kgToDisplay } from '../../../lib/weightUnit';
 
 interface ExerciseInfo {
   id: string;
@@ -14,6 +16,7 @@ interface Props {
 }
 
 export default function PRGrid({ prs, exercises, onSelectExercise }: Props) {
+  const [weightUnit] = useState(() => getWeightUnit());
   const exerciseNameById = new Map(exercises.map((e) => [e.id, e.name]));
   const groups = groupPRsByMuscle(prs, exercises);
 
@@ -36,7 +39,9 @@ export default function PRGrid({ prs, exercises, onSelectExercise }: Props) {
                 <span className="font-display text-xl text-paper">
                   {exerciseNameById.get(pr.exerciseId) ?? pr.exerciseId}
                 </span>
-                <span className="font-mono text-sm text-acid">{pr.weight} kg</span>
+                <span className="font-mono text-sm text-acid">
+                  {kgToDisplay(pr.weight, weightUnit)} {weightUnit}
+                </span>
                 <span className="font-mono text-xs text-paper-dim">{pr.date}</span>
               </button>
             ))}

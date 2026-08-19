@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import type { ProgressPoint } from '../../../lib/prs';
+import { getWeightUnit, kgToDisplay } from '../../../lib/weightUnit';
 
 interface ExerciseInfo {
   id: string;
@@ -17,22 +19,31 @@ function ChartTooltip({
   active,
   payload,
   label,
+  weightUnit,
 }: {
   active?: boolean;
   payload?: { value: number }[];
   label?: string;
+  weightUnit: string;
 }) {
   if (!active || !payload || payload.length === 0) return null;
   return (
     <div className="card-brutal font-mono text-sm">
       <p className="text-paper-dim">{label}</p>
-      <p className="text-acid">{payload[0].value} kg</p>
+      <p className="text-acid">
+        {payload[0].value} {weightUnit}
+      </p>
     </div>
   );
 }
 
 export default function ProgressChart({ exerciseId, points, exercises, onSelectExercise }: Props) {
+  const [weightUnit] = useState(() => getWeightUnit());
   const exerciseName = exercises.find((e) => e.id === exerciseId)?.name ?? exerciseId;
+  const displayPoints = points.map((p) => ({
+    ...p,
+    maxWeight: kgToDisplay(p.maxWeight, weightUnit),
+  }));
 
   return (
     <div className="flex flex-col gap-4">
@@ -54,7 +65,7 @@ export default function ProgressChart({ exerciseId, points, exercises, onSelectE
         <p className="mb-4 font-display text-2xl text-paper">{exerciseName}</p>
         <div className="h-72 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={points} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+            <LineChart data={displayPoints} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
               <CartesianGrid stroke="var(--color-paper-dim)" strokeOpacity={0.2} vertical={false} />
               <XAxis
                 dataKey="date"
@@ -64,9 +75,9 @@ export default function ProgressChart({ exerciseId, points, exercises, onSelectE
               <YAxis
                 stroke="var(--color-paper-dim)"
                 tick={{ fontSize: 12, fontFamily: 'JetBrains Mono, monospace' }}
-                unit=" kg"
+                unit={` ${weightUnit}`}
               />
-              <Tooltip content={<ChartTooltip />} />
+              <Tooltip content={<ChartTooltip weightUnit={weightUnit} />} />
               <Line
                 type="monotone"
                 dataKey="maxWeight"

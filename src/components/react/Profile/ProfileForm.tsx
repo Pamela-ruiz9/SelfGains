@@ -3,6 +3,7 @@ import { supabase } from '../../../lib/supabase';
 import { getMyProfile, uploadAvatar, upsertProfile } from '../../../lib/profile';
 import { logMeasurement } from '../../../lib/measurements';
 import { applyTheme, DEFAULT_ACCENT, type ThemeMode } from '../../../lib/theme';
+import { getWeightUnit, setWeightUnit, type WeightUnit } from '../../../lib/weightUnit';
 import { getActiveRoutine, weeksElapsed } from '../../../lib/routines';
 import { DEFAULT_MAP_CENTER, getMyTrainerProfile, upsertTrainerProfile } from '../../../lib/trainerProfiles';
 import { DISCIPLINES } from '../ActivityPicker/ActivityPicker';
@@ -31,6 +32,7 @@ export default function ProfileForm() {
   const [measurements, setMeasurements] = useState<Record<string, string>>({});
   const [theme, setTheme] = useState<ThemeMode>('dark');
   const [accentColor, setAccentColor] = useState(DEFAULT_ACCENT);
+  const [weightUnit, setWeightUnitState] = useState<WeightUnit>(() => getWeightUnit());
 
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -149,6 +151,11 @@ export default function ProfileForm() {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo guardar el color.');
     }
+  }
+
+  function handleWeightUnitChange(next: WeightUnit) {
+    setWeightUnitState(next);
+    setWeightUnit(next);
   }
 
   async function handleTrainerToggle(next: boolean) {
@@ -303,6 +310,33 @@ export default function ProfileForm() {
             className="h-8 w-8 cursor-pointer border-2 border-paper-dim/40 bg-transparent p-0"
           />
         </div>
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <p className="label-brutal text-acid">Unidad de peso</p>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => handleWeightUnitChange('kg')}
+            className={
+              weightUnit === 'kg' ? 'btn-brutal-sm border-acid bg-acid text-on-accent' : 'btn-brutal-sm'
+            }
+          >
+            Kilos (kg)
+          </button>
+          <button
+            type="button"
+            onClick={() => handleWeightUnitChange('lb')}
+            className={
+              weightUnit === 'lb' ? 'btn-brutal-sm border-acid bg-acid text-on-accent' : 'btn-brutal-sm'
+            }
+          >
+            Libras (lb)
+          </button>
+        </div>
+        <p className="font-mono text-xs text-paper-dim">
+          Se aplica al peso que registras en tus series de gym. Se guarda en este dispositivo.
+        </p>
       </div>
 
       {routineExpired && (

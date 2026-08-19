@@ -18,6 +18,7 @@ import {
   type RoutineDays,
 } from '../../../lib/weekdays';
 import { fullActivityName, kmToMeters, metersToKm, requiresDistance } from '../../../lib/activities';
+import { displayToKg, getWeightUnit, kgToDisplay, type WeightUnit } from '../../../lib/weightUnit';
 import {
   calculatePRs,
   suggestNextSet,
@@ -76,7 +77,14 @@ interface ParsedSession {
   distanceKm: number | null;
 }
 
-export function parseSetInput(reps: string, weight: string, rpe: string): ParsedSet | { error: string } {
+// `weight` is the user-facing string in `weightUnit`; the returned weight is
+// always in kg, which is what actually gets stored (DB column, PR math).
+export function parseSetInput(
+  reps: string,
+  weight: string,
+  rpe: string,
+  weightUnit: WeightUnit = 'kg'
+): ParsedSet | { error: string } {
   const repsNum = Number(reps);
   const weightNum = Number(weight);
   const rpeNum = rpe === '' ? null : Number(rpe);
@@ -90,7 +98,7 @@ export function parseSetInput(reps: string, weight: string, rpe: string): Parsed
   if (rpeNum !== null && (!Number.isFinite(rpeNum) || rpeNum < 0 || rpeNum > 10)) {
     return { error: 'El RPE debe ser un número entre 0 y 10.' };
   }
-  return { reps: repsNum, weight: weightNum, rpe: rpeNum };
+  return { reps: repsNum, weight: displayToKg(weightNum, weightUnit), rpe: rpeNum };
 }
 
 // `distance` is the user-facing string in METERS; distanceKm on the way out
@@ -117,7 +125,11 @@ export function parseSessionInput(
 // Compares each just-saved set against the PRs computed from workouts logged
 // BEFORE this session (pastWorkouts doesn't include what was just saved), so
 // a set that ties or beats the prior best gets called out by name.
-function buildSavedMessage(justSaved: LoggedSet[], pastWorkouts: WorkoutWithSets[]): string {
+function buildSavedMessage(
+  justSaved: LoggedSet[],
+  pastWorkouts: WorkoutWithSets[],
+  weightUnit: WeightUnit
+): string {
   const priorPRByExercise = new Map(calculatePRs(pastWorkouts).map((pr) => [pr.exerciseId, pr.weight]));
 
   const bestByExercise = new Map<string, LoggedSet>();
@@ -132,12 +144,15 @@ function buildSavedMessage(justSaved: LoggedSet[], pastWorkouts: WorkoutWithSets
   });
 
   if (newPRs.length === 0) return 'Entrenamiento guardado correctamente.';
-  const list = newPRs.map((pr) => `${pr.exerciseName} (${pr.weight} kg)`).join(', ');
+  const list = newPRs
+    .map((pr) => `${pr.exerciseName} (${kgToDisplay(pr.weight, weightUnit)} ${weightUnit})`)
+    .join(', ');
   return `Entrenamiento guardado correctamente. ¡Nuevo PR en ${list}!`;
 }
 
-function suggestionHint(suggestion: SuggestedSet): string {
-  const base = `Sugerido: ${suggestion.reps} reps × ${suggestion.weight} kg`;
+function suggestionHint(suggestion: SuggestedSet, weightUnit: WeightUnit): string {
+  const weight = kgToDisplay(suggestion.weight, weightUnit);
+  const base = `Sugerido: ${suggestion.reps} reps × ${weight} ${weightUnit}`;
   if (suggestion.status === 'progress') {
     return `${base} (+2.5 kg — llevas 3 sesiones con RPE bajo)`;
   }
@@ -151,6 +166,7 @@ export function SetFields({
   reps,
   weight,
   rpe,
+  weightUnit = 'kg',
   onRepsChange,
   onWeightChange,
   onRpeChange,
@@ -158,6 +174,7 @@ export function SetFields({
   reps: string;
   weight: string;
   rpe: string;
+  weightUnit?: WeightUnit;
   onRepsChange: (v: string) => void;
   onWeightChange: (v: string) => void;
   onRpeChange: (v: string) => void;
@@ -176,7 +193,7 @@ export function SetFields({
         />
       </label>
       <label className="flex flex-col gap-2">
-        <span className="label-brutal">Peso (kg)</span>
+        <span className="label-brutal">Peso ({weightUnit})</span>
         <input
           type="number"
           value={weight}
@@ -326,6 +343,7 @@ function RoutineActivityCard({
   activity,
   target,
   workouts,
+  weightUnit,
   onAddSet,
   onAddSession,
   done,
@@ -334,6 +352,7 @@ function RoutineActivityCard({
   activity: ActivityOption;
   target: Omit<RoutineActivityTarget, 'activityId'>;
   workouts: WorkoutWithSets[];
+  weightUnit: WeightUnit;
   onAddSet: (activityId: string, activityName: string, parsed: ParsedSet) => void;
   onAddSession: (activityId: string, activityName: string, parsed: ParsedSession) => void;
   done: boolean;
@@ -345,7 +364,9 @@ function RoutineActivityCard({
   const [reps, setReps] = useState(
     target.targetReps ? String(target.targetReps) : suggestion ? String(suggestion.reps) : ''
   );
-  const [weight, setWeight] = useState(suggestion ? String(suggestion.weight) : '');
+  const [weight, setWeight] = useState(
+    suggestion ? String(kgToDisplay(suggestion.weight, weightUnit)) : ''
+  );
   const [rpe, setRpe] = useState('');
   const [duration, setDuration] = useState('');
   const [distance, setDistance] = useState(
@@ -356,7 +377,7 @@ function RoutineActivityCard({
   function handleAdd(e: FormEvent) {
     e.preventDefault();
     if (activity.metricType === 'sets') {
-      const parsed = parseSetInput(reps, weight, rpe);
+      const parsed = parseSetInput(reps, weight, rpe, weightUnit);
       if ('error' in parsed) {
         setError(parsed.error);
         return;
@@ -402,13 +423,14 @@ function RoutineActivityCard({
         </p>
       )}
       {suggestion && (
-        <p className="font-mono text-xs text-paper-dim">{suggestionHint(suggestion)}</p>
+        <p className="font-mono text-xs text-paper-dim">{suggestionHint(suggestion, weightUnit)}</p>
       )}
       {activity.metricType === 'sets' ? (
         <SetFields
           reps={reps}
           weight={weight}
           rpe={rpe}
+          weightUnit={weightUnit}
           onRepsChange={setReps}
           onWeightChange={setWeight}
           onRpeChange={setRpe}
@@ -461,6 +483,7 @@ export default function WorkoutLogger({ activities, plans }: Props) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [savedMessage, setSavedMessage] = useState<string | null>(null);
+  const [weightUnit] = useState<WeightUnit>(() => getWeightUnit());
 
   useEffect(() => {
     async function loadFromServer() {
@@ -524,7 +547,7 @@ export default function WorkoutLogger({ activities, plans }: Props) {
     if (selectedActivity?.metricType === 'sets') {
       const suggestion = suggestNextSet(pastWorkouts, selectedActivity.id);
       setReps(suggestion ? String(suggestion.reps) : '');
-      setWeight(suggestion ? String(suggestion.weight) : '');
+      setWeight(suggestion ? String(kgToDisplay(suggestion.weight, weightUnit)) : '');
     }
   }, [selectedActivity, pastWorkouts]);
 
@@ -637,7 +660,7 @@ export default function WorkoutLogger({ activities, plans }: Props) {
     }
 
     if (selectedActivity.metricType === 'sets') {
-      const parsed = parseSetInput(reps, weight, rpe);
+      const parsed = parseSetInput(reps, weight, rpe, weightUnit);
       if ('error' in parsed) {
         setError(parsed.error);
         return;
@@ -689,7 +712,7 @@ export default function WorkoutLogger({ activities, plans }: Props) {
       for (const s of loggedSessions) {
         await addSession(workout.id, s.activityId, s.durationMin, s.distanceKm ?? undefined);
       }
-      setSavedMessage(buildSavedMessage(loggedSets, pastWorkouts));
+      setSavedMessage(buildSavedMessage(loggedSets, pastWorkouts, weightUnit));
       setLoggedSets([]);
       setLoggedSessions([]);
     } catch (err) {
@@ -763,6 +786,7 @@ export default function WorkoutLogger({ activities, plans }: Props) {
                     activity={activity}
                     target={target}
                     workouts={pastWorkouts}
+                    weightUnit={weightUnit}
                     onAddSet={addLoggedSet}
                     onAddSession={addLoggedSession}
                     done={isActivityDone(activity, target)}
@@ -828,13 +852,16 @@ export default function WorkoutLogger({ activities, plans }: Props) {
             <p className="font-mono text-xs text-paper-dim">{selectedActivity.description}</p>
           )}
           {freeFormSuggestion && (
-            <p className="font-mono text-xs text-paper-dim">{suggestionHint(freeFormSuggestion)}</p>
+            <p className="font-mono text-xs text-paper-dim">
+              {suggestionHint(freeFormSuggestion, weightUnit)}
+            </p>
           )}
           {selectedActivity?.metricType === 'sets' && (
             <SetFields
               reps={reps}
               weight={weight}
               rpe={rpe}
+              weightUnit={weightUnit}
               onRepsChange={setReps}
               onWeightChange={setWeight}
               onRpeChange={setRpe}
@@ -863,7 +890,7 @@ export default function WorkoutLogger({ activities, plans }: Props) {
                 <th className="px-3 py-2 font-normal">Ejercicio</th>
                 <th className="px-3 py-2 font-normal">Serie</th>
                 <th className="px-3 py-2 font-normal">Reps</th>
-                <th className="px-3 py-2 font-normal">Peso</th>
+                <th className="px-3 py-2 font-normal">Peso ({weightUnit})</th>
                 <th className="px-3 py-2 font-normal">RPE</th>
                 <th className="px-3 py-2"></th>
               </tr>
@@ -874,7 +901,7 @@ export default function WorkoutLogger({ activities, plans }: Props) {
                   <td className="px-3 py-2 font-body text-paper">{s.exerciseName}</td>
                   <td className="px-3 py-2 text-acid">{s.setNumber}</td>
                   <td className="px-3 py-2">{s.reps}</td>
-                  <td className="px-3 py-2">{s.weight}</td>
+                  <td className="px-3 py-2">{kgToDisplay(s.weight, weightUnit)}</td>
                   <td className="px-3 py-2">{s.rpe ?? '—'}</td>
                   <td className="px-3 py-2">
                     <button

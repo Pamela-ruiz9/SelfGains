@@ -3,6 +3,9 @@ import type { ConflictItem } from '../../../lib/offlineDb';
 import { getConflicts, patchCacheArray, removeConflict } from '../../../lib/offlineQueue';
 import { updateSessionRemote, updateSetRemote } from '../../../lib/workouts';
 import type { Workout, WorkoutSession, WorkoutSet } from '../../../types/db';
+import { getWeightUnit, kgToDisplay } from '../../../lib/weightUnit';
+
+const weightUnit = getWeightUnit();
 
 const TYPE_LABEL: Record<string, string> = {
   createWorkout: 'Entrenamiento nuevo',
@@ -16,7 +19,8 @@ const TYPE_LABEL: Record<string, string> = {
 }
 
 function describeSetPayload(payload: Record<string, unknown>): string {
-  return `${payload.reps} reps × ${payload.weight}kg${payload.rpe ? ` (RPE ${payload.rpe})` : ''}`;
+  const weight = kgToDisplay(Number(payload.weight), weightUnit);
+  return `${payload.reps} reps × ${weight}${weightUnit}${payload.rpe ? ` (RPE ${payload.rpe})` : ''}`;
 }
 
 function describeSessionPayload(payload: Record<string, unknown>): string {
