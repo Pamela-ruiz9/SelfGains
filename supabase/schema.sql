@@ -340,7 +340,16 @@ create policy "Cualquiera de los dos lados puede cancelar una solicitud"
 -- forzando una fila en `connections` sin el consentimiento real de esa
 -- persona — la política de UPDATE de arriba solo fija `to_user_id`
 -- (auth.uid() = to_user_id en using/with check), no las demás columnas.
-revoke update (from_user_id) on connection_requests from authenticated;
+-- Ojo: un `revoke update (columna)` por sí solo NO alcanza acá — Supabase
+-- ya le da a `authenticated` un `grant update` a nivel de tabla completa por
+-- defecto en cualquier tabla nueva, y ese grant amplio sigue permitiendo
+-- escribir cualquier columna sin importar qué se revoque a nivel de columna
+-- (verificado empíricamente contra el proyecto real vía
+-- information_schema.column_privileges). Hay que revocar el `update` de
+-- tabla completa primero, y recién ahí otorgar `update` solo sobre la
+-- columna que sí debe ser editable.
+revoke update on connection_requests from authenticated;
+grant update (status) on connection_requests to authenticated;
 
 create table trainer_profiles (
   user_id uuid primary key references auth.users(id) on delete cascade,
@@ -412,8 +421,12 @@ create policy "Quien propuso puede cancelarla mientras esté pendiente"
 -- una rutina ajena vía la política de "El receptor de una rutina compartida
 -- pendiente puede verla" que sigue debajo — esa política de SELECT sobre
 -- `routines` confía en `routine_shares.routine_id` sin poder saber si fue
--- manipulado después del insert original.
-revoke update (routine_id, from_user_id) on routine_shares from authenticated;
+-- manipulado después del insert original. Mismo patrón revoke-total +
+-- grant-parcial que arriba (ver esa nota): un revoke solo de columna no
+-- alcanza contra el grant de tabla completa que Supabase ya le da a
+-- `authenticated` por defecto.
+revoke update on routine_shares from authenticated;
+grant update (status) on routine_shares to authenticated;
 
 create policy "El receptor de una rutina compartida pendiente puede verla"
   on routines for select
