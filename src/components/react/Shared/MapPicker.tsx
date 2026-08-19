@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type * as LeafletTypes from 'leaflet';
 
 type Leaflet = typeof LeafletTypes;
@@ -24,7 +24,7 @@ interface MapPickerProps {
 function makePinIcon(L: Leaflet) {
   return L.divIcon({
     className: '',
-    html: '<div style="width:20px;height:20px;border-radius:50% 50% 50% 0;background:#d7ff3f;border:2px solid #0c0c0a;transform:rotate(-45deg);"></div>',
+    html: '<div style="width:20px;height:20px;border-radius:50% 50% 50% 0;background:var(--color-acid);border:2px solid var(--color-ink);transform:rotate(-45deg);"></div>',
     iconSize: [20, 20],
     iconAnchor: [10, 20],
   });
@@ -45,6 +45,13 @@ export default function MapPicker({
   const mapRef = useRef<LeafletTypes.Map | null>(null);
   const draggableMarkerRef = useRef<LeafletTypes.Marker | null>(null);
   const markerLayerRef = useRef<LeafletTypes.LayerGroup | null>(null);
+  // Se pone en true recién cuando el mapa/tile layer/marker layer terminaron
+  // de crearse (después del import dinámico) — los efectos de marcadores de
+  // abajo esperan a esto en vez de intentar crear el marcador inicial ellos
+  // mismos dentro del .then() de montaje, que usaría un closure de props
+  // potencialmente obsoleto si `draggableMarker`/`markers` cambian mientras
+  // Leaflet todavía se está cargando.
+  const [ready, setReady] = useState(false);
 
   // Import dinámico: Leaflet toca `window`/`document` al cargarse, y Astro
   // pre-renderiza este componente en el servidor durante `astro build` antes
@@ -68,27 +75,14 @@ export default function MapPicker({
       markerLayerRef.current = L.layerGroup().addTo(map);
       mapRef.current = map;
 
-      if (draggableMarker) {
-        const marker = L.marker(draggableMarker, { icon: makePinIcon(L), draggable: true }).addTo(map);
-        marker.on('dragend', () => {
-          const pos = marker.getLatLng();
-          onDraggableMarkerMove?.(pos.lat, pos.lng);
-        });
-        draggableMarkerRef.current = marker;
-      }
-
-      for (const m of markers) {
-        const marker = L.marker([m.lat, m.lng], { icon: makePinIcon(L) }).bindTooltip(m.label);
-        if (onMarkerClick) marker.on('click', () => onMarkerClick(m.id));
-        marker.addTo(markerLayerRef.current!);
-      }
-
       if (onMapMove) {
         map.on('moveend', () => {
           const c = map.getCenter();
           onMapMove(c.lat, c.lng);
         });
       }
+
+      setReady(true);
     });
 
     return () => {
@@ -104,16 +98,34 @@ export default function MapPicker({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Responsable de todo el ciclo de vida del pin arrastrable: lo crea la
+  // primera vez que `ready` es true y hay un `draggableMarker`, y lo mueve
+  // en renders siguientes — nunca se crea desde el efecto de montaje de
+  // arriba, así siempre lee el valor más reciente de la prop.
   useEffect(() => {
-    if (draggableMarkerRef.current && draggableMarker) {
+    const L = leafletRef.current;
+    const map = mapRef.current;
+    if (!ready || !L || !map || !draggableMarker) return;
+    if (!draggableMarkerRef.current) {
+      const marker = L.marker(draggableMarker, { icon: makePinIcon(L), draggable: true }).addTo(map);
+      marker.on('dragend', () => {
+        const pos = marker.getLatLng();
+        onDraggableMarkerMove?.(pos.lat, pos.lng);
+      });
+      draggableMarkerRef.current = marker;
+    } else {
       draggableMarkerRef.current.setLatLng(draggableMarker);
     }
-  }, [draggableMarker]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, draggableMarker]);
 
+  // Mismo motivo que el efecto de arriba: responsable de todos los
+  // marcadores de solo lectura, gateado por `ready` para no depender del
+  // closure del efecto de montaje.
   useEffect(() => {
     const L = leafletRef.current;
     const layer = markerLayerRef.current;
-    if (!L || !layer) return;
+    if (!ready || !L || !layer) return;
     layer.clearLayers();
     for (const m of markers) {
       const marker = L.marker([m.lat, m.lng], { icon: makePinIcon(L) }).bindTooltip(m.label);
@@ -121,7 +133,7 @@ export default function MapPicker({
       marker.addTo(layer);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [markers]);
+  }, [ready, markers]);
 
   useEffect(() => {
     mapRef.current?.setView(center, zoom);
