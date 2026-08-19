@@ -2162,13 +2162,29 @@ export async function getSharedRoutinePreview(routineId: string): Promise<Routin
   return data as Routine | null;
 }
 
-export async function acceptRoutineShare(shareId: string, routineId: string): Promise<void> {
+export async function acceptRoutineShare(shareId: string): Promise<void> {
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) throw new Error('No hay sesión activa');
 
-  const source = await getSharedRoutinePreview(routineId);
+  // Se lee `routine_id` de la propia fila de la propuesta (acotado a
+  // `to_user_id = auth.uid()` y `status = 'pending'`) en vez de confiarlo
+  // como parámetro — mismo motivo que la corrección de
+  // acceptConnectionRequest en src/lib/connectionRequests.ts: sin esto,
+  // alguien podría pasar un shareId y un routineId que no se correspondan
+  // entre sí y terminar marcando como aceptada una propuesta distinta de
+  // la rutina que realmente copió.
+  const { data: share, error: shareError } = await supabase
+    .from('routine_shares')
+    .select('routine_id')
+    .eq('id', shareId)
+    .eq('to_user_id', user.id)
+    .eq('status', 'pending')
+    .single();
+  if (shareError) throw shareError;
+
+  const source = await getSharedRoutinePreview(share.routine_id);
   if (!source) throw new Error('No se encontró la rutina compartida.');
 
   // Sin .select() después del insert, mismo motivo que
@@ -2804,7 +2820,7 @@ export default function Connections({ activities }: Props) {
   async function handleAcceptShare(share: PendingRoutineShare) {
     setShareActionError(null);
     try {
-      await acceptRoutineShare(share.shareId, share.routineId);
+      await acceptRoutineShare(share.shareId);
       setPreviewShareId(null);
       await refresh();
     } catch (err) {
