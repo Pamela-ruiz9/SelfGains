@@ -104,6 +104,7 @@ export default function Connections() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [searching, setSearching] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
   const [incomingRequests, setIncomingRequests] = useState<IncomingRequest[]>([]);
 
   async function refresh() {
@@ -183,6 +184,7 @@ export default function Connections() {
     e.preventDefault();
     setError(null);
     setSearching(true);
+    setHasSearched(true);
     try {
       setSearchResults(await searchUsers(searchQuery));
     } catch (err) {
@@ -220,6 +222,7 @@ export default function Connections() {
     try {
       await acceptConnectionRequest(requestId);
       await refresh();
+      if (searchQuery.trim()) setSearchResults(await searchUsers(searchQuery));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo aceptar la solicitud.');
     }
@@ -230,6 +233,7 @@ export default function Connections() {
     try {
       await rejectConnectionRequest(requestId);
       await refresh();
+      if (searchQuery.trim()) setSearchResults(await searchUsers(searchQuery));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo rechazar la solicitud.');
     }
@@ -309,6 +313,9 @@ export default function Connections() {
             {searching ? 'Buscando...' : 'Buscar'}
           </button>
         </div>
+        {hasSearched && searchResults.length === 0 && (
+          <p className="font-mono text-sm text-paper-dim">No se encontraron usuarios.</p>
+        )}
         {searchResults.length > 0 && (
           <div className="flex flex-col gap-2">
             {searchResults.map((r) => (
