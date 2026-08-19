@@ -109,11 +109,22 @@ export async function acceptRoutineShare(shareId: string): Promise<void> {
     .insert({ user_id: user.id, name: source.name, days: source.days });
   if (insertError) throw insertError;
 
-  const { error: updateError } = await supabase
+  // .eq('status', 'pending') además de .eq('id', shareId): si dos llamadas
+  // concurrentes (doble click, dos pestañas) pasan el SELECT de arriba
+  // mientras la propuesta seguía pendiente, esta segunda condición hace
+  // que la segunda UPDATE no afecte ninguna fila — se detecta abajo y se
+  // aborta en vez de dejar dos copias de la misma rutina creadas para una
+  // sola propuesta.
+  const { data: updated, error: updateError } = await supabase
     .from('routine_shares')
     .update({ status: 'accepted' })
-    .eq('id', shareId);
+    .eq('id', shareId)
+    .eq('status', 'pending')
+    .select('id');
   if (updateError) throw updateError;
+  if (!updated || updated.length === 0) {
+    throw new Error('Esta propuesta ya se resolvió en otro lado.');
+  }
 }
 
 export async function rejectRoutineShare(shareId: string): Promise<void> {
