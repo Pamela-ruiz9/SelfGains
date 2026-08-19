@@ -5,4 +5,4 @@ group: pecho
 metricType: session
 ---
 
-Nado continuo en estilo pecho (braza), coordinando brazada y patada de rana. Registrá la distancia total nadada y el tiempo de la sesión.
+Nado continuo en estilo pecho (braza), coordinando brazada y patada de rana. Registra la distancia total nadada y el tiempo de la sesión.

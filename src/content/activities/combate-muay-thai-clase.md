@@ -4,4 +4,4 @@ discipline: combate
 metricType: session
 ---
 
-Clase de muay thai (técnica, clinch, sparring). Registrá la duración total de la sesión.
+Clase de muay thai (técnica, clinch, sparring). Registra la duración total de la sesión.

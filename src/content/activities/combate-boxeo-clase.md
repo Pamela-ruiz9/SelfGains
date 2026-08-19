@@ -4,4 +4,4 @@ discipline: combate
 metricType: session
 ---
 
-Clase grupal o entrenamiento de boxeo (técnica, guantes, sparring liviano). Registrá la duración total de la sesión.
+Clase grupal o entrenamiento de boxeo (técnica, guantes, sparring liviano). Registra la duración total de la sesión.
