@@ -16,7 +16,7 @@ import {
 } from '../../../lib/prs';
 import type { ActivityOption } from '../ActivityPicker/ActivityPicker';
 import type { Measurement } from '../../../types/db';
-import CollapsibleSection from './CollapsibleSection';
+import CollapsibleSection from '../Shared/CollapsibleSection';
 import DisciplineSummary from './DisciplineSummary';
 import MeasurementsSummary, { MEASUREMENT_DISPLAY_FIELDS } from './MeasurementsSummary';
 import MeasurementsChart from './MeasurementsChart';

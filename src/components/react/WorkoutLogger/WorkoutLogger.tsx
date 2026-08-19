@@ -26,6 +26,7 @@ import {
   type WorkoutWithSessions,
 } from '../../../lib/prs';
 import ActivityPicker, { DISCIPLINES, type ActivityOption } from '../ActivityPicker/ActivityPicker';
+import CollapsibleSection from '../Shared/CollapsibleSection';
 
 interface PredefinedRoutine {
   id: string;
@@ -441,6 +442,14 @@ export default function WorkoutLogger({ activities, plans }: Props) {
   const [todayActivities, setTodayActivities] = useState<TodayActivityEntry[]>([]);
   const [pastWorkouts, setPastWorkouts] = useState<WorkoutWithLogs[]>([]);
   const [copySourceId, setCopySourceId] = useState('');
+  // Independientes, no acordeón exclusivo: a diferencia de Progreso (una
+  // pantalla de solo consulta), acá se suele necesitar tener "Hoy toca" y
+  // "Agregar otra actividad" abiertas al mismo tiempo dentro del mismo
+  // registro. "Copiar" arranca cerrada — es la que menos se usa y la que
+  // tapaba "Hoy toca" antes de este cambio.
+  const [todaySectionOpen, setTodaySectionOpen] = useState(true);
+  const [copySectionOpen, setCopySectionOpen] = useState(false);
+  const [addActivitySectionOpen, setAddActivitySectionOpen] = useState(true);
 
   const [selectedActivity, setSelectedActivity] = useState<ActivityOption | null>(null);
   const [reps, setReps] = useState('');
@@ -722,113 +731,127 @@ export default function WorkoutLogger({ activities, plans }: Props) {
       </label>
 
       {todayActivities.length > 0 && (
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between gap-3">
-            <p className="label-brutal text-acid">
-              {date === new Date().toISOString().slice(0, 10) ? 'Hoy toca' : 'Ese día toca'}
-            </p>
+        <CollapsibleSection
+          title={date === new Date().toISOString().slice(0, 10) ? 'Hoy toca' : 'Ese día toca'}
+          open={todaySectionOpen}
+          onToggle={() => setTodaySectionOpen((prev) => !prev)}
+          badge={
             <span className="font-mono text-xs text-paper-dim">
               {completedCount} de {totalTodayCount} completado{totalTodayCount === 1 ? '' : 's'}
             </span>
+          }
+        >
+          <div className="flex flex-col gap-4">
+            <div className="h-3 w-full border-2 border-paper-dim/30">
+              <div
+                className="h-full bg-acid transition-all duration-300"
+                style={{ width: `${progressPct}%` }}
+              />
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {todayActivities.map(({ activity, target }) => {
+                const count = loggedCountFor(activity);
+                const progressLabel =
+                  activity.metricType === 'sets' && target.targetSets
+                    ? `${count}/${target.targetSets} series`
+                    : null;
+                return (
+                  <RoutineActivityCard
+                    key={activity.id}
+                    activity={activity}
+                    target={target}
+                    workouts={pastWorkouts}
+                    onAddSet={addLoggedSet}
+                    onAddSession={addLoggedSession}
+                    done={isActivityDone(activity, target)}
+                    progressLabel={progressLabel}
+                  />
+                );
+              })}
+            </div>
           </div>
-          <div className="h-3 w-full border-2 border-paper-dim/30">
-            <div
-              className="h-full bg-acid transition-all duration-300"
-              style={{ width: `${progressPct}%` }}
-            />
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {todayActivities.map(({ activity, target }) => {
-              const count = loggedCountFor(activity);
-              const progressLabel =
-                activity.metricType === 'sets' && target.targetSets
-                  ? `${count}/${target.targetSets} series`
-                  : null;
-              return (
-                <RoutineActivityCard
-                  key={activity.id}
-                  activity={activity}
-                  target={target}
-                  workouts={pastWorkouts}
-                  onAddSet={addLoggedSet}
-                  onAddSession={addLoggedSession}
-                  done={isActivityDone(activity, target)}
-                  progressLabel={progressLabel}
-                />
-              );
-            })}
-          </div>
-        </div>
+        </CollapsibleSection>
       )}
 
       {pastWorkouts.length > 0 && (
-        <div className="card-brutal flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <label className="flex flex-1 flex-col gap-2">
-            <span className="label-brutal">Copiar un entrenamiento anterior</span>
-            <select
-              value={copySourceId}
-              onChange={(e) => setCopySourceId(e.target.value)}
-              className="input-brutal"
+        <CollapsibleSection
+          title="Copiar un entrenamiento anterior"
+          open={copySectionOpen}
+          onToggle={() => setCopySectionOpen((prev) => !prev)}
+        >
+          <div className="card-brutal flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <label className="flex flex-1 flex-col gap-2">
+              <span className="label-brutal">Día a copiar</span>
+              <select
+                value={copySourceId}
+                onChange={(e) => setCopySourceId(e.target.value)}
+                className="input-brutal"
+              >
+                <option value="">
+                  {todayActivities.length === 0
+                    ? 'Elige un día para copiar aquí (sin rutina asignada hoy)'
+                    : 'Elige un día para sumar otra disciplina hoy'}
+                </option>
+                {pastWorkouts.map((w) => {
+                  const labels = disciplinesForPastWorkout(w).map((id) => LABEL_BY_DISCIPLINE[id] ?? id);
+                  return (
+                    <option key={w.id} value={w.id}>
+                      {w.date}
+                      {labels.length > 0 ? ` — ${labels.join(', ')}` : ''}
+                    </option>
+                  );
+                })}
+              </select>
+            </label>
+            <button
+              type="button"
+              onClick={() => copyWorkout(copySourceId)}
+              disabled={!copySourceId}
+              className="btn-brutal-sm shrink-0"
             >
-              <option value="">
-                {todayActivities.length === 0
-                  ? 'Elige un día para copiar aquí (sin rutina asignada hoy)'
-                  : 'Elige un día para sumar otra disciplina hoy'}
-              </option>
-              {pastWorkouts.map((w) => {
-                const labels = disciplinesForPastWorkout(w).map((id) => LABEL_BY_DISCIPLINE[id] ?? id);
-                return (
-                  <option key={w.id} value={w.id}>
-                    {w.date}
-                    {labels.length > 0 ? ` — ${labels.join(', ')}` : ''}
-                  </option>
-                );
-              })}
-            </select>
-          </label>
-          <button
-            type="button"
-            onClick={() => copyWorkout(copySourceId)}
-            disabled={!copySourceId}
-            className="btn-brutal-sm shrink-0"
-          >
-            Copiar a este día
-          </button>
-        </div>
+              Copiar a este día
+            </button>
+          </div>
+        </CollapsibleSection>
       )}
 
-      <form onSubmit={handleAddActivity} className="card-brutal flex flex-col gap-4">
-        <p className="label-brutal text-acid">Agregar otra actividad</p>
-        <ActivityPicker activities={activities} onSelect={setSelectedActivity} />
-        {selectedActivity?.description && (
-          <p className="font-mono text-xs text-paper-dim">{selectedActivity.description}</p>
-        )}
-        {freeFormSuggestion && (
-          <p className="font-mono text-xs text-paper-dim">{suggestionHint(freeFormSuggestion)}</p>
-        )}
-        {selectedActivity?.metricType === 'sets' && (
-          <SetFields
-            reps={reps}
-            weight={weight}
-            rpe={rpe}
-            onRepsChange={setReps}
-            onWeightChange={setWeight}
-            onRpeChange={setRpe}
-          />
-        )}
-        {selectedActivity?.metricType === 'session' && (
-          <SessionFields
-            duration={duration}
-            distance={distance}
-            requiresDistance={requiresDistance(selectedActivity)}
-            onDurationChange={setDuration}
-            onDistanceChange={setDistance}
-          />
-        )}
-        <button type="submit" className="btn-brutal-sm self-start">
-          + Agregar
-        </button>
-      </form>
+      <CollapsibleSection
+        title="Agregar otra actividad"
+        open={addActivitySectionOpen}
+        onToggle={() => setAddActivitySectionOpen((prev) => !prev)}
+      >
+        <form onSubmit={handleAddActivity} className="card-brutal flex flex-col gap-4">
+          <ActivityPicker activities={activities} onSelect={setSelectedActivity} />
+          {selectedActivity?.description && (
+            <p className="font-mono text-xs text-paper-dim">{selectedActivity.description}</p>
+          )}
+          {freeFormSuggestion && (
+            <p className="font-mono text-xs text-paper-dim">{suggestionHint(freeFormSuggestion)}</p>
+          )}
+          {selectedActivity?.metricType === 'sets' && (
+            <SetFields
+              reps={reps}
+              weight={weight}
+              rpe={rpe}
+              onRepsChange={setReps}
+              onWeightChange={setWeight}
+              onRpeChange={setRpe}
+            />
+          )}
+          {selectedActivity?.metricType === 'session' && (
+            <SessionFields
+              duration={duration}
+              distance={distance}
+              requiresDistance={requiresDistance(selectedActivity)}
+              onDurationChange={setDuration}
+              onDistanceChange={setDistance}
+            />
+          )}
+          <button type="submit" className="btn-brutal-sm self-start">
+            + Agregar
+          </button>
+        </form>
+      </CollapsibleSection>
 
       {loggedSets.length > 0 && (
         <div className="overflow-x-auto border-2 border-paper-dim/30">
