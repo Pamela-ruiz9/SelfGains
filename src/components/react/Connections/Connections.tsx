@@ -9,6 +9,15 @@ import {
   removeConnection,
   type ConnectionSummary,
 } from '../../../lib/connections';
+import {
+  acceptConnectionRequest,
+  getIncomingRequests,
+  rejectConnectionRequest,
+  searchUsers,
+  sendConnectionRequest,
+  type IncomingRequest,
+  type SearchResult,
+} from '../../../lib/connectionRequests';
 import { assignRoutineToStudent, getMyRoutines } from '../../../lib/routines';
 import type { Routine } from '../../../types/db';
 import Avatar from '../Shared/Avatar';
@@ -92,17 +101,24 @@ export default function Connections() {
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [incomingRequests, setIncomingRequests] = useState<IncomingRequest[]>([]);
+
   async function refresh() {
-    const [profile, myCode, myConnections, routines] = await Promise.all([
+    const [profile, myCode, myConnections, routines, incoming] = await Promise.all([
       getMyProfile(),
       getMyInviteCode(),
       getMyConnections(),
       getMyRoutines(),
+      getIncomingRequests(),
     ]);
     setIsTrainer(profile?.is_trainer ?? false);
     setCode(myCode);
     setConnections(myConnections);
     setMyRoutines(routines);
+    setIncomingRequests(incoming);
   }
 
   useEffect(() => {
@@ -160,6 +176,62 @@ export default function Connections() {
       await refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo desvincular.');
+    }
+  }
+
+  async function handleSearch(e: FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setSearching(true);
+    try {
+      setSearchResults(await searchUsers(searchQuery));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo buscar.');
+    } finally {
+      setSearching(false);
+    }
+  }
+
+  async function handleSendRequest(userId: string) {
+    setError(null);
+    try {
+      await sendConnectionRequest(userId);
+      setSearchResults((prev) =>
+        prev.map((r) => (r.userId === userId ? { ...r, status: 'request-sent' } : r))
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo enviar la solicitud.');
+    }
+  }
+
+  async function handleAcceptFromSearch(userId: string, requestId: string) {
+    setError(null);
+    try {
+      await acceptConnectionRequest(requestId);
+      setSearchResults((prev) => prev.map((r) => (r.userId === userId ? { ...r, status: 'connected' } : r)));
+      await refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo aceptar la solicitud.');
+    }
+  }
+
+  async function handleAcceptIncoming(requestId: string) {
+    setError(null);
+    try {
+      await acceptConnectionRequest(requestId);
+      await refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo aceptar la solicitud.');
+    }
+  }
+
+  async function handleRejectIncoming(requestId: string) {
+    setError(null);
+    try {
+      await rejectConnectionRequest(requestId);
+      await refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo rechazar la solicitud.');
     }
   }
 
@@ -222,6 +294,86 @@ export default function Connections() {
           </button>
         </div>
       </form>
+
+      <form onSubmit={handleSearch} className="card-brutal flex flex-col gap-3">
+        <p className="label-brutal text-acid">Buscar usuarios</p>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Nombre"
+            className="input-brutal"
+          />
+          <button type="submit" disabled={searching} className="btn-brutal-sm shrink-0">
+            {searching ? 'Buscando...' : 'Buscar'}
+          </button>
+        </div>
+        {searchResults.length > 0 && (
+          <div className="flex flex-col gap-2">
+            {searchResults.map((r) => (
+              <div key={r.userId} className="card-brutal flex items-center gap-4">
+                <Avatar avatarUrl={r.avatarUrl} displayName={r.displayName} isTrainer={r.isTrainer} />
+                <p className="flex-1 font-display text-xl text-paper">{r.displayName ?? 'Sin nombre'}</p>
+                {r.status === 'connected' && (
+                  <p className="font-mono text-xs text-paper-dim">Ya conectado</p>
+                )}
+                {r.status === 'request-sent' && (
+                  <p className="font-mono text-xs text-paper-dim">Solicitud enviada</p>
+                )}
+                {r.status === 'request-received' && r.requestId && (
+                  <button
+                    type="button"
+                    onClick={() => handleAcceptFromSearch(r.userId, r.requestId!)}
+                    className="btn-brutal-sm"
+                  >
+                    Aceptar
+                  </button>
+                )}
+                {r.status === 'none' && (
+                  <button
+                    type="button"
+                    onClick={() => handleSendRequest(r.userId)}
+                    className="btn-brutal-sm"
+                  >
+                    Conectar
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </form>
+
+      <div className="flex flex-col gap-3">
+        <p className="label-brutal text-acid">Solicitudes de conexión</p>
+        {incomingRequests.length === 0 ? (
+          <p className="font-mono text-sm text-paper-dim">No tenés solicitudes pendientes.</p>
+        ) : (
+          incomingRequests.map((req) => (
+            <div key={req.requestId} className="card-brutal flex items-center gap-4">
+              <Avatar avatarUrl={req.avatarUrl} displayName={req.displayName} isTrainer={req.isTrainer} />
+              <p className="flex-1 font-display text-xl text-paper">{req.displayName ?? 'Sin nombre'}</p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleAcceptIncoming(req.requestId)}
+                  className="btn-brutal-sm"
+                >
+                  Aceptar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleRejectIncoming(req.requestId)}
+                  className="font-mono text-xs text-blood hover:text-paper"
+                >
+                  Rechazar
+                </button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
 
       <div className="flex flex-col gap-3">
         <p className="label-brutal text-acid">Mis conexiones</p>
