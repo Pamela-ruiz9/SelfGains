@@ -18,9 +18,15 @@ import {
   type IncomingRequest,
   type SearchResult,
 } from '../../../lib/connectionRequests';
+import {
+  DEFAULT_MAP_CENTER,
+  getVisibleTrainersNear,
+  type VisibleTrainer,
+} from '../../../lib/trainerProfiles';
 import { assignRoutineToStudent, getMyRoutines } from '../../../lib/routines';
 import type { Routine } from '../../../types/db';
 import Avatar from '../Shared/Avatar';
+import MapPicker from '../Shared/MapPicker';
 
 function inviteLink(code: string): string {
   return `${window.location.origin}${import.meta.env.BASE_URL}c/#${code}`;
@@ -107,6 +113,12 @@ export default function Connections() {
   const [hasSearched, setHasSearched] = useState(false);
   const [incomingRequests, setIncomingRequests] = useState<IncomingRequest[]>([]);
 
+  const [showTrainerSearch, setShowTrainerSearch] = useState(false);
+  const [trainerCenter, setTrainerCenter] = useState<[number, number] | null>(null);
+  const [trainerRadiusKm, setTrainerRadiusKm] = useState(10);
+  const [nearbyTrainers, setNearbyTrainers] = useState<VisibleTrainer[]>([]);
+  const [selectedTrainerId, setSelectedTrainerId] = useState<string | null>(null);
+
   async function refresh() {
     const [profile, myCode, myConnections, routines, incoming] = await Promise.all([
       getMyProfile(),
@@ -136,6 +148,21 @@ export default function Connections() {
       }
     });
   }, []);
+
+  useEffect(() => {
+    if (!showTrainerSearch || trainerCenter) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => setTrainerCenter([pos.coords.latitude, pos.coords.longitude]),
+      () => setTrainerCenter(DEFAULT_MAP_CENTER)
+    );
+  }, [showTrainerSearch, trainerCenter]);
+
+  useEffect(() => {
+    if (!trainerCenter) return;
+    getVisibleTrainersNear(trainerCenter[0], trainerCenter[1], trainerRadiusKm)
+      .then(setNearbyTrainers)
+      .catch((err) => setError(err instanceof Error ? err.message : 'No se pudo cargar el mapa.'));
+  }, [trainerCenter, trainerRadiusKm]);
 
   async function handleShare() {
     setError(null);
@@ -381,6 +408,92 @@ export default function Connections() {
           ))
         )}
       </div>
+
+      {!showTrainerSearch ? (
+        <button type="button" onClick={() => setShowTrainerSearch(true)} className="btn-brutal self-start">
+          + Buscar entrenadores cerca
+        </button>
+      ) : (
+        <div className="card-brutal flex flex-col gap-4">
+          <div className="flex items-center justify-between gap-3">
+            <p className="label-brutal text-acid">Buscador de entrenadores</p>
+            <button
+              type="button"
+              onClick={() => setShowTrainerSearch(false)}
+              className="font-mono text-xs text-paper-dim hover:text-paper"
+            >
+              Cerrar
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="label-brutal">Radio</span>
+            {[5, 10, 20, 50].map((km) => (
+              <button
+                key={km}
+                type="button"
+                onClick={() => setTrainerRadiusKm(km)}
+                className={
+                  trainerRadiusKm === km ? 'btn-brutal-sm border-acid bg-acid text-on-accent' : 'btn-brutal-sm'
+                }
+              >
+                {km} km
+              </button>
+            ))}
+          </div>
+          {trainerCenter && (
+            <MapPicker
+              center={trainerCenter}
+              markers={nearbyTrainers.map((t) => ({
+                id: t.user_id,
+                lat: t.lat!,
+                lng: t.lng!,
+                label: t.displayName ?? 'Entrenador',
+              }))}
+              onMarkerClick={setSelectedTrainerId}
+              onMapMove={(lat, lng) => setTrainerCenter([lat, lng])}
+              height={280}
+            />
+          )}
+          {nearbyTrainers.length === 0 ? (
+            <p className="font-mono text-sm text-paper-dim">No hay entrenadores visibles en este radio.</p>
+          ) : (
+            nearbyTrainers.map((t) => (
+              <div
+                key={t.user_id}
+                className={
+                  selectedTrainerId === t.user_id
+                    ? 'card-brutal flex flex-col gap-2 border-acid'
+                    : 'card-brutal flex flex-col gap-2'
+                }
+              >
+                <div className="flex items-center gap-3">
+                  <Avatar avatarUrl={t.avatarUrl} displayName={t.displayName} isTrainer />
+                  <div>
+                    <p className="font-display text-lg text-paper">{t.displayName ?? 'Sin nombre'}</p>
+                    <p className="font-mono text-xs text-paper-dim">{t.distanceKm.toFixed(1)} km</p>
+                  </div>
+                </div>
+                {t.disciplines.length > 0 && (
+                  <p className="font-mono text-xs text-paper-dim">{t.disciplines.join(', ')}</p>
+                )}
+                {t.bio && <p className="font-mono text-sm text-paper">{t.bio}</p>}
+                {t.rate_amount !== null && (
+                  <p className="font-mono text-xs text-paper-dim">
+                    {t.rate_amount} {t.rate_currency} / {t.rate_period}
+                  </p>
+                )}
+                <button
+                  type="button"
+                  onClick={() => handleSendRequest(t.user_id)}
+                  className="btn-brutal-sm self-start"
+                >
+                  Conectar
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+      )}
 
       <div className="flex flex-col gap-3">
         <p className="label-brutal text-acid">Mis conexiones</p>
