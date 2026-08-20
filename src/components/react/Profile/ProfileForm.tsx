@@ -33,6 +33,10 @@ export default function ProfileForm() {
   const [theme, setTheme] = useState<ThemeMode>('dark');
   const [accentColor, setAccentColor] = useState(DEFAULT_ACCENT);
   const [weightUnit, setWeightUnitState] = useState<WeightUnit>(() => getWeightUnit());
+  const [sex, setSex] = useState<'femenino' | 'masculino' | null>(null);
+  const [trainingLevel, setTrainingLevel] = useState<
+    'principiante' | 'intermedio' | 'avanzado' | null
+  >(null);
 
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -71,6 +75,8 @@ export default function ProfileForm() {
         setTheme(profile.theme);
         setAccentColor(profile.accent_color);
         setIsTrainer(profile.is_trainer);
+        setSex(profile.sex);
+        setTrainingLevel(profile.training_level);
         if (profile.is_trainer) {
           const trainerProfile = await getMyTrainerProfile();
           if (trainerProfile) {
@@ -156,6 +162,24 @@ export default function ProfileForm() {
   function handleWeightUnitChange(next: WeightUnit) {
     setWeightUnitState(next);
     setWeightUnit(next);
+  }
+
+  async function handleSexChange(next: 'femenino' | 'masculino' | null) {
+    setSex(next);
+    try {
+      await upsertProfile({ sex: next });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo guardar el sexo.');
+    }
+  }
+
+  async function handleTrainingLevelChange(next: 'principiante' | 'intermedio' | 'avanzado' | null) {
+    setTrainingLevel(next);
+    try {
+      await upsertProfile({ training_level: next });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo guardar el nivel.');
+    }
   }
 
   async function handleTrainerToggle(next: boolean) {
@@ -336,6 +360,78 @@ export default function ProfileForm() {
         </div>
         <p className="font-mono text-xs text-paper-dim">
           Se aplica al peso que registras en tus series de gym. Se guarda en este dispositivo.
+        </p>
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <p className="label-brutal text-acid">Sexo</p>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => handleSexChange('femenino')}
+            className={sex === 'femenino' ? 'btn-brutal-sm border-acid bg-acid text-on-accent' : 'btn-brutal-sm'}
+          >
+            Femenino
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSexChange('masculino')}
+            className={sex === 'masculino' ? 'btn-brutal-sm border-acid bg-acid text-on-accent' : 'btn-brutal-sm'}
+          >
+            Masculino
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSexChange(null)}
+            className={sex === null ? 'btn-brutal-sm border-acid bg-acid text-on-accent' : 'btn-brutal-sm'}
+          >
+            Sin especificar
+          </button>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <p className="label-brutal text-acid">Nivel de entrenamiento</p>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => handleTrainingLevelChange('principiante')}
+            className={
+              trainingLevel === 'principiante' ? 'btn-brutal-sm border-acid bg-acid text-on-accent' : 'btn-brutal-sm'
+            }
+          >
+            Principiante
+          </button>
+          <button
+            type="button"
+            onClick={() => handleTrainingLevelChange('intermedio')}
+            className={
+              trainingLevel === 'intermedio' ? 'btn-brutal-sm border-acid bg-acid text-on-accent' : 'btn-brutal-sm'
+            }
+          >
+            Intermedio
+          </button>
+          <button
+            type="button"
+            onClick={() => handleTrainingLevelChange('avanzado')}
+            className={
+              trainingLevel === 'avanzado' ? 'btn-brutal-sm border-acid bg-acid text-on-accent' : 'btn-brutal-sm'
+            }
+          >
+            Avanzado
+          </button>
+          <button
+            type="button"
+            onClick={() => handleTrainingLevelChange(null)}
+            className={
+              trainingLevel === null ? 'btn-brutal-sm border-acid bg-acid text-on-accent' : 'btn-brutal-sm'
+            }
+          >
+            Sin especificar
+          </button>
+        </div>
+        <p className="font-mono text-xs text-paper-dim">
+          Se usa para recomendarte rutinas predefinidas de gym en Rutinas.
         </p>
       </div>
 
