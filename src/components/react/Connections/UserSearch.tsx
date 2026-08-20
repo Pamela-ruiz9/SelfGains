@@ -1,0 +1,76 @@
+import type { FormEvent } from 'react';
+import type { SearchResult } from '../../../lib/connectionRequests';
+import Avatar from '../Shared/Avatar';
+
+interface Props {
+  query: string;
+  onQueryChange: (value: string) => void;
+  onSubmit: (e: FormEvent) => void;
+  results: SearchResult[];
+  searching: boolean;
+  hasSearched: boolean;
+  onSendRequest: (userId: string) => void;
+  onAcceptFromSearch: (userId: string, requestId: string) => void;
+}
+
+export default function UserSearch({
+  query,
+  onQueryChange,
+  onSubmit,
+  results,
+  searching,
+  hasSearched,
+  onSendRequest,
+  onAcceptFromSearch,
+}: Props) {
+  return (
+    <form onSubmit={onSubmit} className="card-brutal flex flex-col gap-3">
+      <p className="label-brutal text-acid">Buscar usuarios</p>
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => onQueryChange(e.target.value)}
+          placeholder="Nombre"
+          className="input-brutal"
+        />
+        <button type="submit" disabled={searching} className="btn-brutal-sm shrink-0">
+          {searching ? 'Buscando...' : 'Buscar'}
+        </button>
+      </div>
+      {hasSearched && results.length === 0 && (
+        <p className="font-mono text-sm text-paper-dim">No se encontraron usuarios.</p>
+      )}
+      {results.length > 0 && (
+        <div className="flex flex-col gap-2">
+          {results.map((r) => (
+            <div key={r.userId} className="card-brutal flex items-center gap-4">
+              <Avatar avatarUrl={r.avatarUrl} displayName={r.displayName} isTrainer={r.isTrainer} />
+              <p className="flex-1 font-display text-xl text-paper">{r.displayName ?? 'Sin nombre'}</p>
+              {r.status === 'connected' && (
+                <p className="font-mono text-xs text-paper-dim">Ya conectado</p>
+              )}
+              {r.status === 'request-sent' && (
+                <p className="font-mono text-xs text-paper-dim">Solicitud enviada</p>
+              )}
+              {r.status === 'request-received' && r.requestId && (
+                <button
+                  type="button"
+                  onClick={() => onAcceptFromSearch(r.userId, r.requestId!)}
+                  className="btn-brutal-sm"
+                >
+                  Aceptar
+                </button>
+              )}
+              {r.status === 'none' && (
+                <button type="button" onClick={() => onSendRequest(r.userId)} className="btn-brutal-sm">
+                  Conectar
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </form>
+  );
+}

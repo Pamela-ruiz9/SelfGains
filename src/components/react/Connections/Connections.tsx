@@ -40,6 +40,7 @@ import MapPicker from '../Shared/MapPicker';
 import RoutinePreview from '../RoutineManager/RoutinePreview';
 import InviteLinkCard from './InviteLinkCard';
 import RedeemCodeForm from './RedeemCodeForm';
+import UserSearch from './UserSearch';
 
 function AssignRoutinePicker({
   studentId,
@@ -392,58 +393,16 @@ export default function Connections({ activities }: Props) {
 
       <RedeemCodeForm value={redeemInput} onChange={setRedeemInput} onSubmit={handleRedeem} />
 
-      <form onSubmit={handleSearch} className="card-brutal flex flex-col gap-3">
-        <p className="label-brutal text-acid">Buscar usuarios</p>
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Nombre"
-            className="input-brutal"
-          />
-          <button type="submit" disabled={searching} className="btn-brutal-sm shrink-0">
-            {searching ? 'Buscando...' : 'Buscar'}
-          </button>
-        </div>
-        {hasSearched && searchResults.length === 0 && (
-          <p className="font-mono text-sm text-paper-dim">No se encontraron usuarios.</p>
-        )}
-        {searchResults.length > 0 && (
-          <div className="flex flex-col gap-2">
-            {searchResults.map((r) => (
-              <div key={r.userId} className="card-brutal flex items-center gap-4">
-                <Avatar avatarUrl={r.avatarUrl} displayName={r.displayName} isTrainer={r.isTrainer} />
-                <p className="flex-1 font-display text-xl text-paper">{r.displayName ?? 'Sin nombre'}</p>
-                {r.status === 'connected' && (
-                  <p className="font-mono text-xs text-paper-dim">Ya conectado</p>
-                )}
-                {r.status === 'request-sent' && (
-                  <p className="font-mono text-xs text-paper-dim">Solicitud enviada</p>
-                )}
-                {r.status === 'request-received' && r.requestId && (
-                  <button
-                    type="button"
-                    onClick={() => handleAcceptFromSearch(r.userId, r.requestId!)}
-                    className="btn-brutal-sm"
-                  >
-                    Aceptar
-                  </button>
-                )}
-                {r.status === 'none' && (
-                  <button
-                    type="button"
-                    onClick={() => handleSendRequest(r.userId)}
-                    className="btn-brutal-sm"
-                  >
-                    Conectar
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </form>
+      <UserSearch
+        query={searchQuery}
+        onQueryChange={setSearchQuery}
+        onSubmit={handleSearch}
+        results={searchResults}
+        searching={searching}
+        hasSearched={hasSearched}
+        onSendRequest={handleSendRequest}
+        onAcceptFromSearch={handleAcceptFromSearch}
+      />
 
       <div className="flex flex-col gap-3">
         <p className="label-brutal text-acid">Solicitudes de conexión</p>
