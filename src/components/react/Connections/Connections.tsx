@@ -39,6 +39,7 @@ import Avatar from '../Shared/Avatar';
 import MapPicker from '../Shared/MapPicker';
 import RoutinePreview from '../RoutineManager/RoutinePreview';
 import InviteLinkCard from './InviteLinkCard';
+import RedeemCodeForm from './RedeemCodeForm';
 
 function AssignRoutinePicker({
   studentId,
@@ -389,21 +390,7 @@ export default function Connections({ activities }: Props) {
 
       <InviteLinkCard code={code} copied={copied} onShare={handleShare} onCopy={handleCopy} />
 
-      <form onSubmit={handleRedeem} className="card-brutal flex flex-col gap-3">
-        <p className="label-brutal text-acid">Conectarme con un código</p>
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={redeemInput}
-            onChange={(e) => setRedeemInput(e.target.value)}
-            placeholder="AB3F9K"
-            className="input-brutal"
-          />
-          <button type="submit" className="btn-brutal-sm shrink-0">
-            Conectar
-          </button>
-        </div>
-      </form>
+      <RedeemCodeForm value={redeemInput} onChange={setRedeemInput} onSubmit={handleRedeem} />
 
       <form onSubmit={handleSearch} className="card-brutal flex flex-col gap-3">
         <p className="label-brutal text-acid">Buscar usuarios</p>
