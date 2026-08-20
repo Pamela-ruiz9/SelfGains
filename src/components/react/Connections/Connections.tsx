@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { supabase } from '../../../lib/supabase';
 import { getMyProfile } from '../../../lib/profile';
 import {
@@ -36,12 +36,12 @@ import type { Routine } from '../../../types/db';
 import type { RoutineDays } from '../../../lib/weekdays';
 import type { ActivityOption } from '../ActivityPicker/ActivityPicker';
 import Avatar from '../Shared/Avatar';
-import MapPicker from '../Shared/MapPicker';
 import RoutinePreview from '../RoutineManager/RoutinePreview';
 import InviteLinkCard from './InviteLinkCard';
 import RedeemCodeForm from './RedeemCodeForm';
 import UserSearch from './UserSearch';
 import IncomingRequests from './IncomingRequests';
+import TrainerSearch from './TrainerSearch';
 
 function AssignRoutinePicker({
   studentId,
@@ -356,17 +356,6 @@ export default function Connections({ activities }: Props) {
     }
   }
 
-  const trainerMarkers = useMemo(
-    () =>
-      nearbyTrainers.map((t) => ({
-        id: t.user_id,
-        lat: t.lat!,
-        lng: t.lng!,
-        label: t.displayName ?? 'Entrenador',
-      })),
-    [nearbyTrainers]
-  );
-
   if (!authChecked) {
     return <p className="font-mono text-sm text-paper-dim">Cargando...</p>;
   }
@@ -411,107 +400,20 @@ export default function Connections({ activities }: Props) {
         onReject={handleRejectIncoming}
       />
 
-      {!showTrainerSearch ? (
-        <button type="button" onClick={() => setShowTrainerSearch(true)} className="btn-brutal self-start">
-          + Buscar entrenadores cerca
-        </button>
-      ) : (
-        <div className="card-brutal flex flex-col gap-4">
-          <div className="flex items-center justify-between gap-3">
-            <p className="label-brutal text-acid">Buscador de entrenadores</p>
-            <button
-              type="button"
-              onClick={() => setShowTrainerSearch(false)}
-              className="border-2 border-paper-dim/60 bg-transparent px-2 py-1 font-mono text-xs uppercase tracking-wide text-paper-dim transition duration-150 hover:border-paper hover:text-paper active:scale-95"
-            >
-              Cerrar
-            </button>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="label-brutal">Radio</span>
-            {[5, 10, 20, 50].map((km) => (
-              <button
-                key={km}
-                type="button"
-                onClick={() => setTrainerRadiusKm(km)}
-                className={
-                  trainerRadiusKm === km ? 'btn-brutal-sm border-acid bg-acid text-on-accent' : 'btn-brutal-sm'
-                }
-              >
-                {km} km
-              </button>
-            ))}
-          </div>
-          {trainerCenter && (
-            <MapPicker
-              center={trainerCenter}
-              markers={trainerMarkers}
-              onMarkerClick={setSelectedTrainerId}
-              onMapMove={(lat, lng) => setTrainerCenter([lat, lng])}
-              height={280}
-            />
-          )}
-          {nearbyTrainers.length === 0 ? (
-            <p className="font-mono text-sm text-paper-dim">No hay entrenadores visibles en este radio.</p>
-          ) : (
-            nearbyTrainers.map((t) => {
-              const effectiveStatus = sentTrainerRequests.has(t.user_id) ? 'request-sent' : t.status;
-              return (
-                <div
-                  key={t.user_id}
-                  className={
-                    selectedTrainerId === t.user_id
-                      ? 'card-brutal flex flex-col gap-2 border-acid'
-                      : 'card-brutal flex flex-col gap-2'
-                  }
-                >
-                  <div className="flex items-center gap-3">
-                    <Avatar avatarUrl={t.avatarUrl} displayName={t.displayName} isTrainer />
-                    <div>
-                      <p className="font-display text-lg text-paper">{t.displayName ?? 'Sin nombre'}</p>
-                      <p className="font-mono text-xs text-paper-dim">{t.distanceKm.toFixed(1)} km</p>
-                    </div>
-                  </div>
-                  {t.disciplines.length > 0 && (
-                    <p className="font-mono text-xs text-paper-dim">{t.disciplines.join(', ')}</p>
-                  )}
-                  {t.bio && <p className="font-mono text-sm text-paper">{t.bio}</p>}
-                  {t.rate_amount !== null && (
-                    <p className="font-mono text-xs text-paper-dim">
-                      {t.rate_amount}
-                      {t.rate_currency ? ` ${t.rate_currency}` : ''} / {t.rate_period}
-                    </p>
-                  )}
-                  {effectiveStatus === 'connected' && (
-                    <p className="font-mono text-xs text-paper-dim">Ya conectado</p>
-                  )}
-                  {effectiveStatus === 'request-sent' && (
-                    <p className="font-mono text-xs text-paper-dim">Solicitud enviada</p>
-                  )}
-                  {effectiveStatus === 'request-received' && t.requestId && (
-                    <button
-                      type="button"
-                      onClick={() => handleAcceptTrainerRequest(t.requestId!)}
-                      className="btn-brutal-sm"
-                    >
-                      Aceptar
-                    </button>
-                  )}
-                  {effectiveStatus === 'none' && (
-                    <button
-                      type="button"
-                      onClick={() => handleConnectTrainer(t.user_id)}
-                      className="btn-brutal-sm self-start"
-                    >
-                      Conectar
-                    </button>
-                  )}
-                </div>
-              );
-            })
-          )}
-        </div>
-      )}
+      <TrainerSearch
+        open={showTrainerSearch}
+        onToggle={setShowTrainerSearch}
+        center={trainerCenter}
+        onMapMove={(lat, lng) => setTrainerCenter([lat, lng])}
+        radiusKm={trainerRadiusKm}
+        onRadiusChange={setTrainerRadiusKm}
+        trainers={nearbyTrainers}
+        selectedTrainerId={selectedTrainerId}
+        onMarkerClick={setSelectedTrainerId}
+        sentRequests={sentTrainerRequests}
+        onConnect={handleConnectTrainer}
+        onAcceptRequest={handleAcceptTrainerRequest}
+      />
 
       <div className="flex flex-col gap-3">
         <p className="label-brutal text-acid">Rutinas compartidas pendientes</p>
