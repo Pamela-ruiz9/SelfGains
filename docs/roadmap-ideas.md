@@ -2,15 +2,7 @@
 
 Este documento junta ideas de negocio que salieron en brainstorming (2026-08-16) pero que **todavía no se van a implementar**. No es un spec — cuando se decida arrancar alguna, pasa por el proceso normal (brainstorming → spec → plan) y se borra de acá.
 
-**Actualizado 2026-08-19**: se resolvieron "Rol de entrenador" (`docs/agents/rol-entrenador-status.md`), "Compartir rutinas entre usuarios normales" y "Buscador de entrenadores cercanos" (ambas en `docs/agents/descubrimiento-conexiones-status.md`) — se sacaron de este backlog. Más tarde ese mismo día se resolvió también "Rutinas predefinidas para otras disciplinas" (`docs/agents/rutinas-otras-disciplinas-status.md`). Queda una idea de producto abierta, más una lista de deuda técnica compilada de los docs de cada feature (antes vivía dispersa en la sección "Lo que falta" de cada uno).
-
-## Ideas de producto abiertas
-
-### Perfil enriquecido
-
-- Sexo (femenino/masculino).
-- Nivel de entrenamiento: principiante / básico / intermedio (¿avanzado?).
-- Sin definir aún: si esto alimenta algo automático (ej. filtrar rutinas predefinidas por nivel) o es solo informativo para el entrenador. Necesita un brainstorm corto antes de implementar.
+**Actualizado 2026-08-19**: se resolvieron "Rol de entrenador" (`docs/agents/rol-entrenador-status.md`), "Compartir rutinas entre usuarios normales" y "Buscador de entrenadores cercanos" (ambas en `docs/agents/descubrimiento-conexiones-status.md`) — se sacaron de este backlog. Más tarde ese mismo día se resolvió también "Rutinas predefinidas para otras disciplinas" (`docs/agents/rutinas-otras-disciplinas-status.md`) y, por último, "Perfil enriquecido" (`docs/agents/perfil-enriquecido-status.md`). No queda ninguna idea de producto abierta en este backlog — solo la lista de deuda técnica compilada de los docs de cada feature (antes vivía dispersa en la sección "Lo que falta" de cada uno).
 
 ## Deuda técnica / mejoras pendientes (compilado 2026-08-19)
 
