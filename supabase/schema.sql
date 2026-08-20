@@ -475,3 +475,11 @@ create policy "El receptor decide, el remitente puede reconectar tras desvincula
 -- sin recomendación de rutina por esa señal, nunca bloquea nada.
 alter table profiles add column sex text check (sex in ('femenino', 'masculino'));
 alter table profiles add column training_level text check (training_level in ('principiante', 'intermedio', 'avanzado'));
+
+-- Constraint único en routine_shares
+-- (docs/superpowers/specs/2026-08-20-routine-shares-unique-constraint-design.md).
+-- Parcial (solo pending) para no bloquear re-proponer la misma rutina
+-- después de que una propuesta anterior se aceptó o rechazó.
+create unique index routine_shares_no_duplicate_pending
+  on routine_shares (routine_id, to_user_id)
+  where status = 'pending';

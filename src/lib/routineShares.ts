@@ -10,7 +10,10 @@ export async function proposeRoutineShare(routineId: string, toUserId: string): 
   const { error } = await supabase
     .from('routine_shares')
     .insert({ routine_id: routineId, from_user_id: user.id, to_user_id: toUserId });
-  if (error) throw error;
+  if (error) {
+    if (error.code === '23505') throw new Error('Ya le propusiste esta rutina y sigue pendiente.');
+    throw error;
+  }
 }
 
 export interface PendingRoutineShare {
