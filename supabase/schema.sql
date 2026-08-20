@@ -468,3 +468,10 @@ create policy "El receptor decide, el remitente puede reconectar tras desvincula
     auth.uid() = to_user_id
     or (auth.uid() = from_user_id and status = 'pending')
   );
+
+-- Perfil enriquecido: nivel de entrenamiento y sexo
+-- (docs/superpowers/specs/2026-08-19-perfil-enriquecido-nivel-sexo-design.md).
+-- Ambas nullable, sin default — un perfil sin completar queda simplemente
+-- sin recomendación de rutina por esa señal, nunca bloquea nada.
+alter table profiles add column sex text check (sex in ('femenino', 'masculino'));
+alter table profiles add column training_level text check (training_level in ('principiante', 'intermedio', 'avanzado'));

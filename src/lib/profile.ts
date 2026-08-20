@@ -28,6 +28,12 @@ export async function upsertProfile(
   // (ver docs/superpowers/specs/2026-08-18-rol-entrenador-design.md sección
   // 1) — se mantiene en espejo acá para que nunca quede desactualizada
   // respecto al nombre/avatar/rol reales en `profiles`.
+
+  // sex/training_level NO se agregan acá a propósito: son datos privados
+  // de perfil que ninguna conexión (ni un entrenador conectado) puede leer
+  // — ver docs/superpowers/specs/2026-08-19-perfil-enriquecido-nivel-sexo-design.md
+  // y la nota de seguridad de docs/agents/rol-entrenador-status.md sobre
+  // por qué `public_identities` existe separada de `profiles`.
   const { error: identityError } = await supabase.from('public_identities').upsert({
     user_id: user.id,
     display_name: profile.display_name,
