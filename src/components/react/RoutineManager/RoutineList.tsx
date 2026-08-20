@@ -18,6 +18,7 @@ export interface RoutineOption {
   subtitle?: string;
   days: RoutineDays;
   assignedByName?: string | null;
+  recommended?: boolean;
 }
 
 interface RoutineListProps {
@@ -150,6 +151,7 @@ function RoutineCard({
         <div>
           <p className="font-display text-2xl text-paper">{routine.name}</p>
           {routine.subtitle && <p className="label-brutal">{routine.subtitle}</p>}
+          {routine.recommended && <p className="label-brutal text-acid">Recomendada para vos</p>}
           {routine.assignedByName && (
             <p className="font-mono text-xs text-paper-dim">Compartida por: {routine.assignedByName}</p>
           )}

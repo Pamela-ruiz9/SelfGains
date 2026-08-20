@@ -12,17 +12,51 @@ import {
 } from '../../../lib/routines';
 import { getWorkoutsForCurrentUser } from '../../../lib/workouts';
 import { weekAdherence } from '../../../lib/adherence';
-import type { RoutineDays } from '../../../lib/weekdays';
+import { entryActivityId, WEEKDAYS, type RoutineDays } from '../../../lib/weekdays';
+import { getMyProfile } from '../../../lib/profile';
 import type { ActiveRoutine, Routine } from '../../../types/db';
 import type { ActivityOption } from '../ActivityPicker/ActivityPicker';
 import RoutineList, { type RoutineOption } from './RoutineList';
 import CreateRoutineForm from './CreateRoutineForm';
+
+// Una rutina de gym solo puede recomendarse si al menos un día referencia
+// una actividad de disciplina 'gym' — running/natación/combate no tienen
+// `sex` en su contenido y quedan fuera de este cálculo por completo.
+function isGymPlan(days: RoutineDays, activities: ActivityOption[]): boolean {
+  for (const day of WEEKDAYS) {
+    for (const entry of days[day]) {
+      const activity = activities.find((a) => a.id === entryActivityId(entry));
+      if (activity) return activity.discipline === 'gym';
+    }
+  }
+  return false;
+}
+
+// Un campo que el usuario sí completó y que contradice al plan lo descarta,
+// sin importar qué diga el otro campo. Pero para que se recomiende hace
+// falta que al menos un campo coincida activamente — un perfil vacío (o
+// donde no se completó nada) nunca debe hacer que todo se vea "recomendado".
+function isRecommendedGymPlan(
+  plan: { level: string; sex?: 'femenino' | 'masculino' },
+  profileSex: 'femenino' | 'masculino' | null,
+  profileLevel: 'principiante' | 'intermedio' | 'avanzado' | null
+): boolean {
+  const planLevel = plan.level.toLowerCase();
+
+  if (profileLevel !== null && planLevel !== profileLevel) return false;
+  if (profileSex !== null && plan.sex !== undefined && plan.sex !== profileSex) return false;
+
+  const levelAgrees = profileLevel !== null && planLevel === profileLevel;
+  const sexAgrees = profileSex !== null && plan.sex !== undefined && plan.sex === profileSex;
+  return levelAgrees || sexAgrees;
+}
 
 interface PredefinedRoutine {
   id: string;
   name: string;
   goal: string;
   level: string;
+  sex?: 'femenino' | 'masculino';
   days: RoutineDays;
 }
 
@@ -41,18 +75,25 @@ export default function RoutineManager({ predefinedRoutines, activities }: Props
   const [editingRoutine, setEditingRoutine] = useState<Routine | null>(null);
   const [workoutDates, setWorkoutDates] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
+  const [profileSex, setProfileSex] = useState<'femenino' | 'masculino' | null>(null);
+  const [profileLevel, setProfileLevel] = useState<
+    'principiante' | 'intermedio' | 'avanzado' | null
+  >(null);
   const [showAddRoutine, setShowAddRoutine] = useState(false);
   const [addRoutineTab, setAddRoutineTab] = useState<'custom' | 'predefined'>('custom');
 
   async function refresh() {
-    const [active, mine, workouts] = await Promise.all([
+    const [active, mine, workouts, profile] = await Promise.all([
       getActiveRoutine(),
       getMyRoutines(),
       getWorkoutsForCurrentUser(),
+      getMyProfile(),
     ]);
     setActiveRoutine(active);
     setMyRoutines(mine);
     setWorkoutDates(new Set(workouts.map((w) => w.date)));
+    setProfileSex(profile?.sex ?? null);
+    setProfileLevel(profile?.training_level ?? null);
     if (active?.source === 'custom') {
       setActiveCustomRoutine(await getRoutineById(active.routine_ref));
     } else {
@@ -152,12 +193,18 @@ export default function RoutineManager({ predefinedRoutines, activities }: Props
       : activeCustomRoutine?.days ?? null;
   const adherence = activeRoutineDays ? weekAdherence(activeRoutineDays, workoutDates) : null;
 
-  const predefinedOptions: RoutineOption[] = predefinedRoutines.map((p) => ({
-    ref: p.id,
-    name: p.name,
-    subtitle: `${p.goal} · ${p.level}`,
-    days: p.days,
-  }));
+  const predefinedOptions: RoutineOption[] = predefinedRoutines
+    .map((p) => ({
+      ref: p.id,
+      name: p.name,
+      subtitle: `${p.goal} · ${p.level}`,
+      days: p.days,
+      recommended:
+        isGymPlan(p.days, activities) && isRecommendedGymPlan(p, profileSex, profileLevel),
+    }))
+    // Sort es estable — dentro de "recomendadas" y "resto" se conserva el
+    // orden alfabético que ya trae `predefinedRoutines` desde la página.
+    .sort((a, b) => Number(b.recommended) - Number(a.recommended));
 
   const customOptions: RoutineOption[] = myRoutines.map((r) => ({
     ref: r.id,
