@@ -29,7 +29,7 @@ alter table profiles add column sex text check (sex in ('femenino', 'masculino')
 alter table profiles add column training_level text check (training_level in ('principiante', 'intermedio', 'avanzado'));
 ```
 
-Ambas nullable, sin default — un perfil existente las tiene en `NULL` hasta que el usuario las complete. `src/lib/profile.ts` extiende el tipo `Profile` y el payload de `upsertProfile` con `sex` y `trainingLevel` (mismo mapeo camelCase↔snake_case que ya usa el resto de campos).
+Ambas nullable, sin default — un perfil existente las tiene en `NULL` hasta que el usuario las complete. `src/types/db.ts` extiende el tipo `Profile` con `sex` y `training_level` — snake_case, igual que el resto de campos del tipo (`display_name`, `weight_kg`, etc.); no hay mapeo camelCase en ningún punto de este tipo.
 
 `src/content.config.ts`, colección `plans`, suma un campo opcional:
 
