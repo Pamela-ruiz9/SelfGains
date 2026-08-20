@@ -1,6 +1,10 @@
 import { supabase } from './supabase';
 import type { PublicIdentity } from '../types/db';
 
+export function inviteLink(code: string): string {
+  return `${window.location.origin}${import.meta.env.BASE_URL}c/#${code}`;
+}
+
 const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 
 function generateCode(): string {
