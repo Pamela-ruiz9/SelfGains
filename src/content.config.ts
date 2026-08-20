@@ -40,6 +40,9 @@ const plans = defineCollection({
     name: z.string(),
     goal: z.string(),
     level: z.string(),
+    // Solo relevante para gym — running/natación/combate lo dejan sin
+    // definir. Ver docs/superpowers/specs/2026-08-19-perfil-enriquecido-nivel-sexo-design.md.
+    sex: z.enum(['femenino', 'masculino']).optional(),
     days: z.object({
       lunes: routineDay,
       martes: routineDay,
