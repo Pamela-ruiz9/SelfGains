@@ -36,12 +36,12 @@ import type { Routine } from '../../../types/db';
 import type { RoutineDays } from '../../../lib/weekdays';
 import type { ActivityOption } from '../ActivityPicker/ActivityPicker';
 import Avatar from '../Shared/Avatar';
-import RoutinePreview from '../RoutineManager/RoutinePreview';
 import InviteLinkCard from './InviteLinkCard';
 import RedeemCodeForm from './RedeemCodeForm';
 import UserSearch from './UserSearch';
 import IncomingRequests from './IncomingRequests';
 import TrainerSearch from './TrainerSearch';
+import PendingRoutineShares from './PendingRoutineShares';
 
 function AssignRoutinePicker({
   studentId,
@@ -415,51 +415,17 @@ export default function Connections({ activities }: Props) {
         onAcceptRequest={handleAcceptTrainerRequest}
       />
 
-      <div className="flex flex-col gap-3">
-        <p className="label-brutal text-acid">Rutinas compartidas pendientes</p>
-        {shareActionError && <p className="font-mono text-xs text-blood">{shareActionError}</p>}
-        {pendingShares.length === 0 ? (
-          <p className="font-mono text-sm text-paper-dim">No tienes propuestas de rutina pendientes.</p>
-        ) : (
-          pendingShares.map((share) => (
-            <div key={share.shareId} className="card-brutal flex flex-col gap-3">
-              <p className="font-mono text-sm text-paper">
-                <span className="text-acid">{share.fromDisplayName ?? 'Alguien'}</span> te propuso "
-                {share.routineName}"
-              </p>
-              {previewShareId === share.shareId && previewDays && (
-                <RoutinePreview days={previewDays} activities={activities} />
-              )}
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => handlePreviewShare(share)}
-                  disabled={actingShareId === share.shareId}
-                  className="btn-brutal-sm"
-                >
-                  Ver
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleAcceptShare(share)}
-                  disabled={actingShareId === share.shareId}
-                  className="btn-brutal-sm border-acid bg-acid text-on-accent"
-                >
-                  {actingShareId === share.shareId ? 'Agregando...' : 'Agregar a mis rutinas'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleRejectShare(share.shareId)}
-                  disabled={actingShareId === share.shareId}
-                  className="border-2 border-blood bg-transparent px-2 py-1 font-mono text-xs uppercase tracking-wide text-blood transition duration-150 hover:bg-blood hover:text-paper active:scale-95"
-                >
-                  Rechazar
-                </button>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
+      <PendingRoutineShares
+        shares={pendingShares}
+        previewShareId={previewShareId}
+        previewDays={previewDays}
+        actingShareId={actingShareId}
+        error={shareActionError}
+        activities={activities}
+        onPreview={handlePreviewShare}
+        onAccept={handleAcceptShare}
+        onReject={handleRejectShare}
+      />
 
       <div className="flex flex-col gap-3">
         <p className="label-brutal text-acid">Mis conexiones</p>
