@@ -85,38 +85,40 @@ export async function acceptRoutineShare(shareId: string): Promise<void> {
   } = await supabase.auth.getUser();
   if (!user) throw new Error('No hay sesión activa');
 
+  // Leer la rutina origen ANTES de reclamar la propuesta: la política de
+  // RLS "El receptor de una rutina compartida pendiente puede verla" solo
+  // permite este SELECT mientras routine_shares.status = 'pending' — si
+  // reclamáramos primero (marcando 'accepted'), este SELECT quedaría
+  // bloqueado por RLS y la aceptación fallaría siempre. Leer antes es
+  // seguro: es de solo lectura, no crea ningún dato, así que no reabre la
+  // carrera — lo único que hace falta serializar es el INSERT de la copia,
+  // no la lectura.
+  const { data: share, error: shareError } = await supabase
+    .from('routine_shares')
+    .select('routine_id')
+    .eq('id', shareId)
+    .eq('to_user_id', user.id)
+    .eq('status', 'pending')
+    .single();
+  if (shareError) throw new Error('Esta propuesta ya se resolvió en otro lado.');
+
+  const source = await getSharedRoutinePreview(share.routine_id);
+  if (!source) throw new Error('No se encontró la rutina compartida.');
+
   // Reclama la propuesta atómicamente antes de copiar nada: el UPDATE
   // condicional (.eq('status', 'pending')) solo puede afectar la fila una
   // vez, así que si dos llamadas concurrentes (doble click, dos pestañas)
   // llegan acá al mismo tiempo, como mucho una gana y sigue — la otra ve 0
   // filas afectadas y aborta antes de insertar ninguna copia de la rutina.
-  // Reemplaza al SELECT que existía antes: el mismo UPDATE ya devuelve
-  // routine_id, scoped a to_user_id = auth.uid() (mismo motivo que antes:
-  // sin este scoping, alguien podría pasar un shareId ajeno).
-  const { data: claimed, error: claimError } = await supabase
+  const { error: claimError } = await supabase
     .from('routine_shares')
     .update({ status: 'accepted' })
     .eq('id', shareId)
     .eq('to_user_id', user.id)
     .eq('status', 'pending')
-    .select('routine_id')
+    .select('id')
     .single();
   if (claimError) throw new Error('Esta propuesta ya se resolvió en otro lado.');
-
-  const source = await getSharedRoutinePreview(claimed.routine_id);
-  if (!source) {
-    // Revertir el reclamo: sin esto, la propuesta quedaría "accepted" para
-    // siempre sin que el usuario tenga la rutina copiada, sin forma de
-    // reintentar. Guardado con .eq('status', 'accepted') igual que el
-    // reclamo original — nunca una escritura ciega — para no pisar un
-    // rechazo que haya llegado desde otra pestaña en esta misma ventana.
-    await supabase
-      .from('routine_shares')
-      .update({ status: 'pending' })
-      .eq('id', shareId)
-      .eq('status', 'accepted');
-    throw new Error('No se encontró la rutina compartida.');
-  }
 
   // Sin .select() después del insert, mismo motivo que
   // assignRoutineToStudent en src/lib/routines.ts: nada del lado del
@@ -125,6 +127,11 @@ export async function acceptRoutineShare(shareId: string): Promise<void> {
     .from('routines')
     .insert({ user_id: user.id, name: source.name, days: source.days });
   if (insertError) {
+    // Revertir el reclamo, guardado con .eq('status', 'accepted') — nunca
+    // una escritura ciega — para no pisar un rechazo que haya llegado
+    // desde otra pestaña en esta misma ventana. Sin esto, la propuesta
+    // quedaría "accepted" para siempre sin que el usuario tenga la rutina
+    // copiada, sin forma de reintentar.
     await supabase
       .from('routine_shares')
       .update({ status: 'pending' })
