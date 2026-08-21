@@ -13,6 +13,7 @@ import {
   entryActivityId,
   entryTarget,
   getTodayWeekday,
+  localDateStr,
   targetSummary,
   type RoutineActivityTarget,
   type RoutineDays,
@@ -456,7 +457,7 @@ export default function WorkoutLogger({ activities, plans }: Props) {
   const [authChecked, setAuthChecked] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(() => localDateStr());
   const [loggedSets, setLoggedSets] = useState<LoggedSet[]>([]);
   const [loggedSessions, setLoggedSessions] = useState<LoggedSession[]>([]);
   const [planId, setPlanId] = useState<string | undefined>(undefined);
@@ -755,7 +756,7 @@ export default function WorkoutLogger({ activities, plans }: Props) {
 
       {todayActivities.length > 0 && (
         <CollapsibleSection
-          title={date === new Date().toISOString().slice(0, 10) ? 'Hoy toca' : 'Ese día toca'}
+          title={date === localDateStr() ? 'Hoy toca' : 'Ese día toca'}
           open={todaySectionOpen}
           onToggle={() => setTodaySectionOpen((prev) => !prev)}
           badge={
