@@ -107,8 +107,14 @@ export async function acceptRoutineShare(shareId: string): Promise<void> {
   if (!source) {
     // Revertir el reclamo: sin esto, la propuesta quedaría "accepted" para
     // siempre sin que el usuario tenga la rutina copiada, sin forma de
-    // reintentar.
-    await supabase.from('routine_shares').update({ status: 'pending' }).eq('id', shareId);
+    // reintentar. Guardado con .eq('status', 'accepted') igual que el
+    // reclamo original — nunca una escritura ciega — para no pisar un
+    // rechazo que haya llegado desde otra pestaña en esta misma ventana.
+    await supabase
+      .from('routine_shares')
+      .update({ status: 'pending' })
+      .eq('id', shareId)
+      .eq('status', 'accepted');
     throw new Error('No se encontró la rutina compartida.');
   }
 
@@ -119,7 +125,11 @@ export async function acceptRoutineShare(shareId: string): Promise<void> {
     .from('routines')
     .insert({ user_id: user.id, name: source.name, days: source.days });
   if (insertError) {
-    await supabase.from('routine_shares').update({ status: 'pending' }).eq('id', shareId);
+    await supabase
+      .from('routine_shares')
+      .update({ status: 'pending' })
+      .eq('id', shareId)
+      .eq('status', 'accepted');
     throw insertError;
   }
 }
