@@ -187,11 +187,7 @@ export default function RoutineManager({ predefinedRoutines, activities }: Props
   const days = activeRoutine ? daysElapsed(activeRoutine.started_at) : 0;
   const expired = activeRoutine ? elapsed >= activeRoutine.duration_weeks : false;
 
-  const activeRoutineDays: RoutineDays | null =
-    activeRoutine?.source === 'predefined'
-      ? predefinedRoutines.find((p) => p.id === activeRoutine.routine_ref)?.days ?? null
-      : activeCustomRoutine?.days ?? null;
-  const adherence = activeRoutineDays ? weekAdherence(activeRoutineDays, workoutDates) : null;
+  const adherence = activeRoutine ? weekAdherence(workoutDates) : null;
 
   const predefinedOptions: RoutineOption[] = predefinedRoutines
     .map((p) => ({
@@ -248,9 +244,9 @@ export default function RoutineManager({ predefinedRoutines, activities }: Props
                 {Math.min(days + 1, activeRoutine.duration_weeks * 7)} de{' '}
                 {activeRoutine.duration_weeks * 7}
               </p>
-              {adherence && adherence.scheduledDays > 0 && (
+              {adherence && adherence.daysElapsed > 0 && (
                 <p className="font-mono text-sm text-paper-dim">
-                  Esta semana: {adherence.completedDays} de {adherence.scheduledDays} días
+                  Esta semana: {adherence.daysTrained} de {adherence.daysElapsed} días
                   cumplidos
                 </p>
               )}
