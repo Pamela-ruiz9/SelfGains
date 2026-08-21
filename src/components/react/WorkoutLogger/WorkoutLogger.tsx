@@ -464,6 +464,8 @@ export default function WorkoutLogger({ activities, plans }: Props) {
   const [todayActivities, setTodayActivities] = useState<TodayActivityEntry[]>([]);
   const [pastWorkouts, setPastWorkouts] = useState<WorkoutWithLogs[]>([]);
   const [copySourceId, setCopySourceId] = useState('');
+  const [selectedSetIds, setSelectedSetIds] = useState<Set<string>>(new Set());
+  const [selectedSessionIds, setSelectedSessionIds] = useState<Set<string>>(new Set());
   // Independientes, no acordeón exclusivo: a diferencia de Progreso (una
   // pantalla de solo consulta), acá se suele necesitar tener "Hoy toca" y
   // "Agregar otra actividad" abiertas al mismo tiempo dentro del mismo
@@ -590,19 +592,23 @@ export default function WorkoutLogger({ activities, plans }: Props) {
   const totalTodayCount = todayActivities.length;
   const progressPct = totalTodayCount > 0 ? Math.round((completedCount / totalTodayCount) * 100) : 0;
 
-  // Copies every set/session from a previously logged day into today's
-  // draft in one shot — for a rest day with no routine assigned, or to
-  // bolt on a whole other discipline you already have a good log for,
-  // without re-typing it one exercise at a time.
-  function copyWorkout(workoutId: string) {
+  // Copies the selected sets/sessions from a previously logged day into
+  // today's draft — for a rest day with no routine assigned, or to bolt on
+  // a whole other discipline you already have a good log for, without
+  // re-typing it one exercise at a time. Only the ids the user left ticked
+  // in the checklist come along; anything they un-ticked is skipped.
+  function copyWorkout(workoutId: string, setIds: Set<string>, sessionIds: Set<string>) {
     const source = pastWorkouts.find((w) => w.id === workoutId);
     if (!source) return;
 
-    if (source.sets.length > 0) {
+    const setsToCopy = source.sets.filter((s) => setIds.has(s.id));
+    const sessionsToCopy = source.sessions.filter((s) => sessionIds.has(s.id));
+
+    if (setsToCopy.length > 0) {
       setLoggedSets((prev) => {
         const counts = new Map<string, number>();
         for (const s of prev) counts.set(s.exerciseId, (counts.get(s.exerciseId) ?? 0) + 1);
-        const additions: LoggedSet[] = source.sets.map((s) => {
+        const additions: LoggedSet[] = setsToCopy.map((s) => {
           const activity = activityById.get(s.exercise_id);
           const setNumber = (counts.get(s.exercise_id) ?? 0) + 1;
           counts.set(s.exercise_id, setNumber);
@@ -619,10 +625,10 @@ export default function WorkoutLogger({ activities, plans }: Props) {
       });
     }
 
-    if (source.sessions.length > 0) {
+    if (sessionsToCopy.length > 0) {
       setLoggedSessions((prev) => [
         ...prev,
-        ...source.sessions.map((s) => {
+        ...sessionsToCopy.map((s) => {
           const activity = activityById.get(s.activity_id);
           return {
             activityId: s.activity_id,
@@ -635,8 +641,17 @@ export default function WorkoutLogger({ activities, plans }: Props) {
     }
 
     setCopySourceId('');
+    setSelectedSetIds(new Set());
+    setSelectedSessionIds(new Set());
     setError(null);
     setSavedMessage(null);
+  }
+
+  function handleCopySourceChange(workoutId: string) {
+    setCopySourceId(workoutId);
+    const source = pastWorkouts.find((w) => w.id === workoutId);
+    setSelectedSetIds(new Set(source ? source.sets.map((s) => s.id) : []));
+    setSelectedSessionIds(new Set(source ? source.sessions.map((s) => s.id) : []));
   }
 
   function disciplinesForPastWorkout(w: WorkoutWithLogs): string[] {
@@ -741,6 +756,8 @@ export default function WorkoutLogger({ activities, plans }: Props) {
     );
   }
 
+  const copySource = pastWorkouts.find((w) => w.id === copySourceId);
+
   return (
     <div className="flex max-w-2xl flex-col gap-8">
       <label className="flex max-w-xs flex-col gap-2">
@@ -805,12 +822,12 @@ export default function WorkoutLogger({ activities, plans }: Props) {
           open={copySectionOpen}
           onToggle={() => setCopySectionOpen((prev) => !prev)}
         >
-          <div className="card-brutal flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-            <label className="flex flex-1 flex-col gap-2">
+          <div className="card-brutal flex flex-col gap-3">
+            <label className="flex flex-col gap-2">
               <span className="label-brutal">Día a copiar</span>
               <select
                 value={copySourceId}
-                onChange={(e) => setCopySourceId(e.target.value)}
+                onChange={(e) => handleCopySourceChange(e.target.value)}
                 className="input-brutal"
               >
                 <option value="">
@@ -829,13 +846,62 @@ export default function WorkoutLogger({ activities, plans }: Props) {
                 })}
               </select>
             </label>
+            {copySource && (
+              <div className="flex flex-col gap-2">
+                {copySource.sets.map((s) => {
+                  const activity = activityById.get(s.exercise_id);
+                  const name = activity ? fullActivityName(activity) : s.exercise_id;
+                  return (
+                    <label key={s.id} className="flex items-center gap-2 font-mono text-sm text-paper">
+                      <input
+                        type="checkbox"
+                        checked={selectedSetIds.has(s.id)}
+                        onChange={(e) =>
+                          setSelectedSetIds((prev) => {
+                            const next = new Set(prev);
+                            if (e.target.checked) next.add(s.id);
+                            else next.delete(s.id);
+                            return next;
+                          })
+                        }
+                      />
+                      {name} — serie {s.set_number}: {s.reps} reps x {kgToDisplay(s.weight, weightUnit)}{' '}
+                      {weightUnit}
+                      {s.rpe !== null ? ` (RPE ${s.rpe})` : ''}
+                    </label>
+                  );
+                })}
+                {copySource.sessions.map((s) => {
+                  const activity = activityById.get(s.activity_id);
+                  const name = activity ? fullActivityName(activity) : s.activity_id;
+                  return (
+                    <label key={s.id} className="flex items-center gap-2 font-mono text-sm text-paper">
+                      <input
+                        type="checkbox"
+                        checked={selectedSessionIds.has(s.id)}
+                        onChange={(e) =>
+                          setSelectedSessionIds((prev) => {
+                            const next = new Set(prev);
+                            if (e.target.checked) next.add(s.id);
+                            else next.delete(s.id);
+                            return next;
+                          })
+                        }
+                      />
+                      {name} — {s.distance_km !== null ? `${kmToMeters(s.distance_km)} m en ` : ''}
+                      {s.duration_min} min
+                    </label>
+                  );
+                })}
+              </div>
+            )}
             <button
               type="button"
-              onClick={() => copyWorkout(copySourceId)}
-              disabled={!copySourceId}
-              className="btn-brutal-sm shrink-0"
+              onClick={() => copyWorkout(copySourceId, selectedSetIds, selectedSessionIds)}
+              disabled={selectedSetIds.size + selectedSessionIds.size === 0}
+              className="btn-brutal-sm shrink-0 self-start"
             >
-              Copiar a este día
+              Copiar seleccionados ({selectedSetIds.size + selectedSessionIds.size})
             </button>
           </div>
         </CollapsibleSection>
