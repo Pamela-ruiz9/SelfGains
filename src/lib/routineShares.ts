@@ -85,24 +85,32 @@ export async function acceptRoutineShare(shareId: string): Promise<void> {
   } = await supabase.auth.getUser();
   if (!user) throw new Error('No hay sesión activa');
 
-  // Se lee `routine_id` de la propia fila de la propuesta (acotado a
-  // `to_user_id = auth.uid()` y `status = 'pending'`) en vez de confiarlo
-  // como parámetro — mismo motivo que la corrección de
-  // acceptConnectionRequest en src/lib/connectionRequests.ts: sin esto,
-  // alguien podría pasar un shareId y un routineId que no se correspondan
-  // entre sí y terminar marcando como aceptada una propuesta distinta de
-  // la rutina que realmente copió.
-  const { data: share, error: shareError } = await supabase
+  // Reclama la propuesta atómicamente antes de copiar nada: el UPDATE
+  // condicional (.eq('status', 'pending')) solo puede afectar la fila una
+  // vez, así que si dos llamadas concurrentes (doble click, dos pestañas)
+  // llegan acá al mismo tiempo, como mucho una gana y sigue — la otra ve 0
+  // filas afectadas y aborta antes de insertar ninguna copia de la rutina.
+  // Reemplaza al SELECT que existía antes: el mismo UPDATE ya devuelve
+  // routine_id, scoped a to_user_id = auth.uid() (mismo motivo que antes:
+  // sin este scoping, alguien podría pasar un shareId ajeno).
+  const { data: claimed, error: claimError } = await supabase
     .from('routine_shares')
-    .select('routine_id')
+    .update({ status: 'accepted' })
     .eq('id', shareId)
     .eq('to_user_id', user.id)
     .eq('status', 'pending')
+    .select('routine_id')
     .single();
-  if (shareError) throw shareError;
+  if (claimError) throw new Error('Esta propuesta ya se resolvió en otro lado.');
 
-  const source = await getSharedRoutinePreview(share.routine_id);
-  if (!source) throw new Error('No se encontró la rutina compartida.');
+  const source = await getSharedRoutinePreview(claimed.routine_id);
+  if (!source) {
+    // Revertir el reclamo: sin esto, la propuesta quedaría "accepted" para
+    // siempre sin que el usuario tenga la rutina copiada, sin forma de
+    // reintentar.
+    await supabase.from('routine_shares').update({ status: 'pending' }).eq('id', shareId);
+    throw new Error('No se encontró la rutina compartida.');
+  }
 
   // Sin .select() después del insert, mismo motivo que
   // assignRoutineToStudent en src/lib/routines.ts: nada del lado del
@@ -110,23 +118,9 @@ export async function acceptRoutineShare(shareId: string): Promise<void> {
   const { error: insertError } = await supabase
     .from('routines')
     .insert({ user_id: user.id, name: source.name, days: source.days });
-  if (insertError) throw insertError;
-
-  // .eq('status', 'pending') además de .eq('id', shareId): si dos llamadas
-  // concurrentes (doble click, dos pestañas) pasan el SELECT de arriba
-  // mientras la propuesta seguía pendiente, esta segunda condición hace
-  // que la segunda UPDATE no afecte ninguna fila — se detecta abajo y se
-  // aborta en vez de dejar dos copias de la misma rutina creadas para una
-  // sola propuesta.
-  const { data: updated, error: updateError } = await supabase
-    .from('routine_shares')
-    .update({ status: 'accepted' })
-    .eq('id', shareId)
-    .eq('status', 'pending')
-    .select('id');
-  if (updateError) throw updateError;
-  if (!updated || updated.length === 0) {
-    throw new Error('Esta propuesta ya se resolvió en otro lado.');
+  if (insertError) {
+    await supabase.from('routine_shares').update({ status: 'pending' }).eq('id', shareId);
+    throw insertError;
   }
 }
 
