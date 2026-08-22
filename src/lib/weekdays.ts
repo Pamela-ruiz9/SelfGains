@@ -72,3 +72,14 @@ export function getTodayWeekday(date: Date = new Date()): Weekday {
 export function weekdayLabel(day: Weekday): string {
   return day.charAt(0).toUpperCase() + day.slice(1);
 }
+
+// Local calendar date as "YYYY-MM-DD" — deliberately not toISOString(),
+// which converts to UTC first and can show tomorrow's date once local time
+// crosses into the evening (e.g. from ~18:00 onward in a UTC-6 timezone
+// like Mexico City).
+export function localDateStr(date: Date = new Date()): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}

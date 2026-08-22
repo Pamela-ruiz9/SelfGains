@@ -1,6 +1,6 @@
 import { supabase } from './supabase';
 import type { ActiveRoutine, Routine } from '../types/db';
-import type { RoutineDays } from './weekdays';
+import { localDateStr, type RoutineDays } from './weekdays';
 import { isNetworkError, readCache, writeCache } from './offlineQueue';
 
 export async function createRoutine(name: string, days: RoutineDays): Promise<Routine> {
@@ -58,7 +58,7 @@ export async function activateRoutine(
       user_id: user.id,
       source,
       routine_ref: routineRef,
-      started_at: new Date().toISOString().slice(0, 10),
+      started_at: localDateStr(),
       duration_weeks: durationWeeks,
     })
     .select()
