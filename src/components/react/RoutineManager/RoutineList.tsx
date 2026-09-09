@@ -18,6 +18,7 @@ export interface RoutineOption {
   subtitle?: string;
   days: RoutineDays;
   assignedByName?: string | null;
+  originalAuthorName?: string | null;
   recommended?: boolean;
 }
 
@@ -153,7 +154,12 @@ function RoutineCard({
           {routine.subtitle && <p className="label-brutal">{routine.subtitle}</p>}
           {routine.recommended && <p className="label-brutal text-acid">Recomendada para vos</p>}
           {routine.assignedByName && (
-            <p className="font-mono text-xs text-paper-dim">Compartida por: {routine.assignedByName}</p>
+            <p className="font-mono text-xs text-paper-dim">
+              Compartida por: {routine.assignedByName}
+              {routine.originalAuthorName && routine.originalAuthorName !== routine.assignedByName
+                ? ` (originalmente de ${routine.originalAuthorName})`
+                : ''}
+            </p>
           )}
         </div>
         {source === 'custom' && (
