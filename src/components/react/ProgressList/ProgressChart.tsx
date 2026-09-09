@@ -1,5 +1,15 @@
 import { useState } from 'react';
-import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import {
+  Bar,
+  CartesianGrid,
+  ComposedChart,
+  Legend,
+  Line,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 import type { ProgressPoint } from '../../../lib/prs';
 import { getWeightUnit, kgToDisplay } from '../../../lib/weightUnit';
 
@@ -22,7 +32,7 @@ function ChartTooltip({
   weightUnit,
 }: {
   active?: boolean;
-  payload?: { value: number }[];
+  payload?: { value: number; name: string; color: string }[];
   label?: string;
   weightUnit: string;
 }) {
@@ -30,9 +40,11 @@ function ChartTooltip({
   return (
     <div className="card-brutal font-mono text-sm">
       <p className="text-paper-dim">{label}</p>
-      <p className="text-acid">
-        {payload[0].value} {weightUnit}
-      </p>
+      {payload.map((entry) => (
+        <p key={entry.name} style={{ color: entry.color }}>
+          {entry.name}: {entry.value} {weightUnit}
+        </p>
+      ))}
     </div>
   );
 }
@@ -43,6 +55,8 @@ export default function ProgressChart({ exerciseId, points, exercises, onSelectE
   const displayPoints = points.map((p) => ({
     ...p,
     maxWeight: kgToDisplay(p.maxWeight, weightUnit),
+    estimated1RM: kgToDisplay(p.estimated1RM, weightUnit),
+    volume: kgToDisplay(p.volume, weightUnit),
   }));
 
   return (
@@ -65,7 +79,7 @@ export default function ProgressChart({ exerciseId, points, exercises, onSelectE
         <p className="mb-4 font-display text-2xl text-paper">{exerciseName}</p>
         <div className="h-72 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={displayPoints} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+            <ComposedChart data={displayPoints} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
               <CartesianGrid stroke="var(--color-paper-dim)" strokeOpacity={0.2} vertical={false} />
               <XAxis
                 dataKey="date"
@@ -73,20 +87,49 @@ export default function ProgressChart({ exerciseId, points, exercises, onSelectE
                 tick={{ fontSize: 12, fontFamily: 'JetBrains Mono, monospace' }}
               />
               <YAxis
+                yAxisId="weight"
+                stroke="var(--color-paper-dim)"
+                tick={{ fontSize: 12, fontFamily: 'JetBrains Mono, monospace' }}
+                unit={` ${weightUnit}`}
+              />
+              <YAxis
+                yAxisId="volume"
+                orientation="right"
                 stroke="var(--color-paper-dim)"
                 tick={{ fontSize: 12, fontFamily: 'JetBrains Mono, monospace' }}
                 unit={` ${weightUnit}`}
               />
               <Tooltip content={<ChartTooltip weightUnit={weightUnit} />} />
+              <Legend wrapperStyle={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 12 }} />
+              <Bar
+                yAxisId="volume"
+                dataKey="volume"
+                name="Volumen"
+                fill="var(--color-paper-dim)"
+                fillOpacity={0.35}
+              />
               <Line
+                yAxisId="weight"
                 type="monotone"
                 dataKey="maxWeight"
+                name="Peso máximo"
                 stroke="var(--color-acid)"
                 strokeWidth={2}
                 dot={{ r: 4, fill: 'var(--color-acid)' }}
                 activeDot={{ r: 6 }}
               />
-            </LineChart>
+              <Line
+                yAxisId="weight"
+                type="monotone"
+                dataKey="estimated1RM"
+                name="1RM estimado"
+                stroke="var(--color-blood)"
+                strokeWidth={2}
+                strokeDasharray="4 4"
+                dot={{ r: 4, fill: 'var(--color-blood)' }}
+                activeDot={{ r: 6 }}
+              />
+            </ComposedChart>
           </ResponsiveContainer>
         </div>
       </div>
