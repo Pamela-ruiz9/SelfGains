@@ -508,11 +508,22 @@ update routines set original_author_name = assigned_by_name where assigned_by_na
 -- cliente, antes de llamar a esta función (ver src/lib/profile.ts).
 create or replace function delete_own_account()
 returns void
-language sql
+language plpgsql
 security definer
 set search_path = ''
 as $$
+begin
   delete from auth.users where id = auth.uid();
+  -- Si auth.uid() fuera null (no debería pasar en una llamada autenticada,
+  -- pero un JWT malformado/vencido es el único escenario plausible) el
+  -- delete no borraría ninguna fila y devolvería éxito en silencio — el
+  -- cliente (src/lib/profile.ts) confía en "sin error = cuenta borrada" y
+  -- seguiría con signOut()/redirect creyendo que borró todo. Se levanta un
+  -- error en vez de dejarlo pasar en silencio.
+  if not found then
+    raise exception 'No se pudo borrar la cuenta: sesión inválida.';
+  end if;
+end;
 $$;
 
 -- Supabase otorga EXECUTE por default a postgres/anon/authenticated/service_role
