@@ -495,3 +495,25 @@ alter table routines add column original_author_name text;
 -- dato de procedencia que existe es assigned_by_name — se usa como mejor
 -- aproximación disponible.
 update routines set original_author_name = assigned_by_name where assigned_by_name is not null;
+
+-- Borrar cuenta desde la UI (2026-09-09): el sitio es estático, sin backend
+-- propio con privilegios de administrador — esta función permite que un
+-- usuario logueado borre su propia fila de auth.users desde el cliente vía
+-- supabase.rpc('delete_own_account'). Acotada a auth.uid(): no recibe ningún
+-- id como parámetro, así que no hay forma de que un usuario borre la cuenta
+-- de otro. Todas las tablas con datos de usuario ya tienen
+-- "on delete cascade" hacia auth.users, así que esta sola fila arrastra todo
+-- lo demás (workouts, routines, profiles, connections, etc.) — la foto de
+-- perfil en Storage es la única excepción y se limpia aparte, desde el
+-- cliente, antes de llamar a esta función (ver src/lib/profile.ts).
+create or replace function delete_own_account()
+returns void
+language sql
+security definer
+set search_path = ''
+as $$
+  delete from auth.users where id = auth.uid();
+$$;
+
+revoke execute on function delete_own_account() from public;
+grant execute on function delete_own_account() to authenticated;
