@@ -14,6 +14,8 @@ export interface ExercisePR {
 export interface ProgressPoint {
   date: string;
   maxWeight: number;
+  estimated1RM: number;
+  volume: number;
 }
 
 export interface SuggestedSet {
@@ -120,24 +122,53 @@ export function calculatePRs(workouts: WorkoutWithSets[]): ExercisePR[] {
   return Array.from(prsByExercise.values());
 }
 
-// For ONE exercise_id, one point per date with that day's heaviest set,
-// sorted chronologically.
+// Epley formula: estimated weight liftable for 1 rep given a set actually
+// performed at (weight, reps). Overestimates at high rep ranges (20+) — a
+// known, accepted limitation, not special-cased.
+function estimatedOneRepMax(weight: number, reps: number): number {
+  return weight * (1 + reps / 30);
+}
+
+interface DailyExerciseTotals {
+  maxWeight: number;
+  estimated1RM: number;
+  volume: number;
+}
+
+// For ONE exercise_id, one point per date, sorted chronologically:
+// - maxWeight: the heaviest set that day (unchanged behavior).
+// - estimated1RM: the HIGHEST estimated 1RM among that day's sets — not
+//   necessarily the set with maxWeight. A 90kg x5 set (1RM ~105kg) can beat
+//   a 100kg x1 set (1RM ~103.3kg) on the same day; the 90kg set wins.
+// - volume: sum of weight * reps across ALL sets that day, not just the
+//   heaviest.
 export function progressForExercise(
   workouts: WorkoutWithSets[],
   exerciseId: string
 ): ProgressPoint[] {
-  const maxWeightByDate = new Map<string, number>();
+  const totalsByDate = new Map<string, DailyExerciseTotals>();
   for (const workout of workouts) {
     for (const set of workout.sets) {
       if (set.exercise_id !== exerciseId) continue;
-      const current = maxWeightByDate.get(workout.date);
-      if (current === undefined || set.weight > current) {
-        maxWeightByDate.set(workout.date, set.weight);
-      }
+      const current = totalsByDate.get(workout.date) ?? {
+        maxWeight: 0,
+        estimated1RM: 0,
+        volume: 0,
+      };
+      totalsByDate.set(workout.date, {
+        maxWeight: Math.max(current.maxWeight, set.weight),
+        estimated1RM: Math.max(current.estimated1RM, estimatedOneRepMax(set.weight, set.reps)),
+        volume: current.volume + set.weight * set.reps,
+      });
     }
   }
-  return Array.from(maxWeightByDate.entries())
-    .map(([date, maxWeight]) => ({ date, maxWeight }))
+  return Array.from(totalsByDate.entries())
+    .map(([date, totals]) => ({
+      date,
+      maxWeight: totals.maxWeight,
+      estimated1RM: Math.round(totals.estimated1RM * 10) / 10,
+      volume: totals.volume,
+    }))
     .sort((a, b) => a.date.localeCompare(b.date));
 }
 
