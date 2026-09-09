@@ -41,6 +41,7 @@ export default function ProfileForm() {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [savedMessage, setSavedMessage] = useState<string | null>(null);
   const [routineExpired, setRoutineExpired] = useState(false);
@@ -267,13 +268,13 @@ export default function ProfileForm() {
       return;
     }
     setDeletingAccount(true);
-    setError(null);
+    setDeleteError(null);
     try {
       await deleteMyAccount();
       await supabase.auth.signOut();
       window.location.href = import.meta.env.BASE_URL;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo borrar la cuenta.');
+      setDeleteError(err instanceof Error ? err.message : 'No se pudo borrar la cuenta.');
       setDeletingAccount(false);
     }
   }
@@ -626,7 +627,9 @@ export default function ProfileForm() {
       >
         {deletingAccount ? 'Borrando...' : 'Borrar cuenta'}
       </button>
-      {error && <p className="border-l-2 border-blood pl-3 font-mono text-sm text-blood">{error}</p>}
+      {deleteError && (
+        <p className="border-l-2 border-blood pl-3 font-mono text-sm text-blood">{deleteError}</p>
+      )}
     </div>
   );
 }
