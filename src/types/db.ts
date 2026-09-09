@@ -28,6 +28,7 @@ export interface Routine {
   days: RoutineDays;
   created_at: string;
   assigned_by_name: string | null;
+  original_author_name: string | null;
 }
 
 export interface ActiveRoutine {

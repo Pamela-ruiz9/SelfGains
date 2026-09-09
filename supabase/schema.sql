@@ -483,3 +483,15 @@ alter table profiles add column training_level text check (training_level in ('p
 create unique index routine_shares_no_duplicate_pending
   on routine_shares (routine_id, to_user_id)
   where status = 'pending';
+
+-- Procedencia original de una rutina reasignada (2026-09-09): assigned_by_name
+-- ya guarda quién te la compartió a VOS directamente; original_author_name
+-- guarda quién la creó originalmente, y viaja sin tocar de salto en salto
+-- cuando una rutina recibida se reasigna a un tercero (ver
+-- docs/superpowers/specs/2026-09-09-procedencia-original-rutina-compartida-design.md).
+alter table routines add column original_author_name text;
+
+-- Backfill: para las rutinas ya compartidas antes de este cambio, el único
+-- dato de procedencia que existe es assigned_by_name — se usa como mejor
+-- aproximación disponible.
+update routines set original_author_name = assigned_by_name where assigned_by_name is not null;
