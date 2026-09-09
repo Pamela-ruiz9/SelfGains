@@ -515,5 +515,13 @@ as $$
   delete from auth.users where id = auth.uid();
 $$;
 
+-- Supabase otorga EXECUTE por default a postgres/anon/authenticated/service_role
+-- en cada función nueva de "public" vía ACLs de rol explícitas (no vía el
+-- pseudo-rol PUBLIC) — "revoke ... from public" no las toca. Se revocan acá
+-- aparte por buena higiene, aunque no son explotables: anon nunca tiene un
+-- auth.uid() válido (el delete no borra nada), y service_role ya bypassea
+-- RLS/grants por diseño en Supabase.
 revoke execute on function delete_own_account() from public;
+revoke execute on function delete_own_account() from anon;
+revoke execute on function delete_own_account() from service_role;
 grant execute on function delete_own_account() to authenticated;
