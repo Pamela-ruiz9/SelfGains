@@ -125,6 +125,17 @@ export async function assignRoutineToStudent(routineId: string, studentUserId: s
     .select('display_name')
     .maybeSingle();
 
+  const myName = myProfile?.display_name ?? 'tu entrenador';
+
+  // Si la rutina que se está reasignando ya venía compartida (source tiene su
+  // propio assigned_by_name), el "original" se propaga tal cual en vez de
+  // pisarse con myName — así la copia nueva conserva quién la creó
+  // originalmente, no solo quién te la pasó a vos. Si source es una rutina
+  // propia (nunca compartida), el asignador actual ES el original.
+  const originalAuthorName = source.assigned_by_name
+    ? (source.original_author_name ?? source.assigned_by_name)
+    : myName;
+
   // Sin .select() a propósito: el entrenador puede INSERTAR una rutina para
   // el alumno (política de RLS de "routines"), pero no puede LEER de vuelta
   // filas que ya son 100% del alumno — pedir la fila insertada de vuelta
@@ -135,7 +146,8 @@ export async function assignRoutineToStudent(routineId: string, studentUserId: s
     user_id: studentUserId,
     name: source.name,
     days: source.days,
-    assigned_by_name: myProfile?.display_name ?? 'tu entrenador',
+    assigned_by_name: myName,
+    original_author_name: originalAuthorName,
   });
 
   if (error) throw error;
