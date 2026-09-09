@@ -107,3 +107,62 @@ Si aun así se bloquea (pasó en la sesión del 2026-08-19, con el `UPDATE` bloq
 ## Preguntar en vez de adivinar en decisiones subjetivas
 
 Para trabajo de diseño/creativo genuinamente subjetivo (dirección de un logo, estilo visual), usar `AskUserQuestion` con opciones concretas *antes* de invertir tiempo construyendo, y de nuevo entre rondas cuando el feedback es ambiguo ("no me gusta nada" sin más detalle) — preguntar qué específicamente no funciona y si conviene seguir afinando la misma dirección o abrir a algo distinto ahorra rondas completas de exploración en la dirección equivocada. En este repo, ver `docs/agents/logo-identidad-status.md` para un caso concreto de 3 rondas donde cada una se ajustó a partir de una pregunta de una sola vez, no de adivinar.
+
+## Supabase: `revoke ... from public` no alcanza para cerrar una función `security definer`
+
+Cada función nueva creada en el schema `public` recibe automáticamente `EXECUTE` para `postgres`, `anon`, `authenticated` y `service_role` — vía ACLs explícitas por rol que Supabase configura a nivel de proyecto, **no** vía el pseudo-rol `PUBLIC`. Un `revoke execute on function mi_funcion() from public;` (el patrón obvio para "que solo la pueda llamar gente logueada") no toca ninguno de esos cuatro grants — sigue devolviendo filas para `anon`/`service_role`/`postgres` en `information_schema.routine_privileges` después de correrlo. Se descubrió armando `delete_own_account()` (ver `docs/agents/borrar-cuenta-status.md`): no era explotable en este caso puntual (un `anon` nunca tiene `auth.uid()` válido, así que el `delete` no borra nada; `service_role` ya bypassea RLS/grants por diseño), pero es mala higiene dejarlo así.
+
+**El fix:** revocar cada rol explícitamente además de `public`:
+
+```sql
+revoke execute on function mi_funcion() from public;
+revoke execute on function mi_funcion() from anon;
+revoke execute on function mi_funcion() from service_role;
+grant execute on function mi_funcion() to authenticated;
+```
+
+Verificar siempre contra el proyecto real, nunca confiar en que el SQL "debería" alcanzar:
+
+```sql
+select grantee, privilege_type from information_schema.routine_privileges where routine_name = 'mi_funcion';
+```
+
+Dejar `postgres` con `EXECUTE` no hace falta revocarlo — es el rol dueño de la función (`prosecdef`/owner), que retiene privilegio implícito sobre su propio objeto sin importar los grants explícitos.
+
+## Una función `security definer` de auto-borrado debe fallar, no tener éxito en silencio, si no borra nada
+
+Un patrón para "que el usuario borre su propia fila" en un sitio estático sin backend (`delete from auth.users where id = auth.uid()` dentro de una función `security definer`, ver `docs/agents/borrar-cuenta-status.md`) tiene una trampa sutil si se escribe como `language sql` con una sola sentencia `delete` y `returns void`: si `auth.uid()` alguna vez fuera `null` o no matcheara ninguna fila (un JWT vencido/malformado es el único escenario plausible, no debería pasar en una llamada autenticada normal), el `delete` no borra nada y la función igual devuelve éxito — el cliente, que trata "sin error" como "se borró todo", haría `signOut()` y redirigiría creyendo que la cuenta desapareció cuando en realidad sigue intacta.
+
+**El fix:** usar `language plpgsql` y chequear `FOUND` (la variable especial que Postgres setea después de un `INSERT`/`UPDATE`/`DELETE`/`SELECT INTO` según si afectó alguna fila) para levantar una excepción en vez de devolver éxito:
+
+```sql
+create or replace function delete_own_account()
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  delete from auth.users where id = auth.uid();
+  if not found then
+    raise exception 'No se pudo borrar la cuenta: sesión inválida.';
+  end if;
+end;
+$$;
+```
+
+Un `raise exception` en una función `security definer` sí se propaga como error real hasta el cliente (Postgres → PostgREST → `PostgrestError` en supabase-js, que `extends Error`), así que el `if (error) throw error;` que ya usa el resto del código de este proyecto lo captura sin ningún cambio adicional.
+
+## Crear una cuenta de prueba nueva y desechable (no reutilizar una existente) para un test irreversible
+
+Todo el patrón de cuentas de prueba documentado arriba en este archivo asume **reutilizar** una cuenta ya confirmada de una sesión anterior (evita el rate-limit de emails). Pero para probar algo genuinamente irreversible (ej. borrar una cuenta) hace falta una cuenta nueva que se pueda destruir sin perder una cuenta reusable. Insertar directo en `auth.users` (mismo patrón que resetear una contraseña, vía `supabase db query --linked --file`) alcanza para el email/password, pero **también hace falta una fila en `auth.identities`** — sin ella el login por password falla aunque `auth.users` tenga `encrypted_password` y `email_confirmed_at` seteados correctamente. Si el primer intento de `insert into auth.users (...)` falla por una columna `NOT NULL` inesperada, inspeccionar el schema real antes de seguir adivinando:
+
+```sql
+select column_name, is_nullable, column_default from information_schema.columns where table_name = 'users' and table_schema = 'auth';
+```
+
+Una vez que la cuenta desechable cumplió su propósito y se confirmó borrada (fila de `auth.users` en 0, tablas relacionadas en 0), no queda nada que limpiar — a diferencia de las cuentas reutilizables, esta no se vuelve a usar.
+
+## Un estado de error compartido entre muchos handlers de un mismo componente puede generar UX engañosa al agregar una acción destructiva nueva
+
+`ProfileForm.tsx` tiene un solo `error`/`setError` compartido por ~9 handlers distintos (tema, acento, sexo, nivel, entrenador, foto, guardar perfil). Es un patrón razonable mientras todos los errores son igual de "bajo impacto" — pero al agregar un botón de acción destructiva nueva (ej. "Borrar cuenta") y renderizar ese mismo `error` compartido justo debajo, un fallo de cualquiera de los otros handlers (ej. subir una foto) aparece con texto rojo pegado al botón destructivo, sugiriendo falsamente que esa acción específica falló. Una revisión de código lo encontró en `docs/agents/borrar-cuenta-status.md`. El fix es barato: un estado de error dedicado solo para la acción nueva (`deleteError`/`setDeleteError`), sin tocar el estado compartido ni sus renders existentes. Vale la pena pensar esto explícitamente cada vez que se agrega una acción de alto impacto (destructiva/irreversible) a un formulario que ya comparte estado de error entre muchas acciones de bajo impacto.
