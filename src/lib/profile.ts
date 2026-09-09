@@ -66,3 +66,25 @@ export async function uploadAvatar(file: File): Promise<string> {
   // browser (and any cached <img>) would keep showing the old photo.
   return `${data.publicUrl}?t=${Date.now()}`;
 }
+
+// Borra la cuenta del usuario logueado y todos sus datos relacionados. La
+// foto de perfil (Storage) no está en el cascade de FKs de Postgres, así que
+// se limpia acá aparte, best-effort — si falla, no bloquea el borrado de la
+// cuenta (una foto huérfana en un bucket público no expone nada sensible).
+// El resto de las tablas de usuario (workouts, routines, profiles,
+// connections, etc.) ya tienen "on delete cascade" hacia auth.users, así que
+// borrar esa fila vía el RPC de abajo limpia todo lo demás automáticamente.
+export async function deleteMyAccount(): Promise<void> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error('No hay sesión activa');
+
+  const { data: files } = await supabase.storage.from('avatars').list(user.id);
+  if (files && files.length > 0) {
+    await supabase.storage.from('avatars').remove(files.map((f) => `${user.id}/${f.name}`));
+  }
+
+  const { error } = await supabase.rpc('delete_own_account');
+  if (error) throw error;
+}
