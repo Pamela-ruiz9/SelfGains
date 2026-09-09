@@ -1,6 +1,6 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
 import { supabase } from '../../../lib/supabase';
-import { getMyProfile, uploadAvatar, upsertProfile } from '../../../lib/profile';
+import { deleteMyAccount, getMyProfile, uploadAvatar, upsertProfile } from '../../../lib/profile';
 import { logMeasurement } from '../../../lib/measurements';
 import { applyTheme, DEFAULT_ACCENT, type ThemeMode } from '../../../lib/theme';
 import { getWeightUnit, setWeightUnit, type WeightUnit } from '../../../lib/weightUnit';
@@ -40,6 +40,7 @@ export default function ProfileForm() {
 
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [savedMessage, setSavedMessage] = useState<string | null>(null);
   const [routineExpired, setRoutineExpired] = useState(false);
@@ -255,6 +256,26 @@ export default function ProfileForm() {
   async function handleLogout() {
     await supabase.auth.signOut();
     window.location.href = import.meta.env.BASE_URL;
+  }
+
+  async function handleDeleteAccount() {
+    if (
+      !confirm(
+        '¿Eliminar tu cuenta? Esto borra todos tus entrenamientos, rutinas, medidas y conexiones de forma permanente. Esta acción no se puede deshacer.'
+      )
+    ) {
+      return;
+    }
+    setDeletingAccount(true);
+    setError(null);
+    try {
+      await deleteMyAccount();
+      await supabase.auth.signOut();
+      window.location.href = import.meta.env.BASE_URL;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo borrar la cuenta.');
+      setDeletingAccount(false);
+    }
   }
 
   if (!authChecked) {
@@ -596,6 +617,16 @@ export default function ProfileForm() {
       >
         Cerrar sesión
       </button>
+
+      <button
+        type="button"
+        onClick={handleDeleteAccount}
+        disabled={deletingAccount}
+        className="self-start border-2 border-blood bg-transparent px-4 py-2 font-mono text-sm uppercase tracking-wide text-blood transition duration-150 hover:bg-blood hover:text-paper active:scale-95 disabled:opacity-50"
+      >
+        {deletingAccount ? 'Borrando...' : 'Borrar cuenta'}
+      </button>
+      {error && <p className="border-l-2 border-blood pl-3 font-mono text-sm text-blood">{error}</p>}
     </div>
   );
 }
