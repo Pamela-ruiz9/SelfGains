@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { Fragment, useState, type ReactNode } from 'react';
 import { muscleLabel } from '../../../lib/muscles';
 import { groupPRsByMuscle, type ExercisePR } from '../../../lib/prs';
 import { getWeightUnit, kgToDisplay } from '../../../lib/weightUnit';
@@ -13,9 +13,11 @@ interface Props {
   prs: ExercisePR[];
   exercises: ExerciseInfo[];
   onSelectExercise: (id: string) => void;
+  selectedExerciseId: string | null;
+  chart: ReactNode;
 }
 
-export default function PRGrid({ prs, exercises, onSelectExercise }: Props) {
+export default function PRGrid({ prs, exercises, onSelectExercise, selectedExerciseId, chart }: Props) {
   const [weightUnit] = useState(() => getWeightUnit());
   const exerciseNameById = new Map(exercises.map((e) => [e.id, e.name]));
   const groups = groupPRsByMuscle(prs, exercises);
@@ -30,20 +32,24 @@ export default function PRGrid({ prs, exercises, onSelectExercise }: Props) {
           <p className="label-brutal">{muscleLabel(group.muscleId)}</p>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {group.entries.map((pr) => (
-              <button
-                key={pr.exerciseId}
-                type="button"
-                onClick={() => onSelectExercise(pr.exerciseId)}
-                className="card-brutal card-brutal-tap flex flex-col gap-1 text-left transition-colors hover:border-acid"
-              >
-                <span className="font-display text-xl text-paper">
-                  {exerciseNameById.get(pr.exerciseId) ?? pr.exerciseId}
-                </span>
-                <span className="font-mono text-sm text-acid">
-                  {kgToDisplay(pr.weight, weightUnit)} {weightUnit}
-                </span>
-                <span className="font-mono text-xs text-paper-dim">{pr.date}</span>
-              </button>
+              <Fragment key={pr.exerciseId}>
+                <button
+                  type="button"
+                  onClick={() => onSelectExercise(pr.exerciseId)}
+                  className="card-brutal card-brutal-tap flex flex-col gap-1 text-left transition-colors hover:border-acid"
+                >
+                  <span className="font-display text-xl text-paper">
+                    {exerciseNameById.get(pr.exerciseId) ?? pr.exerciseId}
+                  </span>
+                  <span className="font-mono text-sm text-acid">
+                    {kgToDisplay(pr.weight, weightUnit)} {weightUnit}
+                  </span>
+                  <span className="font-mono text-xs text-paper-dim">{pr.date}</span>
+                </button>
+                {pr.exerciseId === selectedExerciseId && (
+                  <div className="sm:col-span-2 lg:col-span-3">{chart}</div>
+                )}
+              </Fragment>
             ))}
           </div>
         </div>

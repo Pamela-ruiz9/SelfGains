@@ -197,35 +197,41 @@ export default function ProgressList({ exerciseNames, exercises, activities }: P
         />
 
         {selectedDiscipline === 'gym' && (
-          <>
-            <PRGrid prs={prs} exercises={exercises} onSelectExercise={setSelectedExerciseId} />
-            {selectedExerciseId && (
-              <ProgressChart
-                exerciseId={selectedExerciseId}
-                points={progressForExercise(workouts, selectedExerciseId)}
-                exercises={exercises}
-                onSelectExercise={setSelectedExerciseId}
-              />
-            )}
-          </>
+          <PRGrid
+            prs={prs}
+            exercises={exercises}
+            onSelectExercise={setSelectedExerciseId}
+            selectedExerciseId={selectedExerciseId}
+            chart={
+              selectedExerciseId && (
+                <ProgressChart
+                  exerciseId={selectedExerciseId}
+                  points={progressForExercise(workouts, selectedExerciseId)}
+                  exercises={exercises}
+                  onSelectExercise={setSelectedExerciseId}
+                />
+              )
+            }
+          />
         )}
 
         {(selectedDiscipline === 'running' || selectedDiscipline === 'natacion') && (
-          <>
-            <CardioPRGrid
-              prs={cardioPrsForSelected}
-              activities={cardioActivitiesForSelected}
-              onSelectActivity={setSelectedCardioActivityId}
-            />
-            {selectedCardioActivityId && (
-              <CardioProgressChart
-                activityId={selectedCardioActivityId}
-                points={progressForCardioActivity(workouts, selectedCardioActivityId)}
-                activities={cardioActivitiesForSelected}
-                onSelectActivity={setSelectedCardioActivityId}
-              />
-            )}
-          </>
+          <CardioPRGrid
+            prs={cardioPrsForSelected}
+            activities={cardioActivitiesForSelected}
+            onSelectActivity={setSelectedCardioActivityId}
+            selectedActivityId={selectedCardioActivityId}
+            chart={
+              selectedCardioActivityId && (
+                <CardioProgressChart
+                  activityId={selectedCardioActivityId}
+                  points={progressForCardioActivity(workouts, selectedCardioActivityId)}
+                  activities={cardioActivitiesForSelected}
+                  onSelectActivity={setSelectedCardioActivityId}
+                />
+              )
+            }
+          />
         )}
 
         {selectedDiscipline === 'combate' && (
