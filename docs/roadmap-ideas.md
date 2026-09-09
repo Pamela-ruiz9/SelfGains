@@ -8,7 +8,7 @@ Este documento junta ideas de negocio que salieron en brainstorming (2026-08-16)
 
 Ninguno de estos es un bug bloqueante — son limitaciones conocidas y aceptadas o funcionalidad que quedó afuera del alcance original de cada feature. Fuente: sección final de cada `docs/agents/*-status.md`.
 
-- **Perfil** (`perfil-y-personalizacion-status.md`): no hay borrar cuenta desde la UI (solo cerrar sesión); no se puede recortar la foto al subirla; el historial de medidas no se puede editar/borrar fila por fila.
+- **Perfil** (`perfil-y-personalizacion-status.md`; borrar cuenta resuelto en `borrar-cuenta-status.md`): no se puede recortar la foto al subirla; el historial de medidas no se puede editar/borrar fila por fila.
 - **Explorador Muscular 3D** (`muscle-explorer-3d-status.md`): el checklist manual (Task 7) nunca se corrió con un humano en un navegador real — falta probar el tacto en mobile y el fallback sin WebGL; el bundle pesa ~1.03MB sin code-splitting.
 - **Registrar / copiar entrenamiento** (`mobile-nav-y-registro-ux-status.md`, `copiar-entrenamiento-parcial-status.md`): los presets de duración/distancia de `SessionFields` están fijos, no varían por disciplina. (La selección parcial al copiar un día anterior ya se resolvió — ver el segundo status doc.)
 - **Progreso** (`progreso-graficas-prs-status.md`; 1RM/volumen resuelto en `1rm-y-volumen-total-status.md`): no se pueden comparar/superponer varios ejercicios a la vez; no hay filtro por rango de fechas; los umbrales de progresión/deload son constantes fijas, no configurables por el usuario.
