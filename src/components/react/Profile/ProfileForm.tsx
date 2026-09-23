@@ -2,7 +2,7 @@ import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
 import { supabase } from '../../../lib/supabase';
 import { deleteMyAccount, getMyProfile, uploadAvatar, upsertProfile } from '../../../lib/profile';
 import { logMeasurement } from '../../../lib/measurements';
-import { applyTheme, DEFAULT_ACCENT, type ThemeMode } from '../../../lib/theme';
+import { ACCENT_GRADIENTS, applyTheme, DEFAULT_ACCENT, type AccentGradientId, type ThemeMode } from '../../../lib/theme';
 import { getWeightUnit, setWeightUnit, type WeightUnit } from '../../../lib/weightUnit';
 import { getActiveRoutine, weeksElapsed } from '../../../lib/routines';
 import { DEFAULT_MAP_CENTER, getMyTrainerProfile, upsertTrainerProfile } from '../../../lib/trainerProfiles';
@@ -31,7 +31,11 @@ export default function ProfileForm() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [measurements, setMeasurements] = useState<Record<string, string>>({});
   const [theme, setTheme] = useState<ThemeMode>('dark');
-  const [accentColor, setAccentColor] = useState(DEFAULT_ACCENT);
+  // string, no AccentGradientId — accentColor termina guardando tanto ids de
+  // preset ("f1"/"f2"/"f3") como hex sueltos del selector de color libre,
+  // y también lo que venga de profile.accent_color (columna text en
+  // Supabase, sin CHECK que restrinja el formato).
+  const [accentColor, setAccentColor] = useState<string>(DEFAULT_ACCENT);
   const [weightUnit, setWeightUnitState] = useState<WeightUnit>(() => getWeightUnit());
   const [sex, setSex] = useState<'femenino' | 'masculino' | null>(null);
   const [trainingLevel, setTrainingLevel] = useState<
@@ -323,19 +327,33 @@ export default function ProfileForm() {
           <button
             type="button"
             onClick={() => handleThemeChange('dark')}
-            className={theme === 'dark' ? 'btn-brutal-sm border-acid bg-acid text-on-accent' : 'btn-brutal-sm'}
+            className={theme === 'dark' ? 'btn-brutal-sm pill-selected' : 'btn-brutal-sm'}
           >
             Oscuro
           </button>
           <button
             type="button"
             onClick={() => handleThemeChange('light')}
-            className={theme === 'light' ? 'btn-brutal-sm border-acid bg-acid text-on-accent' : 'btn-brutal-sm'}
+            className={theme === 'light' ? 'btn-brutal-sm pill-selected' : 'btn-brutal-sm'}
           >
             Claro
           </button>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          {(Object.entries(ACCENT_GRADIENTS) as [AccentGradientId, (typeof ACCENT_GRADIENTS)[AccentGradientId]][]).map(
+            ([id, preset]) => (
+              <button
+                key={id}
+                type="button"
+                aria-label={`Degradado ${id}`}
+                onClick={() => handleAccentChange(id)}
+                style={{ backgroundImage: preset.gradient }}
+                className={`h-8 w-8 rounded-full border-2 transition-transform duration-150 ${
+                  accentColor === id ? 'scale-110 border-paper' : 'border-paper-dim/40'
+                }`}
+              />
+            )
+          )}
           {ACCENT_PRESETS.map((color) => (
             <button
               key={color}
@@ -343,17 +361,17 @@ export default function ProfileForm() {
               aria-label={`Color ${color}`}
               onClick={() => handleAccentChange(color)}
               style={{ backgroundColor: color }}
-              className={`h-8 w-8 rounded-full border-2 transition-transform duration-150 ${
+              className={`h-8 w-8 rounded-full border transition-transform duration-150 ${
                 accentColor.toLowerCase() === color ? 'scale-110 border-paper' : 'border-paper-dim/40'
               }`}
             />
           ))}
           <input
             type="color"
-            value={accentColor}
+            value={accentColor.startsWith('#') ? accentColor : '#000000'}
             onChange={(e) => handleAccentChange(e.target.value)}
             aria-label="Elegir color personalizado"
-            className="h-8 w-8 cursor-pointer border-2 border-paper-dim/40 bg-transparent p-0"
+            className="h-8 w-8 cursor-pointer rounded-control border border-paper-dim/40 bg-transparent p-0"
           />
         </div>
       </div>
@@ -365,7 +383,7 @@ export default function ProfileForm() {
             type="button"
             onClick={() => handleWeightUnitChange('kg')}
             className={
-              weightUnit === 'kg' ? 'btn-brutal-sm border-acid bg-acid text-on-accent' : 'btn-brutal-sm'
+              weightUnit === 'kg' ? 'btn-brutal-sm pill-selected' : 'btn-brutal-sm'
             }
           >
             Kilos (kg)
@@ -374,7 +392,7 @@ export default function ProfileForm() {
             type="button"
             onClick={() => handleWeightUnitChange('lb')}
             className={
-              weightUnit === 'lb' ? 'btn-brutal-sm border-acid bg-acid text-on-accent' : 'btn-brutal-sm'
+              weightUnit === 'lb' ? 'btn-brutal-sm pill-selected' : 'btn-brutal-sm'
             }
           >
             Libras (lb)
@@ -391,21 +409,21 @@ export default function ProfileForm() {
           <button
             type="button"
             onClick={() => handleSexChange('femenino')}
-            className={sex === 'femenino' ? 'btn-brutal-sm border-acid bg-acid text-on-accent' : 'btn-brutal-sm'}
+            className={sex === 'femenino' ? 'btn-brutal-sm pill-selected' : 'btn-brutal-sm'}
           >
             Femenino
           </button>
           <button
             type="button"
             onClick={() => handleSexChange('masculino')}
-            className={sex === 'masculino' ? 'btn-brutal-sm border-acid bg-acid text-on-accent' : 'btn-brutal-sm'}
+            className={sex === 'masculino' ? 'btn-brutal-sm pill-selected' : 'btn-brutal-sm'}
           >
             Masculino
           </button>
           <button
             type="button"
             onClick={() => handleSexChange(null)}
-            className={sex === null ? 'btn-brutal-sm border-acid bg-acid text-on-accent' : 'btn-brutal-sm'}
+            className={sex === null ? 'btn-brutal-sm pill-selected' : 'btn-brutal-sm'}
           >
             Sin especificar
           </button>
@@ -419,7 +437,7 @@ export default function ProfileForm() {
             type="button"
             onClick={() => handleTrainingLevelChange('principiante')}
             className={
-              trainingLevel === 'principiante' ? 'btn-brutal-sm border-acid bg-acid text-on-accent' : 'btn-brutal-sm'
+              trainingLevel === 'principiante' ? 'btn-brutal-sm pill-selected' : 'btn-brutal-sm'
             }
           >
             Principiante
@@ -428,7 +446,7 @@ export default function ProfileForm() {
             type="button"
             onClick={() => handleTrainingLevelChange('intermedio')}
             className={
-              trainingLevel === 'intermedio' ? 'btn-brutal-sm border-acid bg-acid text-on-accent' : 'btn-brutal-sm'
+              trainingLevel === 'intermedio' ? 'btn-brutal-sm pill-selected' : 'btn-brutal-sm'
             }
           >
             Intermedio
@@ -437,7 +455,7 @@ export default function ProfileForm() {
             type="button"
             onClick={() => handleTrainingLevelChange('avanzado')}
             className={
-              trainingLevel === 'avanzado' ? 'btn-brutal-sm border-acid bg-acid text-on-accent' : 'btn-brutal-sm'
+              trainingLevel === 'avanzado' ? 'btn-brutal-sm pill-selected' : 'btn-brutal-sm'
             }
           >
             Avanzado
@@ -446,7 +464,7 @@ export default function ProfileForm() {
             type="button"
             onClick={() => handleTrainingLevelChange(null)}
             className={
-              trainingLevel === null ? 'btn-brutal-sm border-acid bg-acid text-on-accent' : 'btn-brutal-sm'
+              trainingLevel === null ? 'btn-brutal-sm pill-selected' : 'btn-brutal-sm'
             }
           >
             Sin especificar
@@ -471,7 +489,7 @@ export default function ProfileForm() {
         aria-pressed={isTrainer}
         className={
           isTrainer
-            ? 'btn-brutal-sm self-start border-acid bg-acid text-on-accent'
+            ? 'btn-brutal-sm self-start pill-selected'
             : 'btn-brutal-sm self-start'
         }
       >
@@ -494,7 +512,7 @@ export default function ProfileForm() {
             aria-pressed={trainerVisible}
             className={
               trainerVisible
-                ? 'btn-brutal-sm self-start border-acid bg-acid text-on-accent'
+                ? 'btn-brutal-sm self-start pill-selected'
                 : 'btn-brutal-sm self-start'
             }
           >
@@ -508,7 +526,7 @@ export default function ProfileForm() {
                 onClick={() => toggleTrainerDiscipline(d.id)}
                 className={
                   trainerDisciplines.includes(d.id)
-                    ? 'btn-brutal-sm border-acid bg-acid text-on-accent'
+                    ? 'btn-brutal-sm pill-selected'
                     : 'btn-brutal-sm'
                 }
               >
@@ -601,9 +619,9 @@ export default function ProfileForm() {
           ))}
         </div>
 
-        {error && <p className="border-l-2 border-blood pl-3 font-mono text-sm text-blood">{error}</p>}
+        {error && <p className="border-l border-blood pl-3 font-mono text-sm text-blood">{error}</p>}
         {savedMessage && (
-          <p className="border-l-2 border-acid pl-3 font-mono text-sm text-acid">{savedMessage}</p>
+          <p className="border-l border-acid pl-3 font-mono text-sm text-acid">{savedMessage}</p>
         )}
 
         <button type="submit" disabled={saving} className="btn-brutal self-start">
@@ -614,7 +632,7 @@ export default function ProfileForm() {
       <button
         type="button"
         onClick={handleLogout}
-        className="self-start border-2 border-blood bg-transparent px-4 py-2 font-mono text-sm uppercase tracking-wide text-blood transition duration-150 hover:bg-blood hover:text-paper active:scale-95"
+        className="self-start rounded-control border border-blood bg-transparent px-4 py-2 font-mono text-sm uppercase tracking-wide text-blood transition duration-150 hover:bg-blood hover:text-paper active:scale-95"
       >
         Cerrar sesión
       </button>
@@ -623,12 +641,12 @@ export default function ProfileForm() {
         type="button"
         onClick={handleDeleteAccount}
         disabled={deletingAccount}
-        className="self-start border-2 border-blood bg-transparent px-4 py-2 font-mono text-sm uppercase tracking-wide text-blood transition duration-150 hover:bg-blood hover:text-paper active:scale-95 disabled:opacity-50"
+        className="self-start rounded-control border border-blood bg-transparent px-4 py-2 font-mono text-sm uppercase tracking-wide text-blood transition duration-150 hover:bg-blood hover:text-paper active:scale-95 disabled:opacity-50"
       >
         {deletingAccount ? 'Borrando...' : 'Borrar cuenta'}
       </button>
       {deleteError && (
-        <p className="border-l-2 border-blood pl-3 font-mono text-sm text-blood">{deleteError}</p>
+        <p className="border-l border-blood pl-3 font-mono text-sm text-blood">{deleteError}</p>
       )}
     </div>
   );
