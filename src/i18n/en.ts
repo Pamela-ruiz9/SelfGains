@@ -65,4 +65,34 @@ export const en: Dictionary = {
       submitting: 'Saving...',
     },
   },
+  home: {
+    pageTitle: 'Home',
+    eyebrow: 'Train. Log. Progress.',
+    headingLine1: 'YOUR BEST',
+    headingLine2: 'VERSION,',
+    headingLine3Acid1: 'SET',
+    headingLine3Middle: 'BY',
+    headingLine3Acid2: 'SET.',
+    subtitle:
+      'SelfGains combines beginner guides, habit tracking, and a real training log — sets, reps, weight, and RPE — in one place.',
+    ctaLog: 'Log a workout',
+    ctaProgress: 'See progress',
+    pillars: [
+      {
+        n: '01',
+        title: 'Learn to train',
+        body: 'Guides and ready-made plans for beginners. No guessing what to do at the gym.',
+      },
+      {
+        n: '02',
+        title: 'Build a better you',
+        body: 'Overall progress, habits, motivation. Training as part of something bigger.',
+      },
+      {
+        n: '03',
+        title: 'Workout logging',
+        body: 'Sets, reps, weight, progression, PRs. Real data on what you actually lifted.',
+      },
+    ],
+  },
 };

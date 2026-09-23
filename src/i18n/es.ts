@@ -63,6 +63,36 @@ export const es = {
       submitting: 'Guardando...',
     },
   },
+  home: {
+    pageTitle: 'Inicio',
+    eyebrow: 'Entrena. Registra. Progresa.',
+    headingLine1: 'TU MEJOR',
+    headingLine2: 'VERSIÓN,',
+    headingLine3Acid1: 'SERIE',
+    headingLine3Middle: 'POR',
+    headingLine3Acid2: 'SERIE.',
+    subtitle:
+      'SelfGains combina guías para principiantes, seguimiento de hábitos y un cuaderno de entrenamiento real — series, reps, peso y RPE — en un solo lugar.',
+    ctaLog: 'Registrar entrenamiento',
+    ctaProgress: 'Ver progreso',
+    pillars: [
+      {
+        n: '01',
+        title: 'Aprender a entrenar',
+        body: 'Guías y planes predefinidos para principiantes. Sin adivinar qué hacer en el gimnasio.',
+      },
+      {
+        n: '02',
+        title: 'Construir un mejor yo',
+        body: 'Progreso general, hábitos, motivación. El entrenamiento como parte de algo más grande.',
+      },
+      {
+        n: '03',
+        title: 'Registro de entrenamientos',
+        body: 'Series, reps, peso, progresión, PRs. Datos reales de lo que de verdad levantaste.',
+      },
+    ],
+  },
 };
 
 export type Dictionary = typeof es;

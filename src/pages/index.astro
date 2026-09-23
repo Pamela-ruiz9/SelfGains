@@ -1,56 +1,39 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { getDictionary } from '../i18n';
 
 const base = import.meta.env.BASE_URL;
-
-const pillars = [
-  {
-    n: '01',
-    title: 'Aprender a entrenar',
-    body: 'Guías y planes predefinidos para principiantes. Sin adivinar qué hacer en el gimnasio.',
-  },
-  {
-    n: '02',
-    title: 'Construir un mejor yo',
-    body: 'Progreso general, hábitos, motivación. El entrenamiento como parte de algo más grande.',
-  },
-  {
-    n: '03',
-    title: 'Registro de entrenamientos',
-    body: 'Series, reps, peso, progresión, PRs. Datos reales de lo que de verdad levantaste.',
-  },
-];
+const locale = Astro.currentLocale === 'en' ? 'en' : 'es';
+const t = getDictionary(locale).home;
 ---
-<BaseLayout title="Inicio">
+<BaseLayout title={t.pageTitle}>
   <section class="border-b border-paper-dim/30 pb-12">
-    <p class="reveal label-brutal mb-4 text-acid">Entrena. Registra. Progresa.</p>
+    <p class="reveal label-brutal mb-4 text-acid">{t.eyebrow}</p>
     <h1
       class="reveal font-display text-6xl leading-[0.95] text-paper sm:text-8xl"
       style="animation-delay: 60ms"
     >
-      TU MEJOR<br />
-      VERSIÓN,<br />
-      <span class="text-acid">SERIE</span> POR <span class="text-acid">SERIE</span>.
+      {t.headingLine1}<br />
+      {t.headingLine2}<br />
+      <span class="text-acid">{t.headingLine3Acid1}</span> {t.headingLine3Middle} <span class="text-acid">{t.headingLine3Acid2}</span>
     </h1>
     <p
       class="reveal mt-6 max-w-xl font-body text-lg text-paper-dim"
       style="animation-delay: 140ms"
     >
-      SelfGains combina guías para principiantes, seguimiento de hábitos y un
-      cuaderno de entrenamiento real — series, reps, peso y RPE — en un solo
-      lugar.
+      {t.subtitle}
     </p>
     <div class="reveal mt-8 flex flex-wrap gap-4" style="animation-delay: 200ms">
       <a href={`${base}registro/nuevo/`} class="btn-brutal">
-        Registrar entrenamiento
+        {t.ctaLog}
       </a>
-      <a href={`${base}progreso/`} class="btn-brutal-outline"> Ver progreso </a>
+      <a href={`${base}progreso/`} class="btn-brutal-outline"> {t.ctaProgress} </a>
     </div>
   </section>
 
   <section class="mt-12 grid gap-px overflow-hidden rounded-card border border-paper-dim/30 sm:grid-cols-3">
     {
-      pillars.map((p, i) => (
+      t.pillars.map((p, i) => (
         <div
           class="reveal border-paper-dim/30 bg-surface p-6 sm:border-l sm:first:border-l-0"
           style={`animation-delay: ${260 + i * 90}ms`}
