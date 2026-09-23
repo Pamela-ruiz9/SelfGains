@@ -17,6 +17,10 @@ const activities = defineCollection({
         })
       ),
       equipment: z.string(),
+      // Nombre de archivo en public/exercises/ (ej. "abductor-maquina.webp"),
+      // no una URL — la imagen vive en el repo, no se hotlinkea. Ver
+      // docs/superpowers/specs/2026-09-23-imagenes-ejercicios-design.md.
+      image: z.string().optional(),
       videoUrl: z.string().url().optional(),
     }),
     z.object({
