@@ -91,25 +91,26 @@
   }
 
   .btn-brutal {
-    @apply inline-flex items-center justify-center gap-2 border-2 border-paper bg-acid px-6 py-3
+    @apply inline-flex items-center justify-center gap-2 rounded-control bg-acid px-6 py-3
       font-display text-xl uppercase tracking-wide text-on-accent
-      shadow-[5px_5px_0_0_var(--color-paper)] transition-transform duration-150
-      hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[7px_7px_0_0_var(--color-paper)]
+      shadow-[0_6px_18px_-2px_color-mix(in_srgb,var(--color-acid)_35%,transparent)] transition-transform duration-150
+      hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[0_10px_26px_-4px_color-mix(in_srgb,var(--color-acid)_45%,transparent)]
       active:translate-x-0 active:translate-y-0 active:shadow-none
       disabled:pointer-events-none disabled:opacity-40;
+    background-image: var(--gradient-acid);
   }
 
   .btn-brutal-outline {
-    @apply inline-flex items-center justify-center gap-2 border-2 border-paper bg-transparent px-6 py-3
+    @apply inline-flex items-center justify-center gap-2 rounded-control border border-paper/30 bg-transparent px-6 py-3
       font-display text-xl uppercase tracking-wide text-paper
-      shadow-[5px_5px_0_0_var(--color-acid)] transition-transform duration-150
-      hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[7px_7px_0_0_var(--color-acid)]
+      shadow-[0_4px_14px_-2px_color-mix(in_srgb,var(--color-acid)_25%,transparent)] transition-transform duration-150
+      hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[0_8px_20px_-4px_color-mix(in_srgb,var(--color-acid)_35%,transparent)]
       active:translate-x-0 active:translate-y-0 active:shadow-none
       disabled:pointer-events-none disabled:opacity-40;
   }
 
   .btn-brutal-sm {
-    @apply inline-flex items-center justify-center border-2 border-paper bg-surface-raised px-4 py-2
+    @apply inline-flex items-center justify-center rounded-control border border-paper/30 bg-surface-raised px-4 py-2
       font-display text-base uppercase tracking-wide text-paper transition duration-150
       hover:bg-acid hover:text-on-accent active:scale-95
       disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-surface-raised disabled:hover:text-paper;
@@ -120,12 +121,43 @@
   }
 
   .card-brutal {
-    @apply border-2 border-paper-dim/40 bg-surface p-5;
+    @apply rounded-card border border-paper/10 bg-paper/5 p-5 backdrop-blur-md
+      shadow-[0_8px_30px_-14px_color-mix(in_srgb,var(--color-acid)_20%,transparent)];
+  }
+
+  /* El vidrio translúcido con blur se ve bien sobre el fondo oscuro pero
+     lavado/de bajo contraste sobre claro (confirmado con mockup durante el
+     brainstorm) — en tema claro .card-brutal pasa a fondo sólido opaco
+     (reusa el token --color-surface, ya correctamente tintado por el bloque
+     :root[data-theme="light"] de arriba) sin blur y con sombra suave normal. */
+  :root[data-theme='light'] .card-brutal {
+    background-color: var(--color-surface);
+    backdrop-filter: none;
+    box-shadow: 0 4px 16px rgb(0 0 0 / 0.08);
   }
 
   .input-brutal {
-    @apply w-full border-2 border-paper-dim/50 bg-surface px-3 py-2 font-mono text-paper
+    @apply w-full rounded-control border border-paper-dim/50 bg-surface px-3 py-2 font-mono text-paper
       placeholder:text-paper-dim/60 focus:border-acid focus:outline-none disabled:opacity-40;
+  }
+
+  /* Idioma compartido para "esta opción está seleccionada/activa y tiene
+     relleno de acento" — reemplaza el patrón repetido a mano
+     `border-acid bg-acid text-on-accent` que aparecía suelto en ~25 lugares
+     (toggles de tema/unidad/sexo/nivel, filtros, radios de rutina, etc.).
+     Con degradado activo, el relleno se pinta con el degradado en vez de
+     lisos — ver "Acento con degradado" más abajo. */
+  .pill-selected {
+    @apply border-acid bg-acid text-on-accent;
+    background-image: var(--gradient-acid);
+  }
+
+  /* Igual que .pill-selected pero sin el borde — para los pocos casos donde
+     el borde ya se maneja aparte (ej. el CTA circular de "Registrar" en
+     Nav, que tiene border-acid tanto activo como inactivo). */
+  .fill-acid-on {
+    @apply bg-acid text-on-accent;
+    background-image: var(--gradient-acid);
   }
 }
 
