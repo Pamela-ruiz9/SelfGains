@@ -93,7 +93,7 @@ export default function SignupForm() {
             className="input-brutal"
           />
         </label>
-        {error && <p className="border-l-2 border-blood pl-3 font-mono text-sm text-blood">{error}</p>}
+        {error && <p className="border-l border-blood pl-3 font-mono text-sm text-blood">{error}</p>}
         <button type="submit" disabled={loading} className="btn-brutal">
           {loading ? 'Creando cuenta...' : 'Crear cuenta'}
         </button>
