@@ -303,6 +303,110 @@ export const es = {
       saveErrorEdit: 'No se pudo guardar la rutina.',
     },
   },
+  registrar: {
+    pageTitle: 'Registrar entrenamiento',
+    eyebrow: 'Sesión de hoy',
+    heading: 'REGISTRAR ENTRENAMIENTO',
+    warmupTip:
+      'Calienta siempre antes de entrenar — unos minutos de movilidad y activación reducen el riesgo de lesión.',
+    picker: {
+      activityLabel: 'Actividad',
+      noActivities: 'Sin actividades en esta disciplina',
+    },
+    logger: {
+      loading: 'Cargando...',
+      notLoggedIn: {
+        prefix: 'Debes',
+        link: 'iniciar sesión',
+        suffix: 'para registrar un entrenamiento.',
+      },
+      dateLabel: 'Fecha',
+      // Split by which field component consumes it — SetFields reads `set`,
+      // SessionFields reads `session` — instead of one flat bucket mixing
+      // both, so each component's `t` type can point at just its slice.
+      fields: {
+        set: {
+          reps: 'Reps',
+          weight: 'Peso',
+          rpe: 'RPE',
+          rpeScale:
+            'Escala RPE: 10 = al fallo · 8–9 = 1–2 reps en reserva · 6–7 = varias reps en reserva · ≤4 = fácil',
+        },
+        session: {
+          distance: 'Distancia (m)',
+          duration: 'Tiempo (min)',
+          decreaseAriaLabel: 'Restar',
+          increaseAriaLabel: 'Sumar',
+        },
+      },
+      validation: {
+        repsInvalid: 'Las repeticiones deben ser un número mayor a 0.',
+        weightInvalid: 'El peso debe ser un número válido.',
+        rpeInvalid: 'El RPE debe ser un número entre 0 y 10.',
+        durationInvalid: 'La duración debe ser un número mayor a 0.',
+        distanceInvalid: 'La distancia debe ser un número mayor a 0.',
+        noActivitySelected: 'Elige una actividad.',
+        emptyWorkout: 'Agrega al menos una serie o sesión antes de guardar.',
+      },
+      suggestion: {
+        prefix: 'Sugerido',
+        progress: '(+2.5 kg — llevas 3 sesiones con RPE bajo)',
+        deload: '(-10% — llevas 3 sesiones al límite sin avanzar, toca bajar peso)',
+        same: '(igual que tu última sesión)',
+      },
+      card: {
+        done: '✓ Hecho',
+        goalLabel: 'Meta',
+        progressPrefix: 'llevas',
+        setsUnit: 'series',
+        addSet: '+ Agregar serie',
+        addSession: '+ Agregar sesión',
+      },
+      saved: {
+        success: 'Entrenamiento guardado correctamente.',
+        newPrPrefix: '¡Nuevo PR en',
+        newPrSuffixMark: '!',
+        saveError: 'No se pudo guardar el entrenamiento.',
+      },
+      today: {
+        titleToday: 'Hoy toca',
+        titleOtherDay: 'Ese día toca',
+        of: 'de',
+        completedLabel: 'completado',
+        completedPluralSuffix: 's',
+      },
+      copy: {
+        sectionTitle: 'Copiar un entrenamiento anterior',
+        dayLabel: 'Día a copiar',
+        chooseNoRoutine: 'Elige un día para copiar aquí (sin rutina asignada hoy)',
+        chooseWithRoutine: 'Elige un día para sumar otra disciplina hoy',
+        set: 'serie',
+        repsX: 'reps x',
+        distanceIn: 'm en',
+        min: 'min',
+        copySelected: 'Copiar seleccionados',
+      },
+      addActivity: {
+        sectionTitle: 'Agregar otra actividad',
+        submit: '+ Agregar',
+      },
+      table: {
+        exercise: 'Ejercicio',
+        set: 'Serie',
+        reps: 'Reps',
+        weight: 'Peso',
+        rpe: 'RPE',
+        remove: 'Quitar',
+        activity: 'Actividad',
+        distance: 'Distancia',
+        duration: 'Tiempo',
+      },
+      actions: {
+        saving: 'Guardando...',
+        submit: 'Guardar entrenamiento',
+      },
+    },
+  },
 };
 
 export type Dictionary = typeof es;
