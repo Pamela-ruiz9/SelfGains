@@ -699,7 +699,7 @@ export default function MuscleBody({ selectedMuscle, onSelectMuscle }: MuscleBod
   }
 
   return (
-    <div className="h-[420px] border-2 border-paper-dim/30 sm:h-[520px]">
+    <div className="h-[420px] overflow-hidden rounded-card border border-paper-dim/30 sm:h-[520px]">
       <Canvas camera={{ position: [0, 0.3, 4], fov: 38 }}>
         <ambientLight intensity={0.75} />
         <directionalLight position={[3, 4, 4]} intensity={1.4} color="#fff4e0" />

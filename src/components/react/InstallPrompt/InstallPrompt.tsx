@@ -53,7 +53,7 @@ export default function InstallPrompt({ variant }: Props) {
   }
 
   return (
-    <div className="reveal mb-6 flex items-center justify-between gap-3 border-2 border-acid bg-surface px-4 py-3">
+    <div className="reveal mb-6 flex items-center justify-between gap-3 rounded-card border border-acid bg-surface px-4 py-3">
       {action}
       <button
         type="button"
