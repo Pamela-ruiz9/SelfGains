@@ -1,7 +1,8 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { supabase } from '../../../lib/supabase';
+import type { Dictionary } from '../../../i18n';
 
-export default function ResetPasswordForm() {
+export default function ResetPasswordForm({ t }: { t: Dictionary['auth']['resetPassword'] }) {
   const [checked, setChecked] = useState(false);
   const [ready, setReady] = useState(false);
   const [password, setPassword] = useState('');
@@ -31,7 +32,7 @@ export default function ResetPasswordForm() {
     e.preventDefault();
     setError(null);
     if (password !== confirmPassword) {
-      setError('Las contraseñas no coinciden.');
+      setError(t.passwordMismatch);
       return;
     }
     setLoading(true);
@@ -45,19 +46,19 @@ export default function ResetPasswordForm() {
   }
 
   if (!checked) {
-    return <p className="font-mono text-sm text-paper-dim">Cargando...</p>;
+    return <p className="font-mono text-sm text-paper-dim">{t.loading}</p>;
   }
 
   if (done) {
     return (
       <div className="card-brutal max-w-sm border-acid">
         <p className="font-mono text-sm text-paper">
-          Contraseña actualizada. Ya puedes{' '}
+          {t.doneText}{' '}
           <a
             href={`${import.meta.env.BASE_URL}login/`}
             className="text-acid underline underline-offset-4 hover:text-paper"
           >
-            iniciar sesión
+            {t.doneLoginLink}
           </a>
           .
         </p>
@@ -68,12 +69,12 @@ export default function ResetPasswordForm() {
   if (!ready) {
     return (
       <p className="font-mono text-sm text-paper-dim">
-        Este link no es válido o ya venció. Solicita uno nuevo desde{' '}
+        {t.invalidLinkText}{' '}
         <a
           href={`${import.meta.env.BASE_URL}olvide-contrasena/`}
           className="text-acid underline underline-offset-4 hover:text-paper"
         >
-          recuperar contraseña
+          {t.invalidLinkLink}
         </a>
         .
       </p>
@@ -83,7 +84,7 @@ export default function ResetPasswordForm() {
   return (
     <form onSubmit={handleSubmit} className="flex max-w-sm flex-col gap-5">
       <label className="flex flex-col gap-2">
-        <span className="label-brutal">Nueva contraseña</span>
+        <span className="label-brutal">{t.newPassword}</span>
         <input
           type="password"
           value={password}
@@ -99,7 +100,7 @@ export default function ResetPasswordForm() {
         />
       </label>
       <label className="flex flex-col gap-2">
-        <span className="label-brutal">Confirmar contraseña</span>
+        <span className="label-brutal">{t.confirmPassword}</span>
         <input
           type="password"
           value={confirmPassword}
@@ -116,7 +117,7 @@ export default function ResetPasswordForm() {
       </label>
       {error && <p className="border-l border-blood pl-3 font-mono text-sm text-blood">{error}</p>}
       <button type="submit" disabled={loading} className="btn-brutal">
-        {loading ? 'Guardando...' : 'Guardar nueva contraseña'}
+        {loading ? t.submitting : t.submit}
       </button>
     </form>
   );
