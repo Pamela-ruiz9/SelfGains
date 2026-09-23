@@ -30,7 +30,7 @@ function iconSvg(id: string, strokeWidth = 2) {
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round">${ICONS[id]}</svg>`;
 }
 ---
-<header class="sticky top-0 z-50 border-b-2 border-paper bg-ink/95 backdrop-blur">
+<header class="sticky top-0 z-50 border-b border-paper/20 bg-ink/95 backdrop-blur">
   <nav class="mx-auto flex max-w-5xl items-center justify-between px-4 py-4 sm:px-6">
     <a href={base} class="group flex items-center gap-2">
       <svg viewBox="0 0 100 100" class="h-8 w-8 shrink-0 text-acid" aria-hidden="true">
@@ -55,9 +55,9 @@ function iconSvg(id: string, strokeWidth = 2) {
           <a
             href={link.href}
             class:list={[
-              "flex items-center gap-2 border-2 px-3 py-2 transition-colors duration-150",
+              "flex items-center gap-2 rounded-control border px-3 py-2 transition-colors duration-150",
               isActive(link.href)
-                ? "border-acid bg-acid text-on-accent"
+                ? "pill-selected"
                 : "border-transparent text-paper hover:border-paper-dim/50 hover:text-acid",
             ]}
           >
@@ -75,7 +75,7 @@ function iconSvg(id: string, strokeWidth = 2) {
 </header>
 
 <nav
-  class="fixed inset-x-0 bottom-0 z-50 border-t-2 border-paper bg-ink/95 backdrop-blur sm:hidden"
+  class="fixed inset-x-0 bottom-0 z-50 border-t border-paper/20 bg-ink/95 backdrop-blur sm:hidden"
   style="padding-bottom: env(safe-area-inset-bottom);"
 >
   <div class="grid grid-cols-5 items-end font-mono text-[10px] uppercase tracking-wide">
@@ -85,8 +85,8 @@ function iconSvg(id: string, strokeWidth = 2) {
           <a href={link.href} class="relative flex flex-col items-center gap-1 pb-1.5">
             <span
               class:list={[
-                "-mt-7 flex h-14 w-14 items-center justify-center rounded-full border-2 transition-colors duration-150",
-                isActive(link.href) ? "border-acid bg-acid text-on-accent" : "border-acid bg-ink text-acid",
+                "-mt-7 flex h-14 w-14 items-center justify-center rounded-full border border-acid shadow-[0_6px_18px_-2px_color-mix(in_srgb,var(--color-acid)_35%,transparent)] transition-colors duration-150",
+                isActive(link.href) ? "fill-acid-on" : "bg-ink text-acid",
               ]}
             >
               <span class="h-7 w-7" set:html={iconSvg("registrar", 2.5)} />
@@ -99,7 +99,7 @@ function iconSvg(id: string, strokeWidth = 2) {
           <a
             href={link.href}
             class:list={[
-              "flex flex-col items-center justify-center gap-1 border-t-2 py-2.5 text-center leading-tight transition-colors duration-150",
+              "flex flex-col items-center justify-center gap-1 border-t py-2.5 text-center leading-tight transition-colors duration-150",
               isActive(link.href) ? "border-acid text-acid" : "border-transparent text-paper-dim",
             ]}
           >
