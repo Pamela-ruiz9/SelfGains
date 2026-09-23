@@ -4,6 +4,7 @@ metricType: sets
 name: Encogimientos de hombros
 muscles: [trapecio]
 equipment: Mancuernas o barra
+image: encogimientos-hombros.webp
 ---
 
 De pie con el peso a los lados del cuerpo, eleva los hombros directo hacia las orejas sin flexionar los codos, aguanta un instante arriba y baja controlado.

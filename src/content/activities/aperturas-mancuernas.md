@@ -4,6 +4,7 @@ metricType: sets
 name: Aperturas con mancuernas
 muscles: [pecho]
 equipment: Mancuernas
+image: aperturas-mancuernas.webp
 ---
 
 Acostado en un banco con las mancuernas sobre el pecho y los codos ligeramente flexionados, abre los brazos en arco hasta sentir el estiramiento en el pecho, y vuelve a juntarlas arriba.
