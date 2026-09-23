@@ -149,5 +149,11 @@ export default function MapPicker({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [center[0], center[1], zoom]);
 
-  return <div ref={containerRef} style={{ height, width: '100%' }} className="border-2 border-paper-dim/40" />;
+  return (
+    <div
+      ref={containerRef}
+      style={{ height, width: '100%' }}
+      className="rounded-card overflow-hidden border border-paper-dim/40"
+    />
+  );
 }
