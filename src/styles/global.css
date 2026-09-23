@@ -10,13 +10,31 @@
   --color-surface-raised: #201e16;
   --color-paper: #f4f1e4;
   --color-paper-dim: #8c8a7c;
-  --color-acid: #d7ff3f;
+  --color-acid: #67d8f0;
   --color-acid-dim: #9fbf2a;
   --color-blood: #ff5a36;
-  /* Fixed dark color for text drawn on top of the (bright, user-chosen)
-     accent fill — unlike ink/paper/surface this does NOT flip with the
-     light/dark toggle, since accent fills stay bright in both themes. */
+  /* Color de texto dibujado ENCIMA de un relleno de acento (botones,
+     badges). Antes era fijo porque el acento siempre era brillante; ahora
+     puede variar por preset de degradado (ver theme.ts) — este valor es
+     solo el default estático previo a que el JS de personalización corra
+     (F3, que usa texto oscuro). */
   --color-on-accent: #0c0c0a;
+
+  /* Radios compartidos de la dirección "brutal-glass" (2026-09-22): --radius-X
+     en @theme genera automáticamente la utilidad rounded-X, igual que ya pasa
+     con --font-X y --color-X de arriba. */
+  --radius-card: 16px;
+  --radius-control: 10px;
+}
+
+/* Superficie de degradado del acento (ver "Acento con degradado" más abajo).
+   No es un token --theme porque no necesita generar una utilidad Tailwind —
+   se referencia directo como var(--gradient-acid) desde .pill-selected y
+   .fill-acid-on. "none" por default; theme.ts la pisa en runtime igual que
+   ya hace con --color-acid. El valor estático de acá ya es el degradado F3
+   (el nuevo default de la app) para que el primer paint sin JS coincida. */
+:root {
+  --gradient-acid: linear-gradient(135deg, #22d3ee, #3b82f6);
 }
 
 /* Light theme: same token names, redefined. ink/surface/paper/paper-dim
@@ -50,9 +68,8 @@
         rgb(215 255 63 / 0.1),
         transparent 40%
       ),
-      radial-gradient(circle at 100% 0%, rgb(255 90 54 / 0.08), transparent 35%),
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
-    background-repeat: no-repeat, no-repeat, repeat;
+      radial-gradient(circle at 100% 0%, rgb(255 90 54 / 0.08), transparent 35%);
+    background-repeat: no-repeat, no-repeat;
   }
 
   h1,
