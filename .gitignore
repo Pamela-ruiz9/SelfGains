@@ -7,3 +7,6 @@ supabase/.temp/
 
 # Brainstorming visual companion sessions
 .superpowers/
+
+# Local git worktrees (superpowers:using-git-worktrees)
+.worktrees/
