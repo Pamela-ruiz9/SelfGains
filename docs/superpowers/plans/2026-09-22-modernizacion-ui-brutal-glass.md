@@ -346,7 +346,7 @@ Pedido de Pam durante la ejecución (no estaba en el spec original): el acento p
 **Files:**
 - Modify: `src/lib/theme.ts` (reescritura completa)
 - Modify: `src/layouts/BaseLayout.astro:33-52` (script inline de tema)
-- Modify: `supabase/schema.sql:121` (default de la columna, no es una migración — ver nota)
+- Modify: `supabase/schema.sql:121` (default de la columna — ver nota, corregida tras la revisión final: sí es un código alcanzable)
 
 - [ ] **Step 1: Reescribir `theme.ts` con los 3 presets, mantiene compatibilidad con hex sólidos ya guardados**
 
@@ -511,7 +511,7 @@ Por:
     </script>
 ```
 
-- [ ] **Step 3: Actualizar el default de la columna en `supabase/schema.sql` (documentación del esquema — no es una migración real: la app nunca depende de este default, siempre manda un valor explícito desde el estado de React; es solo para que quien lea el esquema no se confunda con un default viejo)**
+- [ ] **Step 3: Actualizar el default de la columna en `supabase/schema.sql` (corrección post-revisión final: esto SÍ es código alcanzable, no solo documentación — `upsertProfile()` en `src/lib/profile.ts` hace un upsert parcial con `{ user_id, ...changes }`; si la primera escritura de un usuario nuevo no incluye `accent_color` — ej. tocar el toggle de sexo/nivel antes que el picker de acento — la fila se crea usando este default. Dejarlo en `'#d7ff3f'` viejo habría causado un flash visible verde-ácido→degradado-F3 la primera vez que Perfil carga ese perfil recién creado; cambiarlo a `'f3'` evita ese flash y no es opcional)**
 
 Reemplazar:
 
