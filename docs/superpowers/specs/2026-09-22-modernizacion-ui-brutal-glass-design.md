@@ -44,7 +44,10 @@ El efecto vidrio (fondo translúcido + `backdrop-blur`) se abandona en modo clar
 
 - **`Nav.astro`**: `border-b-2 border-paper` del header → `border-b border-paper/10`; los links activos (`border-acid bg-acid`) y el botón circular de "Registrar" en la nav inferior pasan de bordes 2px sólidos a radio + glow, mismo criterio que `.btn-brutal`.
 - **`Avatar.tsx`**: ya es circular (`rounded-full`) — sin cambio de forma. El borde `border-2 border-paper-dim/40` pasa a 1px translúcido para consistencia con el resto del sistema.
-- **`MapPicker.tsx`**: el pin de Leaflet (`background:var(--color-acid); border:2px solid var(--color-ink)`) es un elemento SVG/CSS inline, no una clase Tailwind — se ajusta el borde a 1px ahí también por consistencia visual, sin tocar la lógica de posicionamiento/drag del mapa.
+- **`MapPicker.tsx`**: el contenedor del mapa (`border-2 border-paper-dim/40`) se ajusta a 1px + `rounded-card`, sin tocar la lógica de posicionamiento/drag del mapa.
+- **`CollapsibleSection.tsx`**: su estado cerrado replica a mano el estilo de `.btn-brutal-sm` (el propio comentario del archivo lo dice) — recibe el mismo tratamiento de borde/radio que esa clase.
+
+**Nota (agregada durante la planificación de implementación):** un relevamiento más exhaustivo del código, hecho al escribir el plan, encontró que el patrón `border-2`/`border-b-2`/`border-t-2`/`border-l-2`/`border-t-4` hardcodeado aparece en ~25 archivos más además de los listados arriba (mensajes de error con acento de color, botones chicos de acción que replican `.btn-brutal-sm` a mano, contenedores tipo tarjeta, divisores de secciones). El principio de este documento ("el borde deja de ser el elemento que define la forma", 2px → 1px en todos lados) se aplica igual de forma mecánica a todos ellos; el detalle línea por línea de cada archivo vive en `docs/superpowers/plans/2026-09-22-modernizacion-ui-brutal-glass.md` en vez de repetirse acá.
 
 ## 5. Qué NO cambia (explícitamente fuera de esta ronda)
 
