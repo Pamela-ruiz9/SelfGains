@@ -18,7 +18,7 @@ Qué cambia: forma de bordes/esquinas, tratamiento de sombra, textura de fondo.
 
 ## 1. Tokens nuevos/modificados (`src/styles/global.css`)
 
-- **Radio**: tres tokens nuevos — `--radius-card: 16px` (tarjetas, contenedores), `--radius-control: 10px` (botones, inputs, pills de nav activo), `--radius-badge: 999px` (elementos ya circulares, como el badge de entrenador en `Avatar.tsx` — sin cambio de forma, solo se nombra el token).
+- **Radio**: dos tokens nuevos — `--radius-card: 16px` (tarjetas, contenedores), `--radius-control: 10px` (botones, inputs, pills de nav activo). Los elementos ya circulares (badge de entrenador en `Avatar.tsx`, CTA de "Registrar" en Nav) no necesitan un tercer token — siguen usando `rounded-full`, que ya da el mismo resultado.
 - **Bordes**: pasan de `border-2` sólido a `border` de 1px con color semitransparente (`rgb(var(--color-paper) / 0.10)` a `0.12` según contraste necesario) — el borde deja de ser el elemento que define la forma; ahora lo hacen el radio + el fondo translúcido.
 - **Sombras**: se elimina el patrón `shadow-[Npx_Npx_0_0_var(--color-paper)]` (offset duro, sin blur) de todos los usos, sin excepción — incluido el botón circular grande de "Registrar" en la barra inferior. Se reemplaza por sombras con blur:
   - Elementos con acento (botones primarios, nav activo): `0 6px 20px rgb(var(--color-acid) / 0.25)` a `0.35` según tamaño.
@@ -56,9 +56,33 @@ El efecto vidrio (fondo translúcido + `backdrop-blur`) se abandona en modo clar
 - Navegación: rutas, links, comportamiento del bottom nav en mobile.
 - Copy en español — ningún texto cambia.
 - Lógica de negocio, llamadas a Supabase, RLS, nada de `src/lib/`.
-- Paleta de colores base (ink/surface/paper/acid/blood) y tipografía (familias, tamaños, tracking).
+- Paleta de colores base (ink/surface/paper/blood) y tipografía (familias, tamaños, tracking). El acento (`acid`) sí cambia — ver §6, agregada durante la ejecución.
 - El toggle de tema claro/oscuro y la preferencia de unidad de peso — sin cambios de comportamiento, solo su apariencia sigue las reglas de arriba.
+
+## 6. Acento con degradado personalizable (agregado durante la ejecución, no estaba en el pedido original)
+
+Pedido de Pam mid-flight: "que cada acento tenga degradado", con 3 opciones de paleta curadas por mí a partir de mockups en el brainstorm, F3 predeterminado, y que convivan con el selector de color sólido libre que ya existía en Perfil (confirmado explícitamente: no lo reemplazan).
+
+**Los 3 presets** (elegidos con mockups reales — nav + tarjeta + botón — durante el brainstorm):
+- **F1** — azul a morado (`#4f9dfe` → `#9b5cf6`), representativo sólido `#8fb4fb`.
+- **F2** — morado a magenta (`#8b5cf6` → `#ec4899`), representativo sólido `#c98cf0`, texto claro sobre el relleno (es el único que lo necesita para contraste).
+- **F3** (default) — cian a azul (`#22d3ee` → `#3b82f6`), representativo sólido `#67d8f0`.
+
+**Por qué un color "representativo sólido" además del degradado:** un `linear-gradient()` solo se puede pintar en `background-image` — no existe en CSS una forma de aplicar un degradado a `color` (texto) o `border-color`. Por eso cada preset define dos valores: el degradado real (para rellenos: botones, badges, nav activo, barra de progreso) y un color sólido representativo (para todo lo que hoy usa `text-acid`/`border-acid`, que sigue funcionando exactamente igual sin tocar esos archivos).
+
+**Mecanismo técnico:** dos variables CSS controladas por `theme.ts`/`BaseLayout.astro`, igual que ya se hacía con `--color-acid` (inline style en `documentElement`, cacheado en `localStorage`, mas la fuente de verdad real es `profiles.accent_color` en Supabase):
+- `--color-acid` — el sólido representativo (o el hex libre elegido, sin cambios respecto a antes).
+- `--gradient-acid` — el `linear-gradient()` del preset, o `"none"` en modo color sólido.
+- `--color-on-accent` — antes fijo, ahora varía por preset (F2 necesita texto claro).
+
+Dos clases compartidas nuevas en `global.css` (`.pill-selected` para "seleccionado, con borde"; `.fill-acid-on` para "relleno con texto, sin borde propio") capturan el patrón `border-acid bg-acid text-on-accent` que aparecía repetido a mano en ~27 lugares de la app (toggles de tema, unidad de peso, sexo, nivel; filtros de radio/disciplina; radios de rutina compartida) — con las clases compartidas, ese relleno muestra el degradado automáticamente en todos esos lugares sin un cambio por archivo.
+
+Los glows con blur de §1/§2 (botones, tarjetas, Nav) pasan de un `rgba()` fijo con el verde ácido original a `color-mix(in srgb, var(--color-acid) N%, transparent)` — así el glow sigue al acento elegido, sea uno de los 3 presets o cualquier color libre.
+
+**Explícitamente fuera de esta ronda:** el favicon (`public/favicon.svg`) y el color activo del explorador muscular 3D (`MuscleBody.tsx`'s `COLOR_ACTIVE`, un material de Three.js) quedan con el verde ácido original fijo — son casos que no leen `--color-acid` en runtime hoy, y engancharlos es trabajo aparte no pedido.
+
+**Detalle línea por línea:** `docs/superpowers/plans/2026-09-22-modernizacion-ui-brutal-glass.md`, Task 2 (fundación), Task 2b (`theme.ts`/`BaseLayout.astro`/schema), Task 9 (UI de Perfil), y los steps agregados a Tasks 3/4/6/7/8b/10.
 
 ## Verificación
 
-Sin suite automatizada, por convención del proyecto. `npm run build && npx tsc --noEmit` limpios (ignorando el error preexistente ya documentado en `ProgressList.tsx`, no relacionado). Recorrido visual con Playwright por las pantallas clave — Nav (mobile y desktop), Rutinas, Registrar, Progreso, Perfil, login/registro/recuperar contraseña — en ambos temas claro y oscuro, confirmando visualmente que: no quedan sombras offset duras ni bordes de 2px en ningún lugar, el modo oscuro muestra el efecto vidrio en tarjetas, el modo claro usa tarjetas sólidas sin blur, y ningún flujo funcional (login, crear rutina, registrar set, editar perfil) se rompió.
+Sin suite automatizada, por convención del proyecto. `npm run build && npx tsc --noEmit` limpios (ignorando el error preexistente ya documentado en `ProgressList.tsx`, no relacionado). Recorrido visual con Playwright por las pantallas clave — Nav (mobile y desktop), Rutinas, Registrar, Progreso, Perfil, login/registro/recuperar contraseña — en ambos temas claro y oscuro, confirmando visualmente que: no quedan sombras offset duras ni bordes de 2px en ningún lugar, el modo oscuro muestra el efecto vidrio en tarjetas, el modo claro usa tarjetas sólidas sin blur, y ningún flujo funcional (login, crear rutina, registrar set, editar perfil) se rompió. Además, en Perfil: los 3 presets de degradado y el selector de color libre conviven sin pisarse, el relleno de los toggles/botones de toda la app sigue al preset elegido, F2 muestra texto claro (los otros dos oscuro), y el acento elegido persiste tanto localmente (recarga de página) como en Supabase (cerrar sesión y volver a entrar).
