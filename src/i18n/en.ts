@@ -406,4 +406,87 @@ export const en: Dictionary = {
       },
     },
   },
+  progreso: {
+    pageTitle: 'Progress',
+    kicker: 'Your log',
+    heading: 'HISTORY',
+    list: {
+      loading: 'Loading...',
+      notLoggedIn: {
+        prefix: 'You must',
+        link: 'log in',
+        suffix: 'to see your history.',
+      },
+      loadError: 'Could not load the history.',
+      empty: "You don't have any workouts or measurements logged yet.",
+      sections: {
+        measurements: 'Body measurements',
+        discipline: 'Summary by discipline',
+        workouts: 'Workouts',
+      },
+      combateNoRecords:
+        "Combat doesn't have pace records — only total time is logged (you can see it above).",
+    },
+    measurementsSummary: {
+      title: 'Your measurements',
+      fields: {
+        weight: 'Weight',
+        waist: 'Waist',
+        hip: 'Hips',
+        arm: 'Arm',
+        leg: 'Leg',
+      },
+    },
+    disciplineSummary: {
+      title: 'Disciplines you practice',
+      sessionCountSingular: 'day trained',
+      sessionCountPlural: 'days trained',
+      totalSets: 'total sets',
+      totalMinutes: 'total min',
+    },
+    prGrid: {
+      title: 'Personal records',
+    },
+    progressChart: {
+      exerciseLabel: 'Exercise',
+      volume: 'Volume',
+      maxWeight: 'Max weight',
+      estimated1RM: 'Estimated 1RM',
+    },
+    cardioPrGrid: {
+      title: 'Cardio records',
+    },
+    cardioProgressChart: {
+      activityLabel: 'Activity',
+      paceHint: 'Pace — lower is faster',
+    },
+    workoutHistory: {
+      empty: 'No workouts for this discipline yet.',
+      deleteDay: 'Delete day',
+      deleteDayConfirm: "Delete this whole day's workout? This action cannot be undone.",
+      deleteWorkoutError: 'Could not delete the workout.',
+      actions: {
+        edit: 'Edit',
+        delete: 'Delete',
+        save: 'Save',
+        saving: 'Saving...',
+        cancel: 'Cancel',
+      },
+      set: {
+        seriesLabel: 'set',
+        repsX: 'reps x',
+        rpeLabel: 'RPE',
+        deleteConfirm: 'Delete this set?',
+        saveError: 'Could not save the change.',
+        deleteError: 'Could not delete the set.',
+      },
+      session: {
+        metersIn: 'm in',
+        min: 'min',
+        deleteConfirm: 'Delete this session?',
+        saveError: 'Could not save the change.',
+        deleteError: 'Could not delete the session.',
+      },
+    },
+  },
 };

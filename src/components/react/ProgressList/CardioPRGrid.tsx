@@ -2,6 +2,7 @@ import { Fragment, type ReactNode } from 'react';
 import { DISCIPLINES, type ActivityOption } from '../ActivityPicker/ActivityPicker';
 import { fullActivityName, kmToMeters } from '../../../lib/activities';
 import { formatPace, groupCardioPRsByDiscipline, type CardioPR } from '../../../lib/prs';
+import type { Dictionary } from '../../../i18n/es';
 
 interface Props {
   prs: CardioPR[];
@@ -9,6 +10,7 @@ interface Props {
   onSelectActivity: (id: string) => void;
   selectedActivityId: string | null;
   chart: ReactNode;
+  t: Dictionary['progreso']['cardioPrGrid'];
 }
 
 export default function CardioPRGrid({
@@ -17,6 +19,7 @@ export default function CardioPRGrid({
   onSelectActivity,
   selectedActivityId,
   chart,
+  t,
 }: Props) {
   const nameById = new Map(activities.map((a) => [a.id, fullActivityName(a)]));
   const labelByDiscipline = new Map(DISCIPLINES.map((d) => [d.id as string, d.label]));
@@ -26,7 +29,7 @@ export default function CardioPRGrid({
 
   return (
     <div className="flex flex-col gap-6">
-      <p className="label-brutal text-acid">Récords de cardio</p>
+      <p className="label-brutal text-acid">{t.title}</p>
       {groups.map((group) => (
         <div key={group.discipline} className="flex flex-col gap-3">
           <p className="label-brutal">{labelByDiscipline.get(group.discipline) ?? group.discipline}</p>

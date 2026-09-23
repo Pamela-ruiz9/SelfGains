@@ -407,6 +407,90 @@ export const es = {
       },
     },
   },
+  progreso: {
+    pageTitle: 'Progreso',
+    kicker: 'Tu bitácora',
+    heading: 'HISTORIAL',
+    list: {
+      loading: 'Cargando...',
+      notLoggedIn: {
+        prefix: 'Debes',
+        link: 'iniciar sesión',
+        suffix: 'para ver tu historial.',
+      },
+      loadError: 'No se pudo cargar el historial.',
+      empty: 'Todavía no tienes entrenamientos ni medidas registradas.',
+      sections: {
+        measurements: 'Medidas corporales',
+        discipline: 'Resumen por disciplina',
+        workouts: 'Entrenamientos',
+      },
+      combateNoRecords:
+        'Combate no tiene récords de ritmo — solo se registra el tiempo total (ya lo ves arriba).',
+    },
+    measurementsSummary: {
+      title: 'Tus medidas',
+      fields: {
+        weight: 'Peso',
+        waist: 'Cintura',
+        hip: 'Cadera',
+        arm: 'Brazo',
+        leg: 'Pierna',
+      },
+    },
+    disciplineSummary: {
+      title: 'Disciplinas que practicás',
+      sessionCountSingular: 'día entrenado',
+      sessionCountPlural: 'días entrenados',
+      totalSets: 'series totales',
+      totalMinutes: 'min totales',
+    },
+    prGrid: {
+      title: 'Récords personales',
+    },
+    progressChart: {
+      exerciseLabel: 'Ejercicio',
+      volume: 'Volumen',
+      maxWeight: 'Peso máximo',
+      estimated1RM: '1RM estimado',
+    },
+    cardioPrGrid: {
+      title: 'Récords de cardio',
+    },
+    cardioProgressChart: {
+      activityLabel: 'Actividad',
+      paceHint: 'Ritmo — más abajo es más rápido',
+    },
+    workoutHistory: {
+      empty: 'No hay entrenamientos de esta disciplina todavía.',
+      deleteDay: 'Eliminar día',
+      deleteDayConfirm: '¿Eliminar todo el entrenamiento de este día? Esta acción no se puede deshacer.',
+      deleteWorkoutError: 'No se pudo eliminar el entrenamiento.',
+      // Compartidas entre SetRow y SessionRow — mismos botones, mismo texto.
+      actions: {
+        edit: 'Editar',
+        delete: 'Eliminar',
+        save: 'Guardar',
+        saving: 'Guardando...',
+        cancel: 'Cancelar',
+      },
+      set: {
+        seriesLabel: 'serie',
+        repsX: 'reps x',
+        rpeLabel: 'RPE',
+        deleteConfirm: '¿Eliminar esta serie?',
+        saveError: 'No se pudo guardar el cambio.',
+        deleteError: 'No se pudo eliminar la serie.',
+      },
+      session: {
+        metersIn: 'm en',
+        min: 'min',
+        deleteConfirm: '¿Eliminar esta sesión?',
+        saveError: 'No se pudo guardar el cambio.',
+        deleteError: 'No se pudo eliminar la sesión.',
+      },
+    },
+  },
 };
 
 export type Dictionary = typeof es;

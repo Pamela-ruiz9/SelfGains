@@ -12,6 +12,7 @@ import {
 } from 'recharts';
 import type { ProgressPoint } from '../../../lib/prs';
 import { getWeightUnit, kgToDisplay } from '../../../lib/weightUnit';
+import type { Dictionary } from '../../../i18n/es';
 
 interface ExerciseInfo {
   id: string;
@@ -23,6 +24,7 @@ interface Props {
   points: ProgressPoint[];
   exercises: ExerciseInfo[];
   onSelectExercise: (id: string) => void;
+  t: Dictionary['progreso']['progressChart'];
 }
 
 function ChartTooltip({
@@ -49,7 +51,7 @@ function ChartTooltip({
   );
 }
 
-export default function ProgressChart({ exerciseId, points, exercises, onSelectExercise }: Props) {
+export default function ProgressChart({ exerciseId, points, exercises, onSelectExercise, t }: Props) {
   const [weightUnit] = useState(() => getWeightUnit());
   const exerciseName = exercises.find((e) => e.id === exerciseId)?.name ?? exerciseId;
   const displayPoints = points.map((p) => ({
@@ -62,7 +64,7 @@ export default function ProgressChart({ exerciseId, points, exercises, onSelectE
   return (
     <div className="flex flex-col gap-4">
       <label className="flex max-w-xs flex-col gap-2">
-        <span className="label-brutal">Ejercicio</span>
+        <span className="label-brutal">{t.exerciseLabel}</span>
         <select
           value={exerciseId}
           onChange={(e) => onSelectExercise(e.target.value)}
@@ -104,7 +106,7 @@ export default function ProgressChart({ exerciseId, points, exercises, onSelectE
               <Bar
                 yAxisId="volume"
                 dataKey="volume"
-                name="Volumen"
+                name={t.volume}
                 fill="var(--color-paper-dim)"
                 fillOpacity={0.35}
               />
@@ -112,7 +114,7 @@ export default function ProgressChart({ exerciseId, points, exercises, onSelectE
                 yAxisId="weight"
                 type="monotone"
                 dataKey="maxWeight"
-                name="Peso máximo"
+                name={t.maxWeight}
                 stroke="var(--color-acid)"
                 strokeWidth={2}
                 dot={{ r: 4, fill: 'var(--color-acid)' }}
@@ -122,7 +124,7 @@ export default function ProgressChart({ exerciseId, points, exercises, onSelectE
                 yAxisId="weight"
                 type="monotone"
                 dataKey="estimated1RM"
-                name="1RM estimado"
+                name={t.estimated1RM}
                 stroke="var(--color-blood)"
                 strokeWidth={2}
                 strokeDasharray="4 4"
