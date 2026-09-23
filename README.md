@@ -97,6 +97,10 @@ configuradas en Settings → Secrets and variables → Actions → Variables.
       `docs/agents/offline-sync-hardening-status.md`)
 - [x] Rol de entrenador + conexiones entre usuarios, asignación de rutinas
       (detalle en `docs/agents/rol-entrenador-status.md`)
+- [x] Imágenes de referencia para los ejercicios de gym (50 de 52, estáticas,
+      curadas desde `free-exercise-db` — dominio público, guardadas en el
+      repo — detalle y casos sin match en
+      `docs/agents/imagenes-ejercicios-curacion.md`)
 - [ ] Suite de tests automatizada — toda la verificación hoy es manual vía
       Playwright contra Supabase real (ver
       `docs/agents/notas-de-entorno-y-lecciones.md`)
