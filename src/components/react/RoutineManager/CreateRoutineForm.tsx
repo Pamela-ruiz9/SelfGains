@@ -4,7 +4,6 @@ import {
   entryTarget,
   targetSummary,
   WEEKDAYS,
-  weekdayLabel,
   type RoutineActivityTarget,
   type RoutineDayEntry,
   type RoutineDays,
@@ -12,6 +11,7 @@ import {
 import { createRoutine, updateRoutine } from '../../../lib/routines';
 import { fullActivityName, metersToKm, requiresDistance } from '../../../lib/activities';
 import type { Routine } from '../../../types/db';
+import type { Dictionary } from '../../../i18n/es';
 import ActivityPicker, { type ActivityOption } from '../ActivityPicker/ActivityPicker';
 
 interface Props {
@@ -19,6 +19,7 @@ interface Props {
   editingRoutine?: Routine | null;
   onSaved: () => void;
   onCancelEdit?: () => void;
+  t: Dictionary['rutinas'];
 }
 
 function emptyDays(): RoutineDays {
@@ -39,12 +40,14 @@ function DayActivityPicker({
   onAdd,
   onRemove,
   onMove,
+  t,
 }: {
   activities: ActivityOption[];
   dayEntries: RoutineDayEntry[];
   onAdd: (target: RoutineActivityTarget) => void;
   onRemove: (activityId: string) => void;
   onMove: (activityId: string, direction: -1 | 1) => void;
+  t: Dictionary['rutinas']['create'];
 }) {
   const [selected, setSelected] = useState<ActivityOption | null>(null);
   const [targetSets, setTargetSets] = useState('');
@@ -56,7 +59,7 @@ function DayActivityPicker({
   function handleAdd() {
     if (!selected) return;
     if (dayEntries.some((entry) => entryActivityId(entry) === selected.id)) {
-      setDuplicateError(`"${selected.name}" ya está agregado este día.`);
+      setDuplicateError(`"${selected.name}" ${t.duplicateActivitySuffix}`);
       return;
     }
     const entry: RoutineActivityTarget = { activityId: selected.id };
@@ -89,7 +92,7 @@ function DayActivityPicker({
         <div className="grid grid-cols-2 gap-2">
           <input
             type="number"
-            placeholder="Series"
+            placeholder={t.placeholderSets}
             value={targetSets}
             onChange={(e) => setTargetSets(e.target.value)}
             min={0}
@@ -97,7 +100,7 @@ function DayActivityPicker({
           />
           <input
             type="number"
-            placeholder="Reps"
+            placeholder={t.placeholderReps}
             value={targetReps}
             onChange={(e) => setTargetReps(e.target.value)}
             min={0}
@@ -108,7 +111,7 @@ function DayActivityPicker({
       {selected?.metricType === 'session' && requiresDistance(selected) && (
         <input
           type="number"
-          placeholder="Distancia (m)"
+          placeholder={t.placeholderDistance}
           value={targetDistance}
           onChange={(e) => setTargetDistance(e.target.value)}
           min={0}
@@ -122,7 +125,7 @@ function DayActivityPicker({
         disabled={!selected}
         className="btn-brutal-sm self-start"
       >
-        + Agregar
+        {t.add}
       </button>
       {duplicateError && <p className="font-mono text-xs text-blood">{duplicateError}</p>}
       {dayEntries.length > 0 && (
@@ -143,7 +146,7 @@ function DayActivityPicker({
                     type="button"
                     onClick={() => onMove(activityId, -1)}
                     disabled={index === 0}
-                    aria-label="Mover arriba"
+                    aria-label={t.moveUp}
                     className="flex h-7 w-7 items-center justify-center rounded-control border border-paper-dim/60 text-acid transition duration-150 hover:border-paper hover:text-paper active:scale-95 disabled:pointer-events-none disabled:opacity-30"
                   >
                     ↑
@@ -152,7 +155,7 @@ function DayActivityPicker({
                     type="button"
                     onClick={() => onMove(activityId, 1)}
                     disabled={index === dayEntries.length - 1}
-                    aria-label="Mover abajo"
+                    aria-label={t.moveDown}
                     className="flex h-7 w-7 items-center justify-center rounded-control border border-paper-dim/60 text-acid transition duration-150 hover:border-paper hover:text-paper active:scale-95 disabled:pointer-events-none disabled:opacity-30"
                   >
                     ↓
@@ -162,7 +165,7 @@ function DayActivityPicker({
                     onClick={() => onRemove(activityId)}
                     className="rounded-control border border-blood bg-transparent px-2 py-1 font-mono text-xs uppercase tracking-wide text-blood transition duration-150 hover:bg-blood hover:text-paper active:scale-95"
                   >
-                    Quitar
+                    {t.remove}
                   </button>
                 </span>
               </li>
@@ -174,7 +177,13 @@ function DayActivityPicker({
   );
 }
 
-export default function CreateRoutineForm({ activities, editingRoutine, onSaved, onCancelEdit }: Props) {
+export default function CreateRoutineForm({
+  activities,
+  editingRoutine,
+  onSaved,
+  onCancelEdit,
+  t,
+}: Props) {
   const [name, setName] = useState(editingRoutine?.name ?? '');
   const [days, setDays] = useState<RoutineDays>(editingRoutine?.days ?? emptyDays());
   const [saving, setSaving] = useState(false);
@@ -217,7 +226,7 @@ export default function CreateRoutineForm({ activities, editingRoutine, onSaved,
     setError(null);
 
     if (!name.trim()) {
-      setError('Ponele un nombre a la rutina.');
+      setError(t.create.nameRequired);
       return;
     }
 
@@ -235,7 +244,9 @@ export default function CreateRoutineForm({ activities, editingRoutine, onSaved,
       setError(
         err instanceof Error
           ? err.message
-          : `No se pudo ${editingRoutine ? 'guardar' : 'crear'} la rutina.`
+          : editingRoutine
+            ? t.create.saveErrorEdit
+            : t.create.saveErrorCreate
       );
     } finally {
       setSaving(false);
@@ -244,9 +255,11 @@ export default function CreateRoutineForm({ activities, editingRoutine, onSaved,
 
   return (
     <form onSubmit={handleSubmit} className="card-brutal flex flex-col gap-4">
-      <p className="label-brutal text-acid">{editingRoutine ? 'Editar rutina' : 'Crear rutina'}</p>
+      <p className="label-brutal text-acid">
+        {editingRoutine ? t.create.sectionTitleEdit : t.create.sectionTitleCreate}
+      </p>
       <label className="flex flex-col gap-2">
-        <span className="label-brutal">Nombre</span>
+        <span className="label-brutal">{t.create.name}</span>
         <input
           type="text"
           value={name}
@@ -257,13 +270,14 @@ export default function CreateRoutineForm({ activities, editingRoutine, onSaved,
       <div className="grid gap-6 sm:grid-cols-2">
         {WEEKDAYS.map((day) => (
           <div key={day} className="flex flex-col gap-2">
-            <span className="label-brutal">{weekdayLabel(day)}</span>
+            <span className="label-brutal">{t.days[day]}</span>
             <DayActivityPicker
               activities={activities}
               dayEntries={days[day]}
               onAdd={(target) => handleAddToDay(day, target)}
               onRemove={(activityId) => handleRemoveFromDay(day, activityId)}
               onMove={(activityId, direction) => handleMoveInDay(day, activityId, direction)}
+              t={t.create}
             />
           </div>
         ))}
@@ -271,7 +285,7 @@ export default function CreateRoutineForm({ activities, editingRoutine, onSaved,
       {error && <p className="border-l border-blood pl-3 font-mono text-sm text-blood">{error}</p>}
       <div className="flex gap-3">
         <button type="submit" disabled={saving} className="btn-brutal self-start">
-          {saving ? 'Guardando...' : editingRoutine ? 'Guardar cambios' : 'Guardar rutina'}
+          {saving ? t.create.saving : editingRoutine ? t.create.saveChanges : t.create.saveNew}
         </button>
         {editingRoutine && (
           <button
@@ -279,7 +293,7 @@ export default function CreateRoutineForm({ activities, editingRoutine, onSaved,
             onClick={onCancelEdit}
             className="btn-brutal-outline self-start"
           >
-            Cancelar
+            {t.create.cancel}
           </button>
         )}
       </div>

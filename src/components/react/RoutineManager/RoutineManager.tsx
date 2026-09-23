@@ -15,6 +15,7 @@ import { weekAdherence } from '../../../lib/adherence';
 import { entryActivityId, WEEKDAYS, type RoutineDays } from '../../../lib/weekdays';
 import { getMyProfile } from '../../../lib/profile';
 import type { ActiveRoutine, Routine } from '../../../types/db';
+import type { Dictionary } from '../../../i18n/es';
 import type { ActivityOption } from '../ActivityPicker/ActivityPicker';
 import RoutineList, { type RoutineOption } from './RoutineList';
 import CreateRoutineForm from './CreateRoutineForm';
@@ -63,9 +64,10 @@ interface PredefinedRoutine {
 interface Props {
   predefinedRoutines: PredefinedRoutine[];
   activities: ActivityOption[];
+  t: Dictionary['rutinas'];
 }
 
-export default function RoutineManager({ predefinedRoutines, activities }: Props) {
+export default function RoutineManager({ predefinedRoutines, activities, t }: Props) {
   const [authChecked, setAuthChecked] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
@@ -113,7 +115,7 @@ export default function RoutineManager({ predefinedRoutines, activities }: Props
   async function handleActivate(source: 'predefined' | 'custom', ref: string, weeks: number) {
     setError(null);
     if (!Number.isFinite(weeks) || weeks <= 0) {
-      setError('La duración debe ser un número de semanas mayor a 0.');
+      setError(t.weeksDurationError);
       return;
     }
     try {
@@ -121,7 +123,7 @@ export default function RoutineManager({ predefinedRoutines, activities }: Props
       setShowAddRoutine(false);
       await refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo activar la rutina.');
+      setError(err instanceof Error ? err.message : t.activateError);
     }
   }
 
@@ -131,7 +133,7 @@ export default function RoutineManager({ predefinedRoutines, activities }: Props
       await deactivateRoutine();
       await refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo desactivar la rutina.');
+      setError(err instanceof Error ? err.message : t.deactivateError);
     }
   }
 
@@ -145,7 +147,7 @@ export default function RoutineManager({ predefinedRoutines, activities }: Props
   }
 
   async function handleDeleteRoutine(ref: string) {
-    if (!confirm('¿Eliminar esta rutina? Esta acción no se puede deshacer.')) return;
+    if (!confirm(t.deleteConfirm)) return;
     setError(null);
     try {
       await deleteRoutine(ref);
@@ -155,25 +157,25 @@ export default function RoutineManager({ predefinedRoutines, activities }: Props
       if (editingRoutine?.id === ref) setEditingRoutine(null);
       await refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo eliminar la rutina.');
+      setError(err instanceof Error ? err.message : t.deleteError);
     }
   }
 
   if (!authChecked) {
-    return <p className="font-mono text-sm text-paper-dim">Cargando...</p>;
+    return <p className="font-mono text-sm text-paper-dim">{t.loading}</p>;
   }
 
   if (!isLoggedIn) {
     return (
       <p className="font-mono text-sm text-paper-dim">
-        Debes{' '}
+        {t.notLoggedIn.prefix}{' '}
         <a
           href={`${import.meta.env.BASE_URL}login/`}
           className="text-acid underline underline-offset-4 hover:text-paper"
         >
-          iniciar sesión
+          {t.notLoggedIn.link}
         </a>{' '}
-        para ver y armar tus rutinas.
+        {t.notLoggedIn.suffix}
       </p>
     );
   }
@@ -213,42 +215,43 @@ export default function RoutineManager({ predefinedRoutines, activities }: Props
   return (
     <div className="flex flex-col gap-10">
       <div className="flex flex-col gap-3">
-        <p className="label-brutal text-acid">Rutina activa</p>
+        <p className="label-brutal text-acid">{t.active.sectionTitle}</p>
         {!activeRoutine ? (
-          <p className="font-mono text-sm text-paper-dim">
-            No tienes ninguna rutina activa todavía. Elige una predefinida o crea la tuya abajo.
-          </p>
+          <p className="font-mono text-sm text-paper-dim">{t.active.none}</p>
         ) : expired ? (
           <div className="card-brutal border-blood/60">
             <p className="font-mono text-sm text-blood">
-              Tu rutina "{activeName ?? 'desconocida'}" venció hace{' '}
-              {elapsed - activeRoutine.duration_weeks + 1} semana(s). ¿Elegís una nueva abajo?
+              {t.active.expiredPrefix} "{activeName ?? t.active.unknownName}"{' '}
+              {t.active.expiredWeeksAgo} {elapsed - activeRoutine.duration_weeks + 1}{' '}
+              {t.active.expiredSuffix}
             </p>
             <p className="mt-2 font-mono text-sm text-paper-dim">
-              Aprovechá para{' '}
+              {t.active.expiredHintPrefix}{' '}
               <a
                 href={`${import.meta.env.BASE_URL}perfil/`}
                 className="text-acid underline underline-offset-4 hover:text-paper"
               >
-                actualizar tus medidas
+                {t.active.expiredHintLink}
               </a>{' '}
-              y ver tu progreso.
+              {t.active.expiredHintSuffix}
             </p>
           </div>
         ) : (
           <div className="card-brutal flex items-start justify-between gap-3">
             <div>
-              <p className="font-display text-2xl text-paper">{activeName ?? 'Rutina desconocida'}</p>
+              <p className="font-display text-2xl text-paper">
+                {activeName ?? t.active.unknownRoutine}
+              </p>
               <p className="font-mono text-sm text-paper-dim">
-                Semana {Math.min(elapsed + 1, activeRoutine.duration_weeks)} de{' '}
-                {activeRoutine.duration_weeks} — día{' '}
-                {Math.min(days + 1, activeRoutine.duration_weeks * 7)} de{' '}
+                {t.active.weekLabel} {Math.min(elapsed + 1, activeRoutine.duration_weeks)}{' '}
+                {t.active.of} {activeRoutine.duration_weeks} — {t.active.dayLabel}{' '}
+                {Math.min(days + 1, activeRoutine.duration_weeks * 7)} {t.active.of}{' '}
                 {activeRoutine.duration_weeks * 7}
               </p>
               {adherence && adherence.daysElapsed > 0 && (
                 <p className="font-mono text-sm text-paper-dim">
-                  Esta semana: {adherence.daysTrained} de {adherence.daysElapsed} días
-                  cumplidos
+                  {t.active.adherencePrefix} {adherence.daysTrained} {t.active.of}{' '}
+                  {adherence.daysElapsed} {t.active.adherenceSuffix}
                 </p>
               )}
             </div>
@@ -257,7 +260,7 @@ export default function RoutineManager({ predefinedRoutines, activities }: Props
               onClick={handleDeactivate}
               className="shrink-0 rounded-control border border-blood bg-transparent px-3 py-2 font-mono text-xs uppercase tracking-wide text-blood transition duration-150 hover:bg-blood hover:text-paper active:scale-95"
             >
-              Desactivar
+              {t.active.deactivate}
             </button>
           </div>
         )}
@@ -266,14 +269,15 @@ export default function RoutineManager({ predefinedRoutines, activities }: Props
       {error && <p className="border-l border-blood pl-3 font-mono text-sm text-blood">{error}</p>}
 
       <RoutineList
-        title="Mis rutinas"
+        title={t.list.myRoutinesTitle}
         source="custom"
         routines={customOptions}
         activities={activities}
-        emptyMessage="Todavía no creaste ninguna rutina propia."
+        emptyMessage={t.list.myRoutinesEmpty}
         onActivate={handleActivate}
         onEdit={handleEditRoutine}
         onDelete={handleDeleteRoutine}
+        t={t}
       />
 
       {!showAddRoutine ? (
@@ -282,12 +286,12 @@ export default function RoutineManager({ predefinedRoutines, activities }: Props
           onClick={() => setShowAddRoutine(true)}
           className="btn-brutal self-start"
         >
-          + Agregar nueva rutina
+          {t.addRoutine.toggle}
         </button>
       ) : (
         <div className="flex flex-col gap-6">
           <div className="flex items-center justify-between gap-3">
-            <p className="label-brutal text-acid">Agregar nueva rutina</p>
+            <p className="label-brutal text-acid">{t.addRoutine.sectionTitle}</p>
             <button
               type="button"
               onClick={() => {
@@ -296,7 +300,7 @@ export default function RoutineManager({ predefinedRoutines, activities }: Props
               }}
               className="rounded-control border border-paper-dim/60 bg-transparent px-2 py-1 font-mono text-xs uppercase tracking-wide text-paper-dim transition duration-150 hover:border-paper hover:text-paper active:scale-95"
             >
-              Cerrar
+              {t.addRoutine.close}
             </button>
           </div>
 
@@ -310,7 +314,7 @@ export default function RoutineManager({ predefinedRoutines, activities }: Props
                   : 'btn-brutal-sm'
               }
             >
-              Crear la mía
+              {t.addRoutine.tabCustom}
             </button>
             <button
               type="button"
@@ -321,7 +325,7 @@ export default function RoutineManager({ predefinedRoutines, activities }: Props
                   : 'btn-brutal-sm'
               }
             >
-              Elegir predefinida
+              {t.addRoutine.tabPredefined}
             </button>
           </div>
 
@@ -335,15 +339,17 @@ export default function RoutineManager({ predefinedRoutines, activities }: Props
                 refresh();
               }}
               onCancelEdit={() => setEditingRoutine(null)}
+              t={t}
             />
           ) : (
             <RoutineList
-              title="Predefinidas"
+              title={t.list.predefinedTitle}
               source="predefined"
               routines={predefinedOptions}
               activities={activities}
-              emptyMessage="No hay rutinas predefinidas todavía."
+              emptyMessage={t.list.predefinedEmpty}
               onActivate={handleActivate}
+              t={t}
             />
           )}
         </div>
