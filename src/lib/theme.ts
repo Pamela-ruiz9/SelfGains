@@ -15,6 +15,9 @@ interface AccentGradientPreset {
 // que no puede llevar un degradado — solo background-image sí). `onAccent`
 // varía por preset porque F2 (magenta) necesita texto claro para contraste,
 // a diferencia de los otros dos.
+// NOTA: Esta tabla está duplicada manualmente en src/layouts/BaseLayout.astro
+// (en un script is:inline que corre antes del first paint) — si añades/cambias un
+// preset aquí, espéjalo también en BaseLayout.astro para mantenerlo sincronizado.
 export const ACCENT_GRADIENTS: Record<AccentGradientId, AccentGradientPreset> = {
   f1: { gradient: 'linear-gradient(135deg, #4f9dfe, #9b5cf6)', solid: '#8fb4fb', onAccent: '#0c0c0a' },
   f2: { gradient: 'linear-gradient(135deg, #8b5cf6, #ec4899)', solid: '#c98cf0', onAccent: '#ffffff' },
