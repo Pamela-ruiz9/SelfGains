@@ -348,7 +348,7 @@ export default function ProfileForm() {
                 aria-label={`Degradado ${id}`}
                 onClick={() => handleAccentChange(id)}
                 style={{ backgroundImage: preset.gradient }}
-                className={`h-8 w-8 rounded-full border-2 transition-transform duration-150 ${
+                className={`h-8 w-8 rounded-full border transition-transform duration-150 ${
                   accentColor === id ? 'scale-110 border-paper' : 'border-paper-dim/40'
                 }`}
               />
@@ -368,7 +368,11 @@ export default function ProfileForm() {
           ))}
           <input
             type="color"
-            value={accentColor.startsWith('#') ? accentColor : '#000000'}
+            value={
+              accentColor.startsWith('#')
+                ? accentColor
+                : (ACCENT_GRADIENTS[accentColor as AccentGradientId]?.solid ?? '#000000')
+            }
             onChange={(e) => handleAccentChange(e.target.value)}
             aria-label="Elegir color personalizado"
             className="h-8 w-8 cursor-pointer rounded-control border border-paper-dim/40 bg-transparent p-0"
