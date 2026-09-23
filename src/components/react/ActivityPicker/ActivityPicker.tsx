@@ -8,6 +8,7 @@ export interface ActivityOption {
   metricType: 'sets' | 'session';
   group?: string;
   description?: string;
+  image?: string;
 }
 
 export const DISCIPLINES: { id: ActivityOption['discipline']; label: string }[] = [

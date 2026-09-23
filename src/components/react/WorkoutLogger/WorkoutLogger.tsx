@@ -414,6 +414,14 @@ function RoutineActivityCard({
           </span>
         )}
       </div>
+      {activity.image && (
+        <img
+          src={`${import.meta.env.BASE_URL}exercises/${activity.image}`}
+          alt={activity.name}
+          loading="lazy"
+          className="aspect-video w-full rounded-card object-cover"
+        />
+      )}
       {activity.description && (
         <p className="font-mono text-xs text-paper-dim">{activity.description}</p>
       )}
@@ -915,6 +923,14 @@ export default function WorkoutLogger({ activities, plans }: Props) {
       >
         <form onSubmit={handleAddActivity} className="card-brutal flex flex-col gap-4">
           <ActivityPicker activities={activities} onSelect={setSelectedActivity} />
+          {selectedActivity?.image && (
+            <img
+              src={`${import.meta.env.BASE_URL}exercises/${selectedActivity.image}`}
+              alt={selectedActivity.name}
+              loading="lazy"
+              className="aspect-video w-full rounded-card object-cover"
+            />
+          )}
           {selectedActivity?.description && (
             <p className="font-mono text-xs text-paper-dim">{selectedActivity.description}</p>
           )}
