@@ -192,6 +192,19 @@ export const es = {
       error: 'No se pudo borrar la cuenta.',
     },
   },
+  ejercicios: {
+    pageTitle: 'Ejercicios',
+    kicker: 'Explora por músculo',
+    heading: 'EJERCICIOS',
+    noMuscleSelected: 'Ningún músculo seleccionado',
+    instructions:
+      'Haz click en un músculo del modelo para ver qué ejercicios lo trabajan. Puedes rotar el modelo arrastrando con el mouse o el dedo.',
+    emptyState: 'Todavía no hay ejercicios registrados para este músculo.',
+    equipment: 'Equipo: ',
+    loading: 'Cargando...',
+    webglUnsupported:
+      'Tu navegador no soporta WebGL, así que no se puede mostrar el cuerpo 3D. Puedes seguir usando el resto de SelfGains con normalidad.',
+  },
 };
 
 export type Dictionary = typeof es;

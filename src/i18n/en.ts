@@ -194,4 +194,17 @@ export const en: Dictionary = {
       error: 'Could not delete the account.',
     },
   },
+  ejercicios: {
+    pageTitle: 'Exercises',
+    kicker: 'Explore by muscle',
+    heading: 'EXERCISES',
+    noMuscleSelected: 'No muscle selected',
+    instructions:
+      'Click a muscle on the model to see which exercises work it. You can rotate the model by dragging with the mouse or your finger.',
+    emptyState: 'No exercises registered for this muscle yet.',
+    equipment: 'Equipment: ',
+    loading: 'Loading...',
+    webglUnsupported:
+      "Your browser doesn't support WebGL, so the 3D body can't be shown. You can keep using the rest of SelfGains normally.",
+  },
 };

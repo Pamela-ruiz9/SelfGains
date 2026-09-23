@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import MuscleBody from '../MuscleBody/MuscleBody';
 import { muscleLabel } from '../../../lib/muscles';
+import type { Dictionary } from '../../../i18n/es';
 
 export interface ExerciseWithMuscles {
   id: string;
@@ -13,9 +14,10 @@ export interface ExerciseWithMuscles {
 
 interface Props {
   exercises: ExerciseWithMuscles[];
+  t: Dictionary['ejercicios'];
 }
 
-export default function MuscleExplorer({ exercises }: Props) {
+export default function MuscleExplorer({ exercises, t }: Props) {
   const [selectedMuscle, setSelectedMuscle] = useState<string | null>(null);
   const [expandedExercise, setExpandedExercise] = useState<string | null>(null);
 
@@ -30,24 +32,23 @@ export default function MuscleExplorer({ exercises }: Props) {
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
-      <MuscleBody selectedMuscle={selectedMuscle} onSelectMuscle={handleSelectMuscle} />
+      <MuscleBody
+        selectedMuscle={selectedMuscle}
+        onSelectMuscle={handleSelectMuscle}
+        t={{ loading: t.loading, webglUnsupported: t.webglUnsupported }}
+      />
 
       <div className="flex flex-col gap-3">
         <p className="label-brutal text-acid">
-          {selectedMuscle ? muscleLabel(selectedMuscle) : 'Ningún músculo seleccionado'}
+          {selectedMuscle ? muscleLabel(selectedMuscle) : t.noMuscleSelected}
         </p>
 
         {!selectedMuscle && (
-          <p className="font-mono text-sm text-paper-dim">
-            Haz click en un músculo del modelo para ver qué ejercicios lo trabajan. Puedes
-            rotar el modelo arrastrando con el mouse o el dedo.
-          </p>
+          <p className="font-mono text-sm text-paper-dim">{t.instructions}</p>
         )}
 
         {selectedMuscle && matchingExercises.length === 0 && (
-          <p className="font-mono text-sm text-paper-dim">
-            Todavía no hay ejercicios registrados para este músculo.
-          </p>
+          <p className="font-mono text-sm text-paper-dim">{t.emptyState}</p>
         )}
 
         <ul className="flex flex-col gap-2">
@@ -74,7 +75,7 @@ export default function MuscleExplorer({ exercises }: Props) {
                       />
                     )}
                     <p>
-                      <span className="text-paper-dim/70">Equipo: </span>
+                      <span className="text-paper-dim/70">{t.equipment}</span>
                       {ex.equipment}
                     </p>
                     <p>{ex.instructions}</p>

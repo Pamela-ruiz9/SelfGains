@@ -3,6 +3,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import MuscleExplorer from '../../components/react/MuscleExplorer/MuscleExplorer';
 import { getCollection } from 'astro:content';
 import { isGymActivity } from '../../lib/activities';
+import { getDictionary } from '../../i18n';
+
+const locale = Astro.currentLocale === 'en' ? 'en' : 'es';
+const t = getDictionary(locale).ejercicios;
 
 const activityEntries = await getCollection('activities');
 const exercises = activityEntries
@@ -17,8 +21,8 @@ const exercises = activityEntries
   }))
   .sort((a, b) => a.name.localeCompare(b.name));
 ---
-<BaseLayout title="Ejercicios">
-  <p class="label-brutal mb-3 text-acid">Explora por músculo</p>
-  <h1 class="mb-8 font-display text-5xl text-paper sm:text-6xl">EJERCICIOS</h1>
-  <MuscleExplorer client:load exercises={exercises} />
+<BaseLayout title={t.pageTitle}>
+  <p class="label-brutal mb-3 text-acid">{t.kicker}</p>
+  <h1 class="mb-8 font-display text-5xl text-paper sm:text-6xl">{t.heading}</h1>
+  <MuscleExplorer client:load exercises={exercises} t={t} />
 </BaseLayout>
