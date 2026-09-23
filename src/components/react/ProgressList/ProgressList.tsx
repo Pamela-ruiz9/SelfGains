@@ -151,7 +151,7 @@ export default function ProgressList({ exerciseNames, exercises, activities }: P
   }
 
   if (error) {
-    return <p className="border-l-2 border-blood pl-3 font-mono text-sm text-blood">{error}</p>;
+    return <p className="border-l border-blood pl-3 font-mono text-sm text-blood">{error}</p>;
   }
 
   if (workouts.length === 0 && measurements.length === 0) {

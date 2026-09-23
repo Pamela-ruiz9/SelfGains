@@ -118,14 +118,14 @@ function SetRow({
         <button
           type="button"
           onClick={() => setEditing(true)}
-          className="border-2 border-paper-dim/60 bg-transparent px-2 py-1 text-paper transition duration-150 hover:border-paper hover:bg-paper hover:text-ink active:scale-95"
+          className="rounded-control border border-paper-dim/60 bg-transparent px-2 py-1 text-paper transition duration-150 hover:border-paper hover:bg-paper hover:text-ink active:scale-95"
         >
           Editar
         </button>
         <button
           type="button"
           onClick={handleDelete}
-          className="border-2 border-blood bg-transparent px-2 py-1 text-blood transition duration-150 hover:bg-blood hover:text-paper active:scale-95"
+          className="rounded-control border border-blood bg-transparent px-2 py-1 text-blood transition duration-150 hover:bg-blood hover:text-paper active:scale-95"
         >
           Eliminar
         </button>
@@ -223,14 +223,14 @@ function SessionRow({
         <button
           type="button"
           onClick={() => setEditing(true)}
-          className="border-2 border-paper-dim/60 bg-transparent px-2 py-1 text-paper transition duration-150 hover:border-paper hover:bg-paper hover:text-ink active:scale-95"
+          className="rounded-control border border-paper-dim/60 bg-transparent px-2 py-1 text-paper transition duration-150 hover:border-paper hover:bg-paper hover:text-ink active:scale-95"
         >
           Editar
         </button>
         <button
           type="button"
           onClick={handleDelete}
-          className="border-2 border-blood bg-transparent px-2 py-1 text-blood transition duration-150 hover:bg-blood hover:text-paper active:scale-95"
+          className="rounded-control border border-blood bg-transparent px-2 py-1 text-blood transition duration-150 hover:bg-blood hover:text-paper active:scale-95"
         >
           Eliminar
         </button>
@@ -299,7 +299,7 @@ export default function WorkoutHistory({
 
   return (
     <div className="flex flex-col gap-5">
-      {error && <p className="border-l-2 border-blood pl-3 font-mono text-sm text-blood">{error}</p>}
+      {error && <p className="border-l border-blood pl-3 font-mono text-sm text-blood">{error}</p>}
       {visibleWorkouts.length === 0 && (
         <p className="font-mono text-sm text-paper-dim">
           No hay entrenamientos de esta disciplina todavía.
@@ -315,7 +315,7 @@ export default function WorkoutHistory({
             <button
               type="button"
               onClick={() => handleDeleteWorkout(w.id)}
-              className="border-2 border-blood bg-transparent px-2 py-1 font-mono text-xs uppercase tracking-wide text-blood transition duration-150 hover:bg-blood hover:text-paper active:scale-95"
+              className="rounded-control border border-blood bg-transparent px-2 py-1 font-mono text-xs uppercase tracking-wide text-blood transition duration-150 hover:bg-blood hover:text-paper active:scale-95"
             >
               Eliminar día
             </button>
