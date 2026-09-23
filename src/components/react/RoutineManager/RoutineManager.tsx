@@ -255,7 +255,7 @@ export default function RoutineManager({ predefinedRoutines, activities }: Props
             <button
               type="button"
               onClick={handleDeactivate}
-              className="shrink-0 border-2 border-blood bg-transparent px-3 py-2 font-mono text-xs uppercase tracking-wide text-blood transition duration-150 hover:bg-blood hover:text-paper active:scale-95"
+              className="shrink-0 rounded-control border border-blood bg-transparent px-3 py-2 font-mono text-xs uppercase tracking-wide text-blood transition duration-150 hover:bg-blood hover:text-paper active:scale-95"
             >
               Desactivar
             </button>
@@ -263,7 +263,7 @@ export default function RoutineManager({ predefinedRoutines, activities }: Props
         )}
       </div>
 
-      {error && <p className="border-l-2 border-blood pl-3 font-mono text-sm text-blood">{error}</p>}
+      {error && <p className="border-l border-blood pl-3 font-mono text-sm text-blood">{error}</p>}
 
       <RoutineList
         title="Mis rutinas"
@@ -294,7 +294,7 @@ export default function RoutineManager({ predefinedRoutines, activities }: Props
                 setShowAddRoutine(false);
                 setEditingRoutine(null);
               }}
-              className="border-2 border-paper-dim/60 bg-transparent px-2 py-1 font-mono text-xs uppercase tracking-wide text-paper-dim transition duration-150 hover:border-paper hover:text-paper active:scale-95"
+              className="rounded-control border border-paper-dim/60 bg-transparent px-2 py-1 font-mono text-xs uppercase tracking-wide text-paper-dim transition duration-150 hover:border-paper hover:text-paper active:scale-95"
             >
               Cerrar
             </button>
@@ -306,7 +306,7 @@ export default function RoutineManager({ predefinedRoutines, activities }: Props
               onClick={() => setAddRoutineTab('custom')}
               className={
                 addRoutineTab === 'custom'
-                  ? 'btn-brutal-sm border-acid bg-acid text-on-accent'
+                  ? 'btn-brutal-sm pill-selected'
                   : 'btn-brutal-sm'
               }
             >
@@ -317,7 +317,7 @@ export default function RoutineManager({ predefinedRoutines, activities }: Props
               onClick={() => setAddRoutineTab('predefined')}
               className={
                 addRoutineTab === 'predefined'
-                  ? 'btn-brutal-sm border-acid bg-acid text-on-accent'
+                  ? 'btn-brutal-sm pill-selected'
                   : 'btn-brutal-sm'
               }
             >

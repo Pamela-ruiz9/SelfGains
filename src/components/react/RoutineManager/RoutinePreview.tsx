@@ -22,7 +22,7 @@ export default function RoutinePreview({ days, activities }: RoutinePreviewProps
   }
 
   return (
-    <div className="flex flex-col gap-2 border-l-2 border-paper-dim/40 pl-3">
+    <div className="flex flex-col gap-2 border-l border-paper-dim/40 pl-3">
       {scheduledDays.map((day) => (
         <div key={day}>
           <p className="label-brutal">{weekdayLabel(day)}</p>

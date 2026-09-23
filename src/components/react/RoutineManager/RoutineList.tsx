@@ -85,7 +85,7 @@ function ShareRoutinePicker({ routineId }: { routineId: string }) {
       <button
         type="button"
         onClick={handleOpen}
-        className="border-2 border-paper-dim/60 bg-transparent px-2 py-1 font-mono text-xs uppercase tracking-wide text-paper transition duration-150 hover:border-paper hover:bg-paper hover:text-ink active:scale-95"
+        className="rounded-control border border-paper-dim/60 bg-transparent px-2 py-1 font-mono text-xs uppercase tracking-wide text-paper transition duration-150 hover:border-paper hover:bg-paper hover:text-ink active:scale-95"
       >
         Compartir
       </button>
@@ -121,7 +121,7 @@ function ShareRoutinePicker({ routineId }: { routineId: string }) {
       <button
         type="button"
         onClick={() => setOpen(false)}
-        className="border-2 border-paper-dim/60 bg-transparent px-2 py-1 font-mono text-xs uppercase tracking-wide text-paper-dim transition duration-150 hover:border-paper hover:text-paper active:scale-95"
+        className="rounded-control border border-paper-dim/60 bg-transparent px-2 py-1 font-mono text-xs uppercase tracking-wide text-paper-dim transition duration-150 hover:border-paper hover:text-paper active:scale-95"
       >
         Cancelar
       </button>
@@ -168,14 +168,14 @@ function RoutineCard({
               <button
                 type="button"
                 onClick={() => onEdit?.(routine.ref)}
-                className="border-2 border-paper-dim/60 bg-transparent px-2 py-1 font-mono text-xs uppercase tracking-wide text-paper transition duration-150 hover:border-paper hover:bg-paper hover:text-ink active:scale-95"
+                className="rounded-control border border-paper-dim/60 bg-transparent px-2 py-1 font-mono text-xs uppercase tracking-wide text-paper transition duration-150 hover:border-paper hover:bg-paper hover:text-ink active:scale-95"
               >
                 Editar
               </button>
               <button
                 type="button"
                 onClick={() => onDelete?.(routine.ref)}
-                className="border-2 border-blood bg-transparent px-2 py-1 font-mono text-xs uppercase tracking-wide text-blood transition duration-150 hover:bg-blood hover:text-paper active:scale-95"
+                className="rounded-control border border-blood bg-transparent px-2 py-1 font-mono text-xs uppercase tracking-wide text-blood transition duration-150 hover:bg-blood hover:text-paper active:scale-95"
               >
                 Eliminar
               </button>

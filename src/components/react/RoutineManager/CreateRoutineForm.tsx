@@ -144,7 +144,7 @@ function DayActivityPicker({
                     onClick={() => onMove(activityId, -1)}
                     disabled={index === 0}
                     aria-label="Mover arriba"
-                    className="flex h-7 w-7 items-center justify-center border-2 border-paper-dim/60 text-acid transition duration-150 hover:border-paper hover:text-paper active:scale-95 disabled:pointer-events-none disabled:opacity-30"
+                    className="flex h-7 w-7 items-center justify-center rounded-control border border-paper-dim/60 text-acid transition duration-150 hover:border-paper hover:text-paper active:scale-95 disabled:pointer-events-none disabled:opacity-30"
                   >
                     ↑
                   </button>
@@ -153,14 +153,14 @@ function DayActivityPicker({
                     onClick={() => onMove(activityId, 1)}
                     disabled={index === dayEntries.length - 1}
                     aria-label="Mover abajo"
-                    className="flex h-7 w-7 items-center justify-center border-2 border-paper-dim/60 text-acid transition duration-150 hover:border-paper hover:text-paper active:scale-95 disabled:pointer-events-none disabled:opacity-30"
+                    className="flex h-7 w-7 items-center justify-center rounded-control border border-paper-dim/60 text-acid transition duration-150 hover:border-paper hover:text-paper active:scale-95 disabled:pointer-events-none disabled:opacity-30"
                   >
                     ↓
                   </button>
                   <button
                     type="button"
                     onClick={() => onRemove(activityId)}
-                    className="border-2 border-blood bg-transparent px-2 py-1 font-mono text-xs uppercase tracking-wide text-blood transition duration-150 hover:bg-blood hover:text-paper active:scale-95"
+                    className="rounded-control border border-blood bg-transparent px-2 py-1 font-mono text-xs uppercase tracking-wide text-blood transition duration-150 hover:bg-blood hover:text-paper active:scale-95"
                   >
                     Quitar
                   </button>
@@ -268,7 +268,7 @@ export default function CreateRoutineForm({ activities, editingRoutine, onSaved,
           </div>
         ))}
       </div>
-      {error && <p className="border-l-2 border-blood pl-3 font-mono text-sm text-blood">{error}</p>}
+      {error && <p className="border-l border-blood pl-3 font-mono text-sm text-blood">{error}</p>}
       <div className="flex gap-3">
         <button type="submit" disabled={saving} className="btn-brutal self-start">
           {saving ? 'Guardando...' : editingRoutine ? 'Guardar cambios' : 'Guardar rutina'}
