@@ -22,7 +22,7 @@ const pillars = [
 ];
 ---
 <BaseLayout title="Inicio">
-  <section class="border-b-2 border-paper-dim/30 pb-12">
+  <section class="border-b border-paper-dim/30 pb-12">
     <p class="reveal label-brutal mb-4 text-acid">Entrena. Registra. Progresa.</p>
     <h1
       class="reveal font-display text-6xl leading-[0.95] text-paper sm:text-8xl"
@@ -48,11 +48,11 @@ const pillars = [
     </div>
   </section>
 
-  <section class="mt-12 grid gap-px overflow-hidden border-2 border-paper-dim/30 sm:grid-cols-3">
+  <section class="mt-12 grid gap-px overflow-hidden rounded-card border border-paper-dim/30 sm:grid-cols-3">
     {
       pillars.map((p, i) => (
         <div
-          class="reveal border-paper-dim/30 bg-surface p-6 sm:border-l-2 sm:first:border-l-0"
+          class="reveal border-paper-dim/30 bg-surface p-6 sm:border-l sm:first:border-l-0"
           style={`animation-delay: ${260 + i * 90}ms`}
         >
           <span class="font-mono text-sm text-acid">{p.n}</span>
