@@ -25,7 +25,7 @@ export default function IncomingRequests({ requests, onAccept, onReject }: Props
               <button
                 type="button"
                 onClick={() => onReject(req.requestId)}
-                className="border-2 border-blood bg-transparent px-2 py-1 font-mono text-xs uppercase tracking-wide text-blood transition duration-150 hover:bg-blood hover:text-paper active:scale-95"
+                className="rounded-control border border-blood bg-transparent px-2 py-1 font-mono text-xs uppercase tracking-wide text-blood transition duration-150 hover:bg-blood hover:text-paper active:scale-95"
               >
                 Rechazar
               </button>

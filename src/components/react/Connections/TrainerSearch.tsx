@@ -58,7 +58,7 @@ export default function TrainerSearch({
         <button
           type="button"
           onClick={() => onToggle(false)}
-          className="border-2 border-paper-dim/60 bg-transparent px-2 py-1 font-mono text-xs uppercase tracking-wide text-paper-dim transition duration-150 hover:border-paper hover:text-paper active:scale-95"
+          className="rounded-control border border-paper-dim/60 bg-transparent px-2 py-1 font-mono text-xs uppercase tracking-wide text-paper-dim transition duration-150 hover:border-paper hover:text-paper active:scale-95"
         >
           Cerrar
         </button>
@@ -70,7 +70,7 @@ export default function TrainerSearch({
             key={km}
             type="button"
             onClick={() => onRadiusChange(km)}
-            className={radiusKm === km ? 'btn-brutal-sm border-acid bg-acid text-on-accent' : 'btn-brutal-sm'}
+            className={radiusKm === km ? 'btn-brutal-sm pill-selected' : 'btn-brutal-sm'}
           >
             {km} km
           </button>

@@ -55,7 +55,7 @@ export default function PendingRoutineShares({
                 type="button"
                 onClick={() => onAccept(share)}
                 disabled={actingShareId === share.shareId}
-                className="btn-brutal-sm border-acid bg-acid text-on-accent"
+                className="btn-brutal-sm pill-selected"
               >
                 {actingShareId === share.shareId ? 'Agregando...' : 'Agregar a mis rutinas'}
               </button>
@@ -63,7 +63,7 @@ export default function PendingRoutineShares({
                 type="button"
                 onClick={() => onReject(share.shareId)}
                 disabled={actingShareId === share.shareId}
-                className="border-2 border-blood bg-transparent px-2 py-1 font-mono text-xs uppercase tracking-wide text-blood transition duration-150 hover:bg-blood hover:text-paper active:scale-95"
+                className="rounded-control border border-blood bg-transparent px-2 py-1 font-mono text-xs uppercase tracking-wide text-blood transition duration-150 hover:bg-blood hover:text-paper active:scale-95"
               >
                 Rechazar
               </button>

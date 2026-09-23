@@ -313,7 +313,7 @@ export default function Connections({ activities }: Props) {
 
   return (
     <div className="flex max-w-2xl flex-col gap-10">
-      {error && <p className="border-l-2 border-blood pl-3 font-mono text-sm text-blood">{error}</p>}
+      {error && <p className="border-l border-blood pl-3 font-mono text-sm text-blood">{error}</p>}
 
       <InviteLinkCard code={code} copied={copied} onShare={handleShare} onCopy={handleCopy} />
 

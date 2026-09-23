@@ -50,5 +50,5 @@ export default function RedeemInvite() {
     );
   }
 
-  return <p className="border-l-2 border-blood pl-3 font-mono text-sm text-blood">{error}</p>;
+  return <p className="border-l border-blood pl-3 font-mono text-sm text-blood">{error}</p>;
 }
