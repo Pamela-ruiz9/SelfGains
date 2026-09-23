@@ -13,6 +13,7 @@ const exercises = activityEntries
     equipment: e.data.equipment,
     instructions: e.body?.trim() ?? '',
     muscles: e.data.muscles,
+    image: e.data.image,
   }))
   .sort((a, b) => a.name.localeCompare(b.name));
 ---

@@ -8,6 +8,7 @@ export interface ExerciseWithMuscles {
   equipment: string;
   instructions: string;
   muscles: string[];
+  image?: string;
 }
 
 interface Props {
@@ -64,6 +65,14 @@ export default function MuscleExplorer({ exercises }: Props) {
                 </button>
                 {isExpanded && (
                   <div className="mt-3 flex flex-col gap-2 border-t border-paper-dim/20 pt-3 font-mono text-sm text-paper-dim">
+                    {ex.image && (
+                      <img
+                        src={`${import.meta.env.BASE_URL}exercises/${ex.image}`}
+                        alt={ex.name}
+                        loading="lazy"
+                        className="aspect-video w-full rounded-card object-cover"
+                      />
+                    )}
                     <p>
                       <span className="text-paper-dim/70">Equipo: </span>
                       {ex.equipment}
