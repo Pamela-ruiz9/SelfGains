@@ -144,7 +144,7 @@ export default function ConflictResolution() {
 
   return (
     <div className="flex flex-col gap-4">
-      {error && <p className="border-l-2 border-blood pl-3 font-mono text-sm text-blood">{error}</p>}
+      {error && <p className="border-l border-blood pl-3 font-mono text-sm text-blood">{error}</p>}
       {conflicts.map((conflict) => (
         <div key={conflict.id} className="card-brutal flex flex-col gap-3">
           <p className="label-brutal text-acid">{TYPE_LABEL[conflict.queueItem.type] ?? conflict.queueItem.type}</p>

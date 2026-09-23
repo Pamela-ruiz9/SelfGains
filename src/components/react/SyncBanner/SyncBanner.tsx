@@ -40,7 +40,7 @@ export default function SyncBanner() {
     return (
       <a
         href={`${base}sincronizacion/`}
-        className="reveal block border-b-2 border-blood bg-surface px-4 py-2 text-center font-mono text-sm text-blood hover:text-paper"
+        className="reveal block border-b border-blood bg-surface px-4 py-2 text-center font-mono text-sm text-blood hover:text-paper"
       >
         {conflicts} {conflicts === 1 ? 'conflicto' : 'conflictos'} — revisar
       </a>
@@ -48,7 +48,7 @@ export default function SyncBanner() {
   }
 
   return (
-    <p className="reveal border-b-2 border-acid bg-surface px-4 py-2 text-center font-mono text-sm text-paper-dim">
+    <p className="reveal border-b border-acid bg-surface px-4 py-2 text-center font-mono text-sm text-paper-dim">
       {pending} {pending === 1 ? 'cambio pendiente' : 'cambios pendientes'} de sincronizar
     </p>
   );
