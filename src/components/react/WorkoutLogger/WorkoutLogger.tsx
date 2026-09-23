@@ -261,7 +261,7 @@ function SteppedNumberField({
           type="button"
           onClick={() => onChange(bumpValue(value, -step))}
           aria-label={`Restar ${step} ${unit}`}
-          className="h-14 w-14 shrink-0 border-2 border-paper-dim/50 font-display text-2xl text-paper transition-transform duration-100 active:scale-95 active:border-acid active:text-acid"
+          className="h-14 w-14 shrink-0 rounded-control border border-paper-dim/50 font-display text-2xl text-paper transition-transform duration-100 active:scale-95 active:border-acid active:text-acid"
         >
           −
         </button>
@@ -278,7 +278,7 @@ function SteppedNumberField({
           type="button"
           onClick={() => onChange(bumpValue(value, step))}
           aria-label={`Sumar ${step} ${unit}`}
-          className="h-14 w-14 shrink-0 border-2 border-paper-dim/50 font-display text-2xl text-paper transition-transform duration-100 active:scale-95 active:border-acid active:text-acid"
+          className="h-14 w-14 shrink-0 rounded-control border border-paper-dim/50 font-display text-2xl text-paper transition-transform duration-100 active:scale-95 active:border-acid active:text-acid"
         >
           +
         </button>
@@ -289,9 +289,9 @@ function SteppedNumberField({
             key={preset}
             type="button"
             onClick={() => onChange(String(preset))}
-            className={`h-12 min-w-[4.5rem] flex-1 border-2 font-mono text-sm transition-colors ${
+            className={`h-12 min-w-[4.5rem] flex-1 rounded-control border font-mono text-sm transition-colors ${
               value === String(preset)
-                ? 'border-acid bg-acid text-on-accent'
+                ? 'pill-selected'
                 : 'border-paper-dim/50 text-paper-dim hover:border-acid hover:text-acid'
             }`}
           >
@@ -409,7 +409,7 @@ function RoutineActivityCard({
       <div className="flex items-start justify-between gap-2">
         <p className="font-display text-xl text-paper">{fullActivityName(activity)}</p>
         {done && (
-          <span className="shrink-0 border-2 border-acid px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-acid">
+          <span className="shrink-0 rounded-control border border-acid px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-acid">
             ✓ Hecho
           </span>
         )}
@@ -784,9 +784,9 @@ export default function WorkoutLogger({ activities, plans }: Props) {
         >
           <div className="flex flex-col gap-4">
             {totalTodayCount > 1 && (
-              <div className="h-3 w-full overflow-hidden rounded-full border-2 border-paper-dim/30 bg-surface-raised">
+              <div className="h-3 w-full overflow-hidden rounded-full border border-paper-dim/30 bg-surface-raised">
                 <div
-                  className="h-full bg-acid transition-all duration-300"
+                  className="h-full bg-acid transition-all duration-300 [background-image:var(--gradient-acid)]"
                   style={{ width: `${progressPct}%` }}
                 />
               </div>
@@ -950,10 +950,10 @@ export default function WorkoutLogger({ activities, plans }: Props) {
       </CollapsibleSection>
 
       {loggedSets.length > 0 && (
-        <div className="overflow-x-auto border-2 border-paper-dim/30">
+        <div className="overflow-x-auto rounded-card border border-paper-dim/30">
           <table className="w-full min-w-[480px] text-left font-mono text-sm">
             <thead>
-              <tr className="border-b-2 border-acid text-xs uppercase tracking-[0.15em] text-paper-dim">
+              <tr className="border-b border-acid text-xs uppercase tracking-[0.15em] text-paper-dim">
                 <th className="px-3 py-2 font-normal">Ejercicio</th>
                 <th className="px-3 py-2 font-normal">Serie</th>
                 <th className="px-3 py-2 font-normal">Reps</th>
@@ -987,10 +987,10 @@ export default function WorkoutLogger({ activities, plans }: Props) {
       )}
 
       {loggedSessions.length > 0 && (
-        <div className="overflow-x-auto border-2 border-paper-dim/30">
+        <div className="overflow-x-auto rounded-card border border-paper-dim/30">
           <table className="w-full min-w-[420px] text-left font-mono text-sm">
             <thead>
-              <tr className="border-b-2 border-acid text-xs uppercase tracking-[0.15em] text-paper-dim">
+              <tr className="border-b border-acid text-xs uppercase tracking-[0.15em] text-paper-dim">
                 <th className="px-3 py-2 font-normal">Actividad</th>
                 <th className="px-3 py-2 font-normal">Distancia</th>
                 <th className="px-3 py-2 font-normal">Tiempo</th>
@@ -1021,9 +1021,9 @@ export default function WorkoutLogger({ activities, plans }: Props) {
         </div>
       )}
 
-      {error && <p className="border-l-2 border-blood pl-3 font-mono text-sm text-blood">{error}</p>}
+      {error && <p className="border-l border-blood pl-3 font-mono text-sm text-blood">{error}</p>}
       {savedMessage && (
-        <p key={savedMessage} className="reveal border-l-2 border-acid pl-3 font-mono text-sm text-acid">
+        <p key={savedMessage} className="reveal border-l border-acid pl-3 font-mono text-sm text-acid">
           {savedMessage}
         </p>
       )}
