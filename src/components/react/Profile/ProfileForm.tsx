@@ -31,6 +31,7 @@ export default function ProfileForm() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [measurements, setMeasurements] = useState<Record<string, string>>({});
   const [theme, setTheme] = useState<ThemeMode>('dark');
+  const [locale, setLocale] = useState<'es' | 'en'>('es');
   // string, no AccentGradientId — accentColor termina guardando tanto ids de
   // preset ("f1"/"f2"/"f3") como hex sueltos del selector de color libre,
   // y también lo que venga de profile.accent_color (columna text en
@@ -79,6 +80,7 @@ export default function ProfileForm() {
       const profile = await getMyProfile();
       if (profile) {
         setTheme(profile.theme);
+        setLocale(profile.locale);
         setAccentColor(profile.accent_color);
         setIsTrainer(profile.is_trainer);
         setSex(profile.sex);
@@ -153,6 +155,22 @@ export default function ProfileForm() {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo guardar el tema.');
     }
+  }
+
+  async function handleLocaleChange(next: 'es' | 'en') {
+    setLocale(next);
+    try {
+      localStorage.setItem('selfgains-locale', next);
+    } catch {}
+    try {
+      await upsertProfile({ locale: next });
+    } catch (err) {
+      // La navegación de abajo corre igual, con o sin error — el banner de
+      // error nunca llega a pintarse, así que esto es solo para debug.
+      console.error(err);
+    }
+    const base = import.meta.env.BASE_URL;
+    window.location.href = next === 'en' ? `${base}en/perfil/` : `${base}perfil/`;
   }
 
   async function handleAccentChange(next: string) {
@@ -318,6 +336,26 @@ export default function ProfileForm() {
             />
           </label>
           <span className="font-mono text-xs text-paper-dim">{email}</span>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <p className="label-brutal text-acid">Idioma</p>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => handleLocaleChange('es')}
+            className={locale === 'es' ? 'btn-brutal-sm pill-selected' : 'btn-brutal-sm'}
+          >
+            Español
+          </button>
+          <button
+            type="button"
+            onClick={() => handleLocaleChange('en')}
+            className={locale === 'en' ? 'btn-brutal-sm pill-selected' : 'btn-brutal-sm'}
+          >
+            English
+          </button>
         </div>
       </div>
 
