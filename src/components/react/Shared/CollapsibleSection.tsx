@@ -24,7 +24,7 @@ export default function CollapsibleSection({ title, open, onToggle, badge, child
         className={
           open
             ? 'flex w-full items-center justify-between gap-3 text-left'
-            : 'flex w-full items-center justify-between gap-3 rounded-control border border-paper/30 bg-surface-raised px-4 py-3 text-left text-paper transition duration-150 hover:bg-acid hover:text-on-accent active:scale-[0.98]'
+            : 'flex w-full items-center justify-between gap-3 rounded-control border border-paper/30 bg-surface-raised px-4 py-3 text-left text-paper transition duration-150 hover:bg-acid hover:text-on-accent hover:[background-image:var(--gradient-acid)] active:scale-[0.98]'
         }
       >
         <span className="flex items-center gap-3">

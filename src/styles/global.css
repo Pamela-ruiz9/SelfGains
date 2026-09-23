@@ -112,8 +112,8 @@
   .btn-brutal-sm {
     @apply inline-flex items-center justify-center rounded-control border border-paper/30 bg-surface-raised px-4 py-2
       font-display text-base uppercase tracking-wide text-paper transition duration-150
-      hover:bg-acid hover:text-on-accent active:scale-95
-      disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-surface-raised disabled:hover:text-paper;
+      hover:bg-acid hover:text-on-accent hover:[background-image:var(--gradient-acid)] active:scale-95
+      disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-surface-raised disabled:hover:text-paper disabled:hover:[background-image:none];
   }
 
   .card-brutal-tap {
