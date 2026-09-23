@@ -32,12 +32,30 @@ const base = import.meta.env.BASE_URL;
     <title>{title} · SelfGains</title>
     <script is:inline>
       (function () {
+        // Duplica ACCENT_GRADIENTS de src/lib/theme.ts a propósito — este
+        // script es is:inline y corre síncrono en <head>, antes del primer
+        // paint, así que no puede hacer un import de módulo. Si se agrega/
+        // cambia un preset en theme.ts, hay que espejarlo acá también.
+        var GRADIENTS = {
+          f1: { gradient: 'linear-gradient(135deg, #4f9dfe, #9b5cf6)', solid: '#8fb4fb', onAccent: '#0c0c0a' },
+          f2: { gradient: 'linear-gradient(135deg, #8b5cf6, #ec4899)', solid: '#c98cf0', onAccent: '#ffffff' },
+          f3: { gradient: 'linear-gradient(135deg, #22d3ee, #3b82f6)', solid: '#67d8f0', onAccent: '#0c0c0a' },
+        };
         function applyStoredTheme() {
           try {
             var theme = localStorage.getItem('selfgains-theme') || 'dark';
-            var accent = localStorage.getItem('selfgains-accent') || '#d7ff3f';
+            var accent = localStorage.getItem('selfgains-accent') || 'f3';
             document.documentElement.dataset.theme = theme;
-            document.documentElement.style.setProperty('--color-acid', accent);
+            var preset = GRADIENTS[accent];
+            if (preset) {
+              document.documentElement.style.setProperty('--color-acid', preset.solid);
+              document.documentElement.style.setProperty('--gradient-acid', preset.gradient);
+              document.documentElement.style.setProperty('--color-on-accent', preset.onAccent);
+            } else {
+              document.documentElement.style.setProperty('--color-acid', accent);
+              document.documentElement.style.setProperty('--gradient-acid', 'none');
+              document.documentElement.style.setProperty('--color-on-accent', '#0c0c0a');
+            }
           } catch (e) {}
         }
         applyStoredTheme();

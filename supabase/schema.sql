@@ -118,7 +118,7 @@ create table profiles (
   hip_cm numeric,
   arm_cm numeric,
   leg_cm numeric,
-  accent_color text not null default '#d7ff3f',
+  accent_color text not null default 'f3',
   theme text not null default 'dark' check (theme in ('light', 'dark')),
   updated_at timestamptz not null default now()
 );
