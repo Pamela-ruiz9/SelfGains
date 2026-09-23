@@ -93,10 +93,12 @@ export const es = {
     switchToEnglish: 'Cambiar a inglés',
     switchToSpanish: 'Cambiar a español',
   },
-} as const;
+};
 
 export type Dictionary = typeof es;
 ```
+
+(Sin `as const`: con `as const` cada string quedaría con su tipo literal exacto — ej. `"Ejercicios"` en vez de `string` — y entonces `en: Dictionary` exigiría que `en.ts` tuviera literalmente las mismas strings en español, haciendo imposible poner las traducciones al inglés. Sin `as const`, TypeScript infiere `string` para cada hoja, así que `Dictionary` describe la forma — qué claves existen — sin fijar el contenido, que es el mecanismo que realmente se necesita.)
 
 - [ ] **Step 2: Crear `src/i18n/en.ts`**
 
