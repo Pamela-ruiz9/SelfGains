@@ -15,6 +15,16 @@ const t = dict.registrar;
 const activityEntries = await getCollection('activities');
 const activities = activityEntries
   .map((e) => localizeActivity(e, locale, dict))
+  .map(({ id, name, discipline, metricType, group, groupLabel, description, image }) => ({
+    id,
+    name,
+    discipline,
+    metricType,
+    group,
+    groupLabel,
+    description,
+    image,
+  }))
   .sort((a, b) => a.name.localeCompare(b.name, locale));
 
 const planEntries = await getCollection('plans');

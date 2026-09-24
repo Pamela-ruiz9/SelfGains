@@ -15,7 +15,8 @@ const localized = activityEntries.map((e) => localizeActivity(e, locale, dict));
 
 const gymActivities = activityEntries
   .filter(isGymActivity)
-  .map((e) => localizeActivity(e, locale, dict));
+  .map((e) => localizeActivity(e, locale, dict))
+  .sort((a, b) => a.name.localeCompare(b.name, locale));
 const exerciseNames = Object.fromEntries(gymActivities.map((a) => [a.id, a.name]));
 const exercises = gymActivities.map((a) => ({
   id: a.id,
