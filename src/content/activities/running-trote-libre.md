@@ -1,6 +1,6 @@
 ---
 name: Trote libre
-instructions_en: "Easy jog at a comfortable pace, with no target time. Log the distance and the total session time."
+instructions_en: "Easy run at a comfortable pace, with no target time. Log the distance and the total session time."
 name_en: "Easy run"
 discipline: running
 metricType: session

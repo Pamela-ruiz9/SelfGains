@@ -2,7 +2,7 @@
 discipline: gym
 metricType: sets
 name: Jalón al pecho
-instructions_en: "Sit with your thighs secured under the pads, pull the bar down to chest height by driving your elbows back and down, and return while controlling the ascent."
+instructions_en: "Sit with your thighs secured under the pads, pull the bar down to chest height by driving your elbows back and down, and let the bar rise under control."
 name_en: "Lat pulldown"
 muscles: [dorsales, biceps]
 equipment: Polea
