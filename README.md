@@ -101,6 +101,12 @@ configuradas en Settings → Secrets and variables → Actions → Variables.
       curadas desde `free-exercise-db` — dominio público, guardadas en el
       repo — detalle y casos sin match en
       `docs/agents/imagenes-ejercicios-curacion.md`)
+- [x] App bilingüe ES/EN — rutas en inglés bajo `/en/`, selector de idioma en
+      el Nav (todas las pantallas) y en Perfil (requiere sesión), detección
+      del idioma del navegador en la primera visita con preferencia guardada
+      en `localStorage`. Los nombres e instrucciones de ejercicios/rutinas
+      siguen solo en español, pendiente de una ronda futura (detalle en
+      `docs/superpowers/specs/2026-09-23-bilingue-es-en-design.md`)
 - [ ] Suite de tests automatizada — toda la verificación hoy es manual vía
       Playwright contra Supabase real (ver
       `docs/agents/notas-de-entorno-y-lecciones.md`)
