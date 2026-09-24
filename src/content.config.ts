@@ -10,6 +10,8 @@ const activities = defineCollection({
     z.object({
       metricType: z.literal('sets'),
       name: z.string(),
+      name_en: z.string().min(1),
+      instructions_en: z.string().min(1),
       discipline: z.literal('gym'),
       muscles: z.array(
         z.string().refine((id) => muscleIds.includes(id), {
@@ -26,6 +28,8 @@ const activities = defineCollection({
     z.object({
       metricType: z.literal('session'),
       name: z.string(),
+      name_en: z.string().min(1),
+      instructions_en: z.string().min(1),
       discipline: z.enum(['running', 'natacion', 'combate']),
       // Sub-category within a discipline (e.g. swim stroke: crol/dorso/mariposa/pecho).
       // Lets the activity picker offer a second cascading selector instead of a
@@ -42,7 +46,9 @@ const plans = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/plans' }),
   schema: z.object({
     name: z.string(),
+    name_en: z.string().min(1),
     goal: z.string(),
+    goal_en: z.string().min(1),
     level: z.string(),
     // Solo relevante para gym — running/natación/combate lo dejan sin
     // definir. Ver docs/superpowers/specs/2026-08-19-perfil-enriquecido-nivel-sexo-design.md.
