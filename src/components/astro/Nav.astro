@@ -79,6 +79,7 @@ function iconSvg(id: string, strokeWidth = 2) {
       </div>
       <a
         href={otherHref}
+        data-lang-toggle={locale === "en" ? "es" : "en"}
         aria-label={locale === "en" ? t.switchToSpanish : t.switchToEnglish}
         class="flex items-center overflow-hidden rounded-full border border-paper-dim/40 font-mono text-[10px] uppercase tracking-wide transition-colors duration-150 hover:border-paper-dim/70"
       >
@@ -152,5 +153,23 @@ function iconSvg(id: string, strokeWidth = 2) {
       // A failed profile fetch shouldn't break navigation — the fallback
       // person icon just stays put.
     }
+  });
+</script>
+
+<script>
+  // El toggle ES/EN es solo un <a href> — la navegación sola no persiste la
+  // elección. La detección de primera visita en BaseLayout.astro y el
+  // selector de Perfil ya escriben esta misma clave; sin esto, un click acá
+  // se perdería en el próximo arranque de la PWA instalada (que abre en la
+  // start_url del manifest, no en la página donde se hizo el toggle).
+  document.querySelectorAll<HTMLAnchorElement>("[data-lang-toggle]").forEach((el) => {
+    el.addEventListener("click", () => {
+      try {
+        localStorage.setItem("selfgains-locale", el.dataset.langToggle!);
+      } catch {
+        // Sin localStorage (privado/bloqueado), la navegación sigue andando
+        // igual — solo se pierde la persistencia entre visitas.
+      }
+    });
   });
 </script>

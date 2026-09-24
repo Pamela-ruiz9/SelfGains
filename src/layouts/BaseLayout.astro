@@ -35,21 +35,32 @@ const t = getDictionary(locale).sync.banner;
     <title>{title} · SelfGains</title>
     <script is:inline define:vars={{ base }}>
       (function () {
-        // Corre en cada carga de página, pero es un no-op apenas existe una
-        // preferencia guardada — "primera visita" acá significa
-        // literalmente "todavía no eligió ni se le detectó un idioma",
-        // nunca vuelve a mirar el navegador después de la primera vez
+        // Corre en cada carga de página completa (no en navegación interna
+        // vía ClientRouter, que ya aterriza en la URL correcta sola). Dos
+        // casos: (1) primera visita real — sin preferencia guardada todavía
+        // — detecta el idioma del navegador y lo guarda; (2) cualquier otra
+        // carga completa — respeta la preferencia ya guardada (sin volver a
+        // mirar el navegador) y redirige si la URL actual no coincide con
+        // ella. Este segundo caso es necesario porque la PWA instalada
+        // siempre reabre en la start_url en español del manifest — sin este
+        // chequeo, elegir inglés desde el toggle del Nav o desde Perfil se
+        // perdería en el próximo arranque
         // (ver docs/superpowers/specs/2026-09-23-bilingue-es-en-design.md, sección 4).
         try {
           var STORAGE_KEY = 'selfgains-locale';
-          if (localStorage.getItem(STORAGE_KEY)) return;
-          var browserLang = (navigator.language || '').toLowerCase();
-          var wantsEnglish = browserLang.indexOf('en') === 0;
-          localStorage.setItem(STORAGE_KEY, wantsEnglish ? 'en' : 'es');
+          var stored = localStorage.getItem(STORAGE_KEY);
+          if (!stored) {
+            var browserLang = (navigator.language || '').toLowerCase();
+            stored = browserLang.indexOf('en') === 0 ? 'en' : 'es';
+            localStorage.setItem(STORAGE_KEY, stored);
+          }
+          var wantsEnglish = stored === 'en';
           var path = window.location.pathname;
           var isEnglishPath = path.indexOf(base + 'en/') === 0;
           if (wantsEnglish && !isEnglishPath) {
             window.location.replace(base + 'en/' + path.slice(base.length));
+          } else if (!wantsEnglish && isEnglishPath) {
+            window.location.replace(base + path.slice((base + 'en/').length));
           }
         } catch (e) {}
       })();
