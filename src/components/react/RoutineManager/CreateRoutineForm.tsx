@@ -20,6 +20,8 @@ interface Props {
   onSaved: () => void;
   onCancelEdit?: () => void;
   t: Dictionary['rutinas'];
+  pickerT: Dictionary['registrar']['picker'];
+  disciplinesT: Dictionary['disciplines'];
 }
 
 function emptyDays(): RoutineDays {
@@ -41,6 +43,8 @@ function DayActivityPicker({
   onRemove,
   onMove,
   t,
+  pickerT,
+  disciplinesT,
 }: {
   activities: ActivityOption[];
   dayEntries: RoutineDayEntry[];
@@ -48,6 +52,8 @@ function DayActivityPicker({
   onRemove: (activityId: string) => void;
   onMove: (activityId: string, direction: -1 | 1) => void;
   t: Dictionary['rutinas']['create'];
+  pickerT: Dictionary['registrar']['picker'];
+  disciplinesT: Dictionary['disciplines'];
 }) {
   const [selected, setSelected] = useState<ActivityOption | null>(null);
   const [targetSets, setTargetSets] = useState('');
@@ -84,6 +90,7 @@ function DayActivityPicker({
           setSelected(activity);
           setDuplicateError(null);
         }}
+        t={{ ...pickerT, disciplines: disciplinesT }}
       />
       {selected?.description && (
         <p className="font-mono text-xs text-paper-dim">{selected.description}</p>
@@ -183,6 +190,8 @@ export default function CreateRoutineForm({
   onSaved,
   onCancelEdit,
   t,
+  pickerT,
+  disciplinesT,
 }: Props) {
   const [name, setName] = useState(editingRoutine?.name ?? '');
   const [days, setDays] = useState<RoutineDays>(editingRoutine?.days ?? emptyDays());
@@ -278,6 +287,8 @@ export default function CreateRoutineForm({
               onRemove={(activityId) => handleRemoveFromDay(day, activityId)}
               onMove={(activityId, direction) => handleMoveInDay(day, activityId, direction)}
               t={t.create}
+              pickerT={pickerT}
+              disciplinesT={disciplinesT}
             />
           </div>
         ))}

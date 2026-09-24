@@ -65,9 +65,11 @@ interface Props {
   predefinedRoutines: PredefinedRoutine[];
   activities: ActivityOption[];
   t: Dictionary['rutinas'];
+  pickerT: Dictionary['registrar']['picker'];
+  disciplinesT: Dictionary['disciplines'];
 }
 
-export default function RoutineManager({ predefinedRoutines, activities, t }: Props) {
+export default function RoutineManager({ predefinedRoutines, activities, t, pickerT, disciplinesT }: Props) {
   const [authChecked, setAuthChecked] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
@@ -340,6 +342,8 @@ export default function RoutineManager({ predefinedRoutines, activities, t }: Pr
               }}
               onCancelEdit={() => setEditingRoutine(null)}
               t={t}
+              pickerT={pickerT}
+              disciplinesT={disciplinesT}
             />
           ) : (
             <RoutineList

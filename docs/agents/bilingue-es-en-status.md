@@ -35,7 +35,7 @@ Persistencia: `localStorage` (clave `selfgains-locale`) + columna `profiles.loca
 ## Deuda técnica chica (no bloqueante, encontrada en las revisiones de esta ronda)
 
 - El diccionario (`src/i18n/`) tiene texto duplicado entre namespaces (`loading: 'Cargando...'` aparece igual 9 veces, el patrón de 3 claves `notLoggedIn: {prefix, link, suffix}` se repite en 5 namespaces). Se evaluó un namespace `common` compartido en varias tareas y se descartó cada vez por "no repite lo suficiente" — con todos los namespaces ya armados, esa evaluación ya no es cierta. Candidato para un refactor futuro chico, sin apuro.
-- `CreateRoutineForm.tsx` todavía no le pasa `t`/`disciplines` a `ActivityPicker` — cae al default en español ahí específicamente (comentario ya en el código señalándolo, de una tarea anterior a esta ronda).
+- ~~`CreateRoutineForm.tsx` no le pasaba `t`/`disciplines` a `ActivityPicker`~~ — resuelto 2026-09-24: `pickerT`/`disciplinesT` fluyen desde las páginas `rutinas` → `RoutineManager` → `CreateRoutineForm` → `ActivityPicker`.
 - Manifest de la PWA (nombre/descripción al instalar) y el service worker (no precachea `/en/`) quedaron fuera de alcance a propósito — cambios chicos y aislados para cuando se quiera.
 - Templates de email de Supabase (confirmación de cuenta, recuperar contraseña) siguen en español — se configuran desde el dashboard de Supabase, no desde este repo.
 

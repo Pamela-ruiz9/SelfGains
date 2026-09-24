@@ -7,7 +7,8 @@ import { getCollection } from 'astro:content';
 import { getDictionary } from '../../../i18n';
 
 const locale = Astro.currentLocale === 'en' ? 'en' : 'es';
-const t = getDictionary(locale).rutinas;
+const dict = getDictionary(locale);
+const t = dict.rutinas;
 
 const planEntries = await getCollection('plans');
 const predefinedRoutines = planEntries
@@ -36,5 +37,5 @@ const activities = activityEntries
 <BaseLayout title={t.pageTitle}>
   <p class="label-brutal mb-3 text-acid">{t.kicker}</p>
   <h1 class="mb-8 font-display text-5xl text-paper sm:text-6xl">{t.heading}</h1>
-  <RoutineManager client:load predefinedRoutines={predefinedRoutines} activities={activities} t={t} />
+  <RoutineManager client:load predefinedRoutines={predefinedRoutines} activities={activities} t={t} pickerT={dict.registrar.picker} disciplinesT={dict.disciplines} />
 </BaseLayout>

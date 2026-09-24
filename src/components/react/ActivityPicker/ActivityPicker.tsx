@@ -32,9 +32,7 @@ interface Props {
    * action must gate it behind their own trigger (e.g. a separate button).
    */
   onSelect: (activity: ActivityOption | null) => void;
-  // Optional: CreateRoutineForm (RoutineManager) renders this without a
-  // locale yet, so it falls back to Spanish there until that call site gets
-  // wired up in a future pass.
+  // Optional: falls back to Spanish when a caller doesn't pass a locale.
   t?: Dictionary['registrar']['picker'] & { disciplines: Dictionary['disciplines'] };
 }
 
