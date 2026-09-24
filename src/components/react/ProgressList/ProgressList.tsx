@@ -39,11 +39,19 @@ interface Props {
   activities: ActivityOption[];
   t: Dictionary['progreso'];
   registrarT: Dictionary['registrar']['logger'];
+  disciplinesT: Dictionary['disciplines'];
 }
 
 interface WorkoutWithLogs extends WorkoutWithSets, WorkoutWithSessions {}
 
-export default function ProgressList({ exerciseNames, exercises, activities, t, registrarT }: Props) {
+export default function ProgressList({
+  exerciseNames,
+  exercises,
+  activities,
+  t,
+  registrarT,
+  disciplinesT,
+}: Props) {
   const [authChecked, setAuthChecked] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [workouts, setWorkouts] = useState<WorkoutWithLogs[]>([]);
@@ -199,6 +207,7 @@ export default function ProgressList({ exerciseNames, exercises, activities, t, 
           selected={selectedDiscipline}
           onSelect={setSelectedDiscipline}
           t={t.disciplineSummary}
+          disciplinesT={disciplinesT}
         />
 
         {selectedDiscipline === 'gym' && (
@@ -229,6 +238,7 @@ export default function ProgressList({ exerciseNames, exercises, activities, t, 
             onSelectActivity={setSelectedCardioActivityId}
             selectedActivityId={selectedCardioActivityId}
             t={t.cardioPrGrid}
+            disciplinesT={disciplinesT}
             chart={
               selectedCardioActivityId && (
                 <CardioProgressChart
@@ -261,6 +271,7 @@ export default function ProgressList({ exerciseNames, exercises, activities, t, 
           filterDiscipline={selectedDiscipline}
           t={t.workoutHistory}
           registrarT={registrarT}
+          disciplinesT={disciplinesT}
         />
       </CollapsibleSection>
     </div>

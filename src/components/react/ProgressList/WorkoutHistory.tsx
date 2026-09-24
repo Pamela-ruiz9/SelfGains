@@ -34,6 +34,7 @@ interface Props {
   // WorkoutLogger.tsx) get real translations instead of falling back to
   // their Spanish defaults.
   registrarT: Dictionary['registrar']['logger'];
+  disciplinesT: Dictionary['disciplines'];
 }
 
 function SetRow({
@@ -257,11 +258,13 @@ function SessionRow({
   );
 }
 
-const LABEL_BY_DISCIPLINE: Record<string, string> = Object.fromEntries(
-  DISCIPLINES.map((d) => [d.id, d.label])
-);
-
-function DisciplineTags({ disciplines }: { disciplines: string[] }) {
+function DisciplineTags({
+  disciplines,
+  disciplinesT,
+}: {
+  disciplines: string[];
+  disciplinesT: Dictionary['disciplines'];
+}) {
   if (disciplines.length === 0) return null;
   return (
     <div className="flex flex-wrap gap-1.5">
@@ -271,7 +274,7 @@ function DisciplineTags({ disciplines }: { disciplines: string[] }) {
           style={{ backgroundColor: DISCIPLINE_COLORS[d] ?? 'var(--color-paper-dim)' }}
           className="px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-on-accent"
         >
-          {LABEL_BY_DISCIPLINE[d] ?? d}
+          {disciplinesT[d as keyof Dictionary['disciplines']] ?? d}
         </span>
       ))}
     </div>
@@ -286,6 +289,7 @@ export default function WorkoutHistory({
   filterDiscipline,
   t,
   registrarT,
+  disciplinesT,
 }: Props) {
   const [error, setError] = useState<string | null>(null);
   const activityById = new Map(activities.map((a) => [a.id, a]));
@@ -328,7 +332,7 @@ export default function WorkoutHistory({
           <div className="flex items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-3">
               <h2 className="font-display text-2xl tracking-wide text-acid">{w.date}</h2>
-              <DisciplineTags disciplines={disciplinesForWorkout(w)} />
+              <DisciplineTags disciplines={disciplinesForWorkout(w)} disciplinesT={disciplinesT} />
             </div>
             <button
               type="button"

@@ -17,9 +17,11 @@ const ACCENT_PRESETS = ['#d7ff3f', '#3fd7ff', '#ff3fb8', '#ff9c3f', '#8f3fff', '
 export default function ProfileForm({
   t,
   avatarT,
+  disciplinesT,
 }: {
   t: Dictionary['perfil'];
   avatarT: Dictionary['sync']['avatar'];
+  disciplinesT: Dictionary['disciplines'];
 }) {
   const MEASUREMENT_FIELDS: { key: keyof Profile; label: string }[] = [
     { key: 'weight_kg', label: t.measurements.weight },
@@ -568,7 +570,7 @@ export default function ProfileForm({
                     : 'btn-brutal-sm'
                 }
               >
-                {d.label}
+                {disciplinesT[d.id]}
               </button>
             ))}
           </div>

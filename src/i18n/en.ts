@@ -658,4 +658,10 @@ export const en: Dictionary = {
       defaultAlt: 'Avatar',
     },
   },
+  disciplines: {
+    gym: 'Gym',
+    running: 'Running',
+    natacion: 'Swimming',
+    combate: 'Combat sports',
+  },
 };

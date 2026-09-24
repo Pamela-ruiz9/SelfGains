@@ -13,11 +13,14 @@ export interface ActivityOption {
   image?: string;
 }
 
-export const DISCIPLINES: { id: ActivityOption['discipline']; label: string }[] = [
-  { id: 'gym', label: 'Gym' },
-  { id: 'running', label: 'Running' },
-  { id: 'natacion', label: 'Natación' },
-  { id: 'combate', label: 'Combate' },
+// Los labels ya NO viven acá — vienen del namespace `disciplines` del
+// diccionario (ver src/i18n/es.ts / en.ts), para que se traduzcan por
+// locale. Este array solo define el orden/ids de las 4 disciplinas.
+export const DISCIPLINES: { id: ActivityOption['discipline'] }[] = [
+  { id: 'gym' },
+  { id: 'running' },
+  { id: 'natacion' },
+  { id: 'combate' },
 ];
 
 interface Props {
@@ -32,7 +35,7 @@ interface Props {
   // Optional: CreateRoutineForm (RoutineManager) renders this without a
   // locale yet, so it falls back to Spanish there until that call site gets
   // wired up in a future pass.
-  t?: Dictionary['registrar']['picker'];
+  t?: Dictionary['registrar']['picker'] & { disciplines: Dictionary['disciplines'] };
 }
 
 function groupsIn(activities: ActivityOption[]): string[] {
@@ -42,7 +45,11 @@ function groupsIn(activities: ActivityOption[]): string[] {
   return [...known, ...unknown];
 }
 
-export default function ActivityPicker({ activities, onSelect, t = es.registrar.picker }: Props) {
+export default function ActivityPicker({
+  activities,
+  onSelect,
+  t = { ...es.registrar.picker, disciplines: es.disciplines },
+}: Props) {
   const [discipline, setDiscipline] = useState<ActivityOption['discipline']>('gym');
   const byDiscipline = activities.filter((a) => a.discipline === discipline);
   const groups = groupsIn(byDiscipline);
@@ -87,7 +94,7 @@ export default function ActivityPicker({ activities, onSelect, t = es.registrar.
                 : 'btn-brutal-sm opacity-60'
             }
           >
-            {d.label}
+            {t.disciplines[d.id]}
           </button>
         ))}
       </div>

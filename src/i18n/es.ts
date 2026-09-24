@@ -660,6 +660,16 @@ export const es = {
       defaultAlt: 'Avatar',
     },
   },
+  // Labels de las 4 disciplinas de entrenamiento (DISCIPLINES en
+  // ActivityPicker.tsx) — namespace de nivel superior porque se comparte
+  // entre registrar/progreso/perfil (filtros, tags, picker de entrenador),
+  // no específico de una sola pantalla.
+  disciplines: {
+    gym: 'Gym',
+    running: 'Running',
+    natacion: 'Natación',
+    combate: 'Combate',
+  },
 };
 
 export type Dictionary = typeof es;

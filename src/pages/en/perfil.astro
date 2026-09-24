@@ -16,7 +16,7 @@ const t = dict.perfil;
   <a href={`${base}conexiones/`} class="btn-brutal-outline mb-8 block w-full text-center sm:w-fit">
     {t.connections}
   </a>
-  <ProfileForm client:load t={t} avatarT={dict.sync.avatar} />
+  <ProfileForm client:load t={t} avatarT={dict.sync.avatar} disciplinesT={dict.disciplines} />
   <div class="mt-6">
     <InstallPrompt client:load variant="card" t={dict.sync.installPrompt} />
   </div>

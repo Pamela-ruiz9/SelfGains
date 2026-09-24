@@ -32,5 +32,5 @@ const plans = planEntries.map((p) => ({ id: p.id, days: p.data.days }));
     {t.warmupTip}
   </p>
   <InstallPrompt client:load variant="banner" t={dict.sync.installPrompt} />
-  <WorkoutLogger client:load activities={activities} plans={plans} t={t} />
+  <WorkoutLogger client:load activities={activities} plans={plans} t={t} disciplinesT={dict.disciplines} />
 </BaseLayout>

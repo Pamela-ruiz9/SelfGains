@@ -39,10 +39,6 @@ interface PredefinedRoutine {
 
 interface WorkoutWithLogs extends WorkoutWithSets, WorkoutWithSessions {}
 
-const LABEL_BY_DISCIPLINE: Record<string, string> = Object.fromEntries(
-  DISCIPLINES.map((d) => [d.id, d.label])
-);
-
 interface TodayActivityEntry {
   activity: ActivityOption;
   target: Omit<RoutineActivityTarget, 'activityId'>;
@@ -68,6 +64,7 @@ interface Props {
   activities: ActivityOption[];
   plans: PredefinedRoutine[];
   t: Dictionary['registrar'];
+  disciplinesT: Dictionary['disciplines'];
 }
 
 interface ParsedSet {
@@ -519,7 +516,7 @@ function RoutineActivityCard({
   );
 }
 
-export default function WorkoutLogger({ activities, plans, t }: Props) {
+export default function WorkoutLogger({ activities, plans, t, disciplinesT }: Props) {
   const [authChecked, setAuthChecked] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
@@ -910,7 +907,7 @@ export default function WorkoutLogger({ activities, plans, t }: Props) {
                     : t.logger.copy.chooseWithRoutine}
                 </option>
                 {pastWorkouts.map((w) => {
-                  const labels = disciplinesForPastWorkout(w).map((id) => LABEL_BY_DISCIPLINE[id] ?? id);
+                  const labels = disciplinesForPastWorkout(w).map((id) => disciplinesT[id as keyof Dictionary['disciplines']] ?? id);
                   return (
                     <option key={w.id} value={w.id}>
                       {w.date}
@@ -990,7 +987,11 @@ export default function WorkoutLogger({ activities, plans, t }: Props) {
         onToggle={() => setAddActivitySectionOpen((prev) => !prev)}
       >
         <form onSubmit={handleAddActivity} className="card-brutal flex flex-col gap-4">
-          <ActivityPicker activities={activities} onSelect={setSelectedActivity} t={t.picker} />
+          <ActivityPicker
+            activities={activities}
+            onSelect={setSelectedActivity}
+            t={{ ...t.picker, disciplines: disciplinesT }}
+          />
           {selectedActivity?.image && (
             <img
               src={`${import.meta.env.BASE_URL}exercises/${selectedActivity.image}`}

@@ -1,4 +1,3 @@
-import { DISCIPLINES } from '../ActivityPicker/ActivityPicker';
 import { DISCIPLINE_COLORS } from '../../../lib/activities';
 import type { DisciplineSummary as DisciplineSummaryEntry } from '../../../lib/prs';
 import type { Dictionary } from '../../../i18n/es';
@@ -8,13 +7,11 @@ interface Props {
   selected: string | null;
   onSelect: (discipline: string | null) => void;
   t: Dictionary['progreso']['disciplineSummary'];
+  disciplinesT: Dictionary['disciplines'];
 }
 
-const LABEL_BY_DISCIPLINE: Record<string, string> = Object.fromEntries(
-  DISCIPLINES.map((d) => [d.id, d.label])
-);
-
-export default function DisciplineSummary({ summaries, selected, onSelect, t }: Props) {
+export default function DisciplineSummary({ summaries, selected, onSelect, t, disciplinesT }: Props) {
+  const LABEL_BY_DISCIPLINE: Record<string, string> = disciplinesT;
   if (summaries.length === 0) return null;
 
   return (
