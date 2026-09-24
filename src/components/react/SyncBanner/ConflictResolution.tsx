@@ -4,51 +4,47 @@ import { getConflicts, patchCacheArray, removeConflict } from '../../../lib/offl
 import { updateSessionRemote, updateSetRemote } from '../../../lib/workouts';
 import type { Workout, WorkoutSession, WorkoutSet } from '../../../types/db';
 import { getWeightUnit, kgToDisplay } from '../../../lib/weightUnit';
+import type { Dictionary } from '../../../i18n/es';
 
 const weightUnit = getWeightUnit();
 
-const TYPE_LABEL: Record<string, string> = {
-  createWorkout: 'Entrenamiento nuevo',
-  addSet: 'Serie nueva',
-  addSession: 'Sesión nueva',
-  updateSet: 'Edición de una serie',
-  deleteSet: 'Borrado de una serie',
-  updateSession: 'Edición de una sesión',
-  deleteSession: 'Borrado de una sesión',
-  deleteWorkout: 'Borrado de un entrenamiento',
-}
+type ConflictResolutionT = Dictionary['sync']['conflictResolution'];
 
-function describeSetPayload(payload: Record<string, unknown>): string {
+function describeSetPayload(payload: Record<string, unknown>, t: ConflictResolutionT): string {
   const weight = kgToDisplay(Number(payload.weight), weightUnit);
-  return `${payload.reps} reps × ${weight}${weightUnit}${payload.rpe ? ` (RPE ${payload.rpe})` : ''}`;
+  return `${payload.reps} ${t.measure.reps} ${t.measure.times} ${weight}${weightUnit}${payload.rpe ? ` (${t.measure.rpe} ${payload.rpe})` : ''}`;
 }
 
-function describeSessionPayload(payload: Record<string, unknown>): string {
-  const duration = `${payload.durationMin} min`;
-  return payload.distanceKm ? `${payload.distanceKm} km en ${duration}` : duration;
+function describeSessionPayload(payload: Record<string, unknown>, t: ConflictResolutionT): string {
+  const duration = `${payload.durationMin} ${t.measure.min}`;
+  return payload.distanceKm ? `${payload.distanceKm} ${t.measure.distanceIn} ${duration}` : duration;
 }
 
-function describeSessionSnapshot(snapshot: Record<string, unknown>): string {
-  const duration = `${snapshot.duration_min} min`;
-  return snapshot.distance_km ? `${snapshot.distance_km} km en ${duration}` : duration;
+function describeSessionSnapshot(snapshot: Record<string, unknown>, t: ConflictResolutionT): string {
+  const duration = `${snapshot.duration_min} ${t.measure.min}`;
+  return snapshot.distance_km ? `${snapshot.distance_km} ${t.measure.distanceIn} ${duration}` : duration;
 }
 
-function describeMine(conflict: ConflictItem): string {
+function describeMine(conflict: ConflictItem, t: ConflictResolutionT): string {
   const { type, payload } = conflict.queueItem;
-  if (type === 'updateSet') return describeSetPayload(payload);
-  if (type === 'updateSession') return describeSessionPayload(payload);
-  return 'este entrenamiento ya no existe en el servidor';
+  if (type === 'updateSet') return describeSetPayload(payload, t);
+  if (type === 'updateSession') return describeSessionPayload(payload, t);
+  return t.mineNoLongerExists;
 }
 
-function describeTheirs(conflict: ConflictItem): string {
-  if (!conflict.serverSnapshot) return 'Ya no existe en el servidor.';
+function describeTheirs(conflict: ConflictItem, t: ConflictResolutionT): string {
+  if (!conflict.serverSnapshot) return t.theirsNoLongerExists;
   const { type } = conflict.queueItem;
-  if (type === 'updateSet') return describeSetPayload(conflict.serverSnapshot);
-  if (type === 'updateSession') return describeSessionSnapshot(conflict.serverSnapshot);
+  if (type === 'updateSet') return describeSetPayload(conflict.serverSnapshot, t);
+  if (type === 'updateSession') return describeSessionSnapshot(conflict.serverSnapshot, t);
   return JSON.stringify(conflict.serverSnapshot);
 }
 
-export default function ConflictResolution() {
+interface Props {
+  t: ConflictResolutionT;
+}
+
+export default function ConflictResolution({ t }: Props) {
   const [conflicts, setConflicts] = useState<ConflictItem[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -115,7 +111,7 @@ export default function ConflictResolution() {
       await removeConflict(conflict.id!);
       setConflicts((prev) => prev.filter((c) => c.id !== conflict.id));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo descartar el cambio.');
+      setError(err instanceof Error ? err.message : t.discardError);
     }
   }
 
@@ -132,14 +128,14 @@ export default function ConflictResolution() {
       await removeConflict(conflict.id!);
       setConflicts((prev) => prev.filter((c) => c.id !== conflict.id));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo aplicar el cambio.');
+      setError(err instanceof Error ? err.message : t.applyError);
     }
   }
 
-  if (loading) return <p className="font-mono text-sm text-paper-dim">Cargando...</p>;
+  if (loading) return <p className="font-mono text-sm text-paper-dim">{t.loading}</p>;
 
   if (conflicts.length === 0) {
-    return <p className="font-mono text-sm text-paper-dim">No hay conflictos pendientes.</p>;
+    return <p className="font-mono text-sm text-paper-dim">{t.empty}</p>;
   }
 
   return (
@@ -147,21 +143,23 @@ export default function ConflictResolution() {
       {error && <p className="border-l border-blood pl-3 font-mono text-sm text-blood">{error}</p>}
       {conflicts.map((conflict) => (
         <div key={conflict.id} className="card-brutal flex flex-col gap-3">
-          <p className="label-brutal text-acid">{TYPE_LABEL[conflict.queueItem.type] ?? conflict.queueItem.type}</p>
-          <p className="font-mono text-sm text-paper">
-            Vos: <span className="text-paper-dim">{describeMine(conflict)}</span>
+          <p className="label-brutal text-acid">
+            {t.typeLabels[conflict.queueItem.type as keyof typeof t.typeLabels] ?? conflict.queueItem.type}
           </p>
           <p className="font-mono text-sm text-paper">
-            Servidor: <span className="text-paper-dim">{describeTheirs(conflict)}</span>
+            {t.mineLabel} <span className="text-paper-dim">{describeMine(conflict, t)}</span>
+          </p>
+          <p className="font-mono text-sm text-paper">
+            {t.serverLabel} <span className="text-paper-dim">{describeTheirs(conflict, t)}</span>
           </p>
           <div className="flex gap-2">
             {conflict.serverSnapshot && (
               <button type="button" onClick={() => keepMine(conflict)} className="btn-brutal-sm">
-                Mantener el mío
+                {t.keepMine}
               </button>
             )}
             <button type="button" onClick={() => discard(conflict)} className="btn-brutal-sm opacity-60">
-              {conflict.serverSnapshot ? 'Descartar y usar el del servidor' : 'Descartar mi cambio'}
+              {conflict.serverSnapshot ? t.discardUseServer : t.discardMine}
             </button>
           </div>
         </div>

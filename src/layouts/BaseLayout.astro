@@ -3,6 +3,7 @@ import '../styles/global.css';
 import Nav from '../components/astro/Nav.astro';
 import SyncBanner from '../components/react/SyncBanner/SyncBanner';
 import { ClientRouter, fade } from 'astro:transitions';
+import { getDictionary } from '../i18n';
 
 interface Props {
   title: string;
@@ -10,6 +11,8 @@ interface Props {
 
 const { title } = Astro.props;
 const base = import.meta.env.BASE_URL;
+const locale = Astro.currentLocale === 'en' ? 'en' : 'es';
+const t = getDictionary(locale).sync.banner;
 ---
 <html lang={Astro.currentLocale === "en" ? "en" : "es"}>
   <head>
@@ -100,7 +103,7 @@ const base = import.meta.env.BASE_URL;
   </head>
   <body class="min-h-screen">
     <Nav />
-    <SyncBanner client:load />
+    <SyncBanner client:load t={t} />
     <main transition:animate={fade({ duration: '0.2s' })} class="mx-auto max-w-5xl px-4 py-10 pb-24 sm:px-6 sm:py-14">
       <slot />
     </main>

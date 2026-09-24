@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { usePwaInstall } from '../../../lib/pwaInstall';
+import type { Dictionary } from '../../../i18n/es';
 
 const BANNER_DISMISSED_KEY = 'selfgains-pwa-banner-dismissed';
 
 interface Props {
   variant: 'card' | 'banner';
+  t: Dictionary['sync']['installPrompt'];
 }
 
-export default function InstallPrompt({ variant }: Props) {
+export default function InstallPrompt({ variant, t }: Props) {
   const { installed, canInstall, isIOSDevice, promptInstall } = usePwaInstall();
   const [dismissed, setDismissed] = useState(() => {
     if (variant !== 'banner' || typeof window === 'undefined') return false;
@@ -34,19 +36,19 @@ export default function InstallPrompt({ variant }: Props) {
 
   const action = isIOSDevice ? (
     <p className="font-mono text-sm text-paper">
-      Tocá <strong className="text-acid">Compartir</strong> y después{' '}
-      <strong className="text-acid">"Agregar a inicio"</strong>.
+      {t.iosPrefix} <strong className="text-acid">{t.iosShare}</strong> {t.iosMiddle}{' '}
+      <strong className="text-acid">{t.iosAddHome}</strong>.
     </p>
   ) : (
     <button type="button" onClick={promptInstall} className="btn-brutal-sm">
-      Instalar app
+      {t.install}
     </button>
   );
 
   if (variant === 'card') {
     return (
       <div className="card-brutal flex flex-col gap-3">
-        <p className="label-brutal text-acid">Instalar SelfGains</p>
+        <p className="label-brutal text-acid">{t.cardTitle}</p>
         {action}
       </div>
     );
@@ -58,7 +60,7 @@ export default function InstallPrompt({ variant }: Props) {
       <button
         type="button"
         onClick={dismiss}
-        aria-label="Cerrar"
+        aria-label={t.closeAriaLabel}
         className="shrink-0 font-mono text-lg text-paper-dim hover:text-paper"
       >
         ✕

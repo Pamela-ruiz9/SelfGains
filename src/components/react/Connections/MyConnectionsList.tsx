@@ -78,6 +78,7 @@ interface Props {
   onRemove: (connectionId: string) => void;
   onRoutineAssigned: () => void;
   t: Dictionary['conexiones']['myConnectionsList'];
+  avatarT: Dictionary['sync']['avatar'];
 }
 
 export default function MyConnectionsList({
@@ -87,6 +88,7 @@ export default function MyConnectionsList({
   onRemove,
   onRoutineAssigned,
   t,
+  avatarT,
 }: Props) {
   return (
     <div className="flex flex-col gap-3">
@@ -96,7 +98,7 @@ export default function MyConnectionsList({
       ) : (
         connections.map((c) => (
           <div key={c.connectionId} className="card-brutal flex items-center gap-4">
-            <Avatar avatarUrl={c.avatarUrl} displayName={c.displayName} isTrainer={c.isTrainer} />
+            <Avatar avatarUrl={c.avatarUrl} displayName={c.displayName} isTrainer={c.isTrainer} t={avatarT} />
             <p className="flex-1 font-display text-xl text-paper">{c.displayName ?? t.unnamedUser}</p>
             <div className="flex flex-col items-end gap-2">
               {isTrainer && (

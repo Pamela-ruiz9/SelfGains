@@ -6,7 +6,8 @@ import { getCollection } from 'astro:content';
 import { getDictionary } from '../../i18n';
 
 const locale = Astro.currentLocale === 'en' ? 'en' : 'es';
-const t = getDictionary(locale).registrar;
+const dict = getDictionary(locale);
+const t = dict.registrar;
 
 const activityEntries = await getCollection('activities');
 const activities = activityEntries
@@ -30,6 +31,6 @@ const plans = planEntries.map((p) => ({ id: p.id, days: p.data.days }));
   <p class="card-brutal mb-6 border-acid font-mono text-sm text-paper">
     {t.warmupTip}
   </p>
-  <InstallPrompt client:load variant="banner" />
+  <InstallPrompt client:load variant="banner" t={dict.sync.installPrompt} />
   <WorkoutLogger client:load activities={activities} plans={plans} t={t} />
 </BaseLayout>

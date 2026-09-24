@@ -48,9 +48,10 @@ interface Props {
   activities: ActivityOption[];
   t: Dictionary['conexiones'];
   routinePreviewT: Pick<Dictionary['rutinas'], 'preview' | 'days'>;
+  avatarT: Dictionary['sync']['avatar'];
 }
 
-export default function Connections({ activities, t, routinePreviewT }: Props) {
+export default function Connections({ activities, t, routinePreviewT, avatarT }: Props) {
   const [authChecked, setAuthChecked] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isTrainer, setIsTrainer] = useState(false);
@@ -332,6 +333,7 @@ export default function Connections({ activities, t, routinePreviewT }: Props) {
         onSendRequest={handleSendRequest}
         onAcceptFromSearch={handleAcceptFromSearch}
         t={t.userSearch}
+        avatarT={avatarT}
       />
 
       <IncomingRequests
@@ -339,6 +341,7 @@ export default function Connections({ activities, t, routinePreviewT }: Props) {
         onAccept={handleAcceptIncoming}
         onReject={handleRejectIncoming}
         t={t.incomingRequests}
+        avatarT={avatarT}
       />
 
       <TrainerSearch
@@ -355,6 +358,7 @@ export default function Connections({ activities, t, routinePreviewT }: Props) {
         onConnect={handleConnectTrainer}
         onAcceptRequest={handleAcceptTrainerRequest}
         t={t.trainerSearch}
+        avatarT={avatarT}
       />
 
       <PendingRoutineShares
@@ -378,6 +382,7 @@ export default function Connections({ activities, t, routinePreviewT }: Props) {
         onRemove={handleRemove}
         onRoutineAssigned={refresh}
         t={t.myConnectionsList}
+        avatarT={avatarT}
       />
     </div>
   );

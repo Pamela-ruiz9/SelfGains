@@ -14,7 +14,13 @@ import type { Dictionary } from '../../../i18n';
 
 const ACCENT_PRESETS = ['#d7ff3f', '#3fd7ff', '#ff3fb8', '#ff9c3f', '#8f3fff', '#3fff8f'];
 
-export default function ProfileForm({ t }: { t: Dictionary['perfil'] }) {
+export default function ProfileForm({
+  t,
+  avatarT,
+}: {
+  t: Dictionary['perfil'];
+  avatarT: Dictionary['sync']['avatar'];
+}) {
   const MEASUREMENT_FIELDS: { key: keyof Profile; label: string }[] = [
     { key: 'weight_kg', label: t.measurements.weight },
     { key: 'height_cm', label: t.measurements.height },
@@ -319,7 +325,7 @@ export default function ProfileForm({ t }: { t: Dictionary['perfil'] }) {
   return (
     <div className="flex max-w-sm flex-col gap-10">
       <div className="flex items-center gap-4">
-        <Avatar avatarUrl={avatarUrl} displayName={displayName || email} isTrainer={isTrainer} size={80} />
+        <Avatar avatarUrl={avatarUrl} displayName={displayName || email} isTrainer={isTrainer} size={80} t={avatarT} />
         <div className="flex flex-col gap-1">
           <label className="btn-brutal-outline w-fit cursor-pointer px-4 py-2 text-sm">
             {uploadingPhoto ? t.photo.uploading : t.photo.change}

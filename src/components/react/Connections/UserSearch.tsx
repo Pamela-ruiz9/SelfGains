@@ -13,6 +13,7 @@ interface Props {
   onSendRequest: (userId: string) => void;
   onAcceptFromSearch: (userId: string, requestId: string) => void;
   t: Dictionary['conexiones']['userSearch'];
+  avatarT: Dictionary['sync']['avatar'];
 }
 
 export default function UserSearch({
@@ -25,6 +26,7 @@ export default function UserSearch({
   onSendRequest,
   onAcceptFromSearch,
   t,
+  avatarT,
 }: Props) {
   return (
     <form onSubmit={onSubmit} className="card-brutal flex flex-col gap-3">
@@ -48,7 +50,7 @@ export default function UserSearch({
         <div className="flex flex-col gap-2">
           {results.map((r) => (
             <div key={r.userId} className="card-brutal flex items-center gap-4">
-              <Avatar avatarUrl={r.avatarUrl} displayName={r.displayName} isTrainer={r.isTrainer} />
+              <Avatar avatarUrl={r.avatarUrl} displayName={r.displayName} isTrainer={r.isTrainer} t={avatarT} />
               <p className="flex-1 font-display text-xl text-paper">{r.displayName ?? t.unnamedUser}</p>
               {r.status === 'connected' && (
                 <p className="font-mono text-xs text-paper-dim">{t.alreadyConnected}</p>

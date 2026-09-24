@@ -5,7 +5,8 @@ import InstallPrompt from '../components/react/InstallPrompt/InstallPrompt';
 import { getDictionary } from '../i18n';
 const base = import.meta.env.BASE_URL;
 const locale = Astro.currentLocale === 'en' ? 'en' : 'es';
-const t = getDictionary(locale).perfil;
+const dict = getDictionary(locale);
+const t = dict.perfil;
 ---
 <BaseLayout title={t.pageTitle}>
   <p class="label-brutal mb-3 text-acid">{t.kicker}</p>
@@ -13,8 +14,8 @@ const t = getDictionary(locale).perfil;
   <a href={`${base}conexiones/`} class="btn-brutal-outline mb-8 block w-full text-center sm:w-fit">
     {t.connections}
   </a>
-  <ProfileForm client:load t={t} />
+  <ProfileForm client:load t={t} avatarT={dict.sync.avatar} />
   <div class="mt-6">
-    <InstallPrompt client:load variant="card" />
+    <InstallPrompt client:load variant="card" t={dict.sync.installPrompt} />
   </div>
 </BaseLayout>

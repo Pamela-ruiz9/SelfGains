@@ -7,9 +7,10 @@ interface Props {
   onAccept: (requestId: string) => void;
   onReject: (requestId: string) => void;
   t: Dictionary['conexiones']['incomingRequests'];
+  avatarT: Dictionary['sync']['avatar'];
 }
 
-export default function IncomingRequests({ requests, onAccept, onReject, t }: Props) {
+export default function IncomingRequests({ requests, onAccept, onReject, t, avatarT }: Props) {
   return (
     <div className="flex flex-col gap-3">
       <p className="label-brutal text-acid">{t.title}</p>
@@ -18,7 +19,7 @@ export default function IncomingRequests({ requests, onAccept, onReject, t }: Pr
       ) : (
         requests.map((req) => (
           <div key={req.requestId} className="card-brutal flex items-center gap-4">
-            <Avatar avatarUrl={req.avatarUrl} displayName={req.displayName} isTrainer={req.isTrainer} />
+            <Avatar avatarUrl={req.avatarUrl} displayName={req.displayName} isTrainer={req.isTrainer} t={avatarT} />
             <p className="flex-1 font-display text-xl text-paper">{req.displayName ?? t.unnamedUser}</p>
             <div className="flex gap-2">
               <button type="button" onClick={() => onAccept(req.requestId)} className="btn-brutal-sm">

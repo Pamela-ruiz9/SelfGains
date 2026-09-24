@@ -23,5 +23,5 @@ const activities = activityEntries
 <BaseLayout title={t.pageTitle}>
   <p class="label-brutal mb-3 text-acid">{t.kicker}</p>
   <h1 class="mb-8 font-display text-5xl text-paper sm:text-6xl">{t.heading}</h1>
-  <Connections client:load activities={activities} t={t} routinePreviewT={dict.rutinas} />
+  <Connections client:load activities={activities} t={t} routinePreviewT={dict.rutinas} avatarT={dict.sync.avatar} />
 </BaseLayout>

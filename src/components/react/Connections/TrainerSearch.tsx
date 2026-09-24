@@ -18,6 +18,7 @@ interface Props {
   onConnect: (userId: string) => void;
   onAcceptRequest: (requestId: string) => void;
   t: Dictionary['conexiones']['trainerSearch'];
+  avatarT: Dictionary['sync']['avatar'];
 }
 
 export default function TrainerSearch({
@@ -34,6 +35,7 @@ export default function TrainerSearch({
   onConnect,
   onAcceptRequest,
   t,
+  avatarT,
 }: Props) {
   const trainerMarkers = useMemo(
     () =>
@@ -103,7 +105,7 @@ export default function TrainerSearch({
               }
             >
               <div className="flex items-center gap-3">
-                <Avatar avatarUrl={tr.avatarUrl} displayName={tr.displayName} isTrainer />
+                <Avatar avatarUrl={tr.avatarUrl} displayName={tr.displayName} isTrainer t={avatarT} />
                 <div>
                   <p className="font-display text-lg text-paper">{tr.displayName ?? t.unnamedUser}</p>
                   <p className="font-mono text-xs text-paper-dim">{tr.distanceKm.toFixed(1)} {t.kmUnit}</p>
