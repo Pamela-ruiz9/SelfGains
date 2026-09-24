@@ -40,16 +40,42 @@ interface PlanEntryLike<Days> {
 // Las claves de los vocabularios son los valores en español tal como están en
 // los .md; un valor sin entrada se muestra tal cual.
 function lookup(map: object, key: string): string {
-  return (map as Record<string, string>)[key] ?? key;
+  return Object.hasOwn(map, key) ? (map as Record<string, string>)[key] : key;
 }
 
-export function localizeActivity(entry: ActivityEntryLike, locale: Locale, vocab: Vocab) {
+export interface LocalizedActivity {
+  id: string;
+  name: string;
+  description: string;
+  discipline: 'gym' | 'running' | 'natacion' | 'combate';
+  metricType: 'sets' | 'session';
+  group?: string;
+  groupLabel?: string;
+  // Solo para mostrar: ya viene traducido; la clave en español no se conserva
+  // (a diferencia de group/groupLabel y level/levelLabel).
+  equipment?: string;
+  muscles?: string[];
+  image?: string;
+}
+
+export interface LocalizedPlan<Days> {
+  id: string;
+  name: string;
+  goal: string;
+  level: string;
+  levelLabel: string;
+  sex?: 'femenino' | 'masculino';
+  days: Days;
+}
+
+export function localizeActivity(entry: ActivityEntryLike, locale: Locale, vocab: Vocab): LocalizedActivity {
   const d = entry.data;
   const en = locale === 'en';
   return {
     id: entry.id,
     name: en ? d.name_en : d.name,
-    description: en ? d.instructions_en : (entry.body?.trim() ?? ''),
+    // Sin fallback al cuerpo en español a propósito: el schema exige *_en y un test de cobertura lo verifica; un fallback ocultaría una traducción faltante.
+    description: en ? d.instructions_en.trim() : (entry.body?.trim() ?? ''),
     discipline: d.discipline,
     metricType: d.metricType,
     group: d.group,
@@ -60,7 +86,7 @@ export function localizeActivity(entry: ActivityEntryLike, locale: Locale, vocab
   };
 }
 
-export function localizePlan<Days>(entry: PlanEntryLike<Days>, locale: Locale, vocab: Vocab) {
+export function localizePlan<Days>(entry: PlanEntryLike<Days>, locale: Locale, vocab: Vocab): LocalizedPlan<Days> {
   const d = entry.data;
   const en = locale === 'en';
   return {

@@ -120,3 +120,50 @@ test('plan en inglés: name_en, goal_en y levelLabel traducidos, level sigue sie
   assert.equal(p.sex, 'femenino');
   assert.deepEqual(p.days, { lunes: ['a'] });
 });
+
+test('nivel de plan fuera del vocabulario: levelLabel es el level crudo', () => {
+  const p = localizePlan({ ...planEntry, data: { ...planEntry.data, level: 'Experto' } }, 'en', vocab);
+  assert.equal(p.levelLabel, 'Experto');
+});
+
+test('plan sin sex: sex queda undefined', () => {
+  const p = localizePlan({ ...planEntry, data: { ...planEntry.data, sex: undefined } }, 'en', vocab);
+  assert.equal(p.sex, undefined);
+});
+
+test('actividad de sesión sin image: image queda undefined', () => {
+  const a = localizeActivity(swimEntry, 'en', vocab);
+  assert.equal(a.image, undefined);
+});
+
+test('la descripción en inglés se recorta', () => {
+  const a = localizeActivity(
+    { ...gymEntry, data: { ...gymEntry.data, instructions_en: '  Seated.  \n' } },
+    'en',
+    vocab
+  );
+  assert.equal(a.description, 'Seated.');
+});
+
+test('cuerpo en español solo con espacios: descripción vacía', () => {
+  const a = localizeActivity({ ...gymEntry, body: '  \n\t ' }, 'es', vocabEs);
+  assert.equal(a.description, '');
+});
+
+test('grupo desconocido: groupLabel es la clave cruda', () => {
+  const a = localizeActivity(
+    { ...swimEntry, data: { ...swimEntry.data, group: 'mariposa' } },
+    'en',
+    vocab
+  );
+  assert.equal(a.groupLabel, 'mariposa');
+});
+
+test('una clave de prototipo como equipamiento no se resuelve', () => {
+  const a = localizeActivity(
+    { ...gymEntry, data: { ...gymEntry.data, equipment: 'constructor' } },
+    'en',
+    vocab
+  );
+  assert.equal(a.equipment, 'constructor');
+});
