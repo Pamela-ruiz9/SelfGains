@@ -23,6 +23,6 @@ export const MUSCLES: Muscle[] = [
   { id: 'gemelos', label: 'Gemelos' },
 ];
 
-export function muscleLabel(id: string): string {
-  return MUSCLES.find((m) => m.id === id)?.label ?? id;
+export function muscleLabel(id: string, labels?: Record<string, string>): string {
+  return labels?.[id] ?? MUSCLES.find((m) => m.id === id)?.label ?? id;
 }
