@@ -60,7 +60,11 @@ export function groupLabel(group: string | undefined): string | undefined {
 // selector in the activity picker. Anywhere an activity name is shown flat
 // (routine summaries, workout history, PR cards) it needs that context back,
 // so this reconstructs the qualified "Crol — Catch-up" form for display.
-export function fullActivityName(activity: { name: string; group?: string }): string {
-  const label = groupLabel(activity.group);
+export function fullActivityName(activity: {
+  name: string;
+  group?: string;
+  groupLabel?: string;
+}): string {
+  const label = activity.groupLabel ?? groupLabel(activity.group);
   return label ? `${label} — ${activity.name}` : activity.name;
 }
