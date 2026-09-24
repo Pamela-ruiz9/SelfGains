@@ -21,7 +21,7 @@ Continuación de `2026-09-23-bilingue-es-en-design.md` (Ronda 1: infraestructura
 ### Schema (`src/content.config.ts`)
 
 - Actividades (ambas ramas, `sets` y `session`): `name_en: z.string()`, `instructions_en: z.string()`.
-- Planes: `name_en`, `goal_en`, `instructions_en`, todos `z.string()`.
+- Planes: `name_en` y `goal_en`, ambos `z.string()`. El cuerpo del plan no se muestra en ninguna pantalla, así que no lleva `instructions_en` (YAGNI).
 - `level` y `sex` no cambian. `level` es una clave de lógica (`isRecommendedGymPlan` en `RoutineManager.tsx` compara `plan.level.toLowerCase()` con el nivel del perfil), así que **no se traduce en el archivo**: se traduce al mostrarlo, con `planLevels`.
 - `equipment` tampoco cambia en el archivo: el valor en español es la clave del mapa `equipment` del diccionario (14 valores repetidos; traducirlos por archivo duplicaría trabajo y permitiría inconsistencias).
 
@@ -43,6 +43,8 @@ image: abductor-maquina.webp
 
 Sentado en la máquina con las piernas apoyadas en los cojines interiores, ...
 ```
+
+Las traducciones se guardan en una sola línea entre comillas dobles (`instructions_en: "..."`); el `>-` del ejemplo es ilustrativo.
 
 ### Helper `src/lib/content-i18n.ts`
 
@@ -67,7 +69,7 @@ Ids de archivo, `muscles`, `image`, `videoUrl`, base de datos. El historial y la
 ## Proceso de traducción
 
 1. El agente traduce los `name_en` de las 86 actividades y los 9 planes y entrega la lista corta a Pam para aprobar.
-2. Con los nombres aprobados: `instructions_en`, `goal_en` y los mapas del diccionario (`equipment`, `planLevels`, `groups`, `muscles`).
+2. Con los nombres aprobados: `instructions_en` (solo actividades), `goal_en` y los mapas del diccionario (`equipment`, `planLevels`, `groups`, `muscles`).
 3. Pam revisa el resultado completo al final.
 
 ## Pruebas
