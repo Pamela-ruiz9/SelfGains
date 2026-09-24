@@ -1,5 +1,7 @@
 ---
 name: Catch-up
+instructions_en: "Freestyle drill: one arm waits extended in front until the other completes its stroke and \"touches\" it before starting the next cycle. Works the catch and stroke length. Log the total distance swum and the session time."
+name_en: "Catch-up"
 discipline: natacion
 group: crol
 metricType: session

@@ -1,5 +1,7 @@
 ---
 name: Brazada (pull)
+instructions_en: "Freestyle using only your arms, with a pull buoy between your legs to isolate the pull without kicking. Log the total distance swum and the session time."
+name_en: "Pull (buoy)"
 discipline: natacion
 group: crol
 metricType: session

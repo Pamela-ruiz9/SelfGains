@@ -1,5 +1,7 @@
 ---
 name: Brazada (pull)
+instructions_en: "Butterfly using only your arms, with a pull buoy between your legs to isolate the pull without the dolphin kick. Log the total distance swum and the session time."
+name_en: "Pull (buoy)"
 discipline: natacion
 group: mariposa
 metricType: session

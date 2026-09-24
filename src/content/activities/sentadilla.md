@@ -2,6 +2,8 @@
 discipline: gym
 metricType: sets
 name: Sentadilla con barra
+instructions_en: "Place the barbell across your traps with your feet shoulder-width apart. Lower yourself by bending your hips and knees while keeping your back straight, until your thighs are parallel to the floor. Come up by pushing through your heels."
+name_en: "Barbell squat"
 muscles: [cuadriceps, gluteos, aductores]
 equipment: Barra
 image: sentadilla.webp

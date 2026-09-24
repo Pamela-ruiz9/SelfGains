@@ -1,5 +1,7 @@
 ---
 name: Push/Pull/Legs — Glúteo y pierna
+goal_en: "Hypertrophy"
+name_en: "Push/Pull/Legs — Glutes and legs"
 goal: Hipertrofia
 level: Intermedio
 sex: femenino

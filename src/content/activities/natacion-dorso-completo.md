@@ -1,5 +1,7 @@
 ---
 name: Completo
+instructions_en: "Continuous backstroke swimming, coordinating your arm stroke and kick. Log the total distance swum and the session time."
+name_en: "Full stroke"
 discipline: natacion
 group: dorso
 metricType: session

@@ -4,11 +4,7 @@ Este documento junta ideas de negocio que salieron en brainstorming (2026-08-16)
 
 **Actualizado 2026-08-19**: se resolvieron "Rol de entrenador" (`docs/agents/rol-entrenador-status.md`), "Compartir rutinas entre usuarios normales" y "Buscador de entrenadores cercanos" (ambas en `docs/agents/descubrimiento-conexiones-status.md`) — se sacaron de este backlog. Más tarde ese mismo día se resolvió también "Rutinas predefinidas para otras disciplinas" (`docs/agents/rutinas-otras-disciplinas-status.md`) y, por último, "Perfil enriquecido" (`docs/agents/perfil-enriquecido-status.md`). No queda ninguna idea de producto abierta en este backlog — solo la lista de deuda técnica compilada de los docs de cada feature (antes vivía dispersa en la sección "Lo que falta" de cada uno).
 
-**Actualizado 2026-09-24**: se resolvió "App bilingüe ES/EN — infraestructura + interfaz" (`docs/agents/bilingue-es-en-status.md`) — mergeado a `main`. Esto abre un ítem de producto nuevo, explícitamente diferido desde esa misma ronda:
-
-## Próximo ítem sugerido: Ronda 2 — traducción de contenido (ejercicios/rutinas)
-
-Con la infraestructura bilingüe ya en `main`, la interfaz completa responde en inglés pero los ~86 archivos de contenido (`src/content/activities/*.md`, `src/content/plans/*.md` — nombres e instrucciones de ejercicios y rutinas) siguen solo en español en ambos idiomas. Es el próximo paso natural para que la app sea realmente bilingüe de punta a punta. **Necesita su propio brainstorming antes de spec/plan** (no depende de nada técnico pendiente — la infraestructura no necesita cambios). Preguntas abiertas y contexto completo en la sección final de `docs/agents/bilingue-es-en-status.md` (esquema de datos para el contenido en inglés, si reusar o re-curar las imágenes ya existentes, quién traduce, tono de vocabulario de gimnasio en inglés).
+**Actualizado 2026-09-24**: se resolvió "App bilingüe ES/EN — infraestructura + interfaz" (`docs/agents/bilingue-es-en-status.md`) — mergeado a `main`. También se resolvió la Ronda 2 (traducción del contenido de ejercicios y rutinas, `docs/agents/bilingue-es-en-status.md`). Otra vez no queda ninguna idea de producto abierta en este backlog.
 
 ## Deuda técnica / mejoras pendientes (compilado 2026-08-19)
 
@@ -20,4 +16,15 @@ Ninguno de estos es un bug bloqueante — son limitaciones conocidas y aceptadas
 - **Progreso** (`progreso-graficas-prs-status.md`; 1RM/volumen resuelto en `1rm-y-volumen-total-status.md`): no se pueden comparar/superponer varios ejercicios a la vez; no hay filtro por rango de fechas; los umbrales de progresión/deload son constantes fijas, no configurables por el usuario.
 - **Rol de entrenador** (`rol-entrenador-status.md`): resuelto — ver `procedencia-original-rutina-compartida-status.md`. No queda deuda técnica pendiente de Rol de entrenador.
 - **Conexiones** (`descubrimiento-conexiones-status.md`, `dividir-connections-status.md`, `routine-shares-unique-constraint-status.md`, `accept-routine-share-atomic-status.md`): resuelto — ver el último status doc. No queda deuda técnica pendiente de Conexiones.
-- **App bilingüe ES/EN** (`bilingue-es-en-status.md`): el diccionario de traducciones tiene texto duplicado entre pantallas ("Cargando...", "Guardando...", el patrón de 3 claves `notLoggedIn`) — candidato a un namespace `common` compartido, sin apuro; manifest de la PWA y service worker no traducidos/precacheados para `/en/`, quedó fuera de alcance a propósito; templates de email de Supabase siguen en español (se configuran desde el dashboard, no desde este repo).
+- **App bilingüe ES/EN** (`bilingue-es-en-status.md`; Rondas 1 y 2 completas, solo queda esto):
+  - Diccionario (`src/i18n/`): texto duplicado entre pantallas ("Cargando...", "Guardando...", el patrón `notLoggedIn`), candidato a un namespace `common`.
+  - Manifest de la PWA y service worker sin traducir/precachear para `/en/`; templates de email de Supabase en español (se configuran desde el dashboard).
+  - `GROUP_LABELS` (`src/lib/activities.ts`) y `MUSCLES[].label` (`src/lib/muscles.ts`) duplican `es.groups`/`es.muscles`: armarlos desde el diccionario.
+  - CI (`.github/workflows/deploy.yml`) no corre `npm test`: agregarlo.
+  - Exports sin uso `Locale`, `LocalizedActivity`, `LocalizedPlan` en `src/lib/content-i18n.ts`.
+  - Helper compartido para cargar y localizar actividades (bloque repetido en 6 páginas ×2 de `src/pages/`).
+  - `progreso` usa `a.muscles?.[0] ?? ''`: debería caer en `UNKNOWN_MUSCLE` ('Otros', `src/lib/prs.ts`).
+  - Pulido de `tests/content-coverage.test.mjs` (`fileURLToPath`, juntar todas las fallas, allow-list que falle si deja de ser idéntica) y `.trim()` en los `*_en` de `src/content.config.ts`.
+  - Comentario sobre `levelLabel` en `PredefinedRoutine` (`RoutineManager`).
+  - Contenido en español sin cambiar: typo "mantendiendo" en `natacion-crol-fingertip-drag`; `remo-al-menton` dice "Barra o mancuernas" pero describe solo barra; `natacion-dorso-patada` se llama "Patada (tabla)" sin mencionar tabla.
+  - Gustos de inglés a decidir: `Others` vs `Other`, `Cable` vs `Cable machine`, "glove work" en la clase de boxeo.

@@ -2,6 +2,8 @@
 discipline: gym
 metricType: sets
 name: Peso muerto
+instructions_en: "With the barbell in front of your shins, bend your hips and knees to grab it with a firm grip. Lift by extending your hips and knees at the same time, keeping your back straight and the bar close to your body."
+name_en: "Deadlift"
 muscles: [isquiotibiales, gluteos, dorsales, lumbares]
 equipment: Barra
 image: peso-muerto.webp

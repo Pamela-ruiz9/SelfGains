@@ -205,7 +205,7 @@ En `package.json`, dentro de `"scripts"`, agregar después de `"preview": "astro
 
 ```json
     "preview": "astro preview",
-    "test": "node --test tests/"
+    "test": "node --test tests/*.test.mjs"
 ```
 
 - [ ] **Step 2: Escribir el test que falla**

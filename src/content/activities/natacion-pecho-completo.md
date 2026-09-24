@@ -1,5 +1,7 @@
 ---
 name: Completo
+instructions_en: "Continuous breaststroke swimming, coordinating your arm stroke and breaststroke kick. Log the total distance swum and the session time."
+name_en: "Full stroke"
 discipline: natacion
 group: pecho
 metricType: session

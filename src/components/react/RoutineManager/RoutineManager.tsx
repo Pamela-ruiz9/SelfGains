@@ -57,6 +57,7 @@ interface PredefinedRoutine {
   name: string;
   goal: string;
   level: string;
+  levelLabel: string;
   sex?: 'femenino' | 'masculino';
   days: RoutineDays;
 }
@@ -197,7 +198,7 @@ export default function RoutineManager({ predefinedRoutines, activities, t, pick
     .map((p) => ({
       ref: p.id,
       name: p.name,
-      subtitle: `${p.goal} · ${p.level}`,
+      subtitle: `${p.goal} · ${p.levelLabel}`,
       days: p.days,
       recommended:
         isGymPlan(p.days, activities) && isRecommendedGymPlan(p, profileSex, profileLevel),

@@ -1,5 +1,7 @@
 ---
 name: Un brazo
+instructions_en: "Backstroke drill swimming with one arm while the other stays extended at your side, alternating arms. Log the total distance swum and the session time."
+name_en: "Single arm"
 discipline: natacion
 group: dorso
 metricType: session

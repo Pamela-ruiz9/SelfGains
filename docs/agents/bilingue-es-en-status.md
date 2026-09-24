@@ -1,6 +1,6 @@
 # App bilingüe ES/EN — status
 
-Pedido directo de Pam: "ahora ayudame a cambiar a bilingue". Decisión de alcance tomada en el brainstorming: dividir en dos rondas independientes. Esta ronda (completa, mergeada) cubre **infraestructura i18n + traducción de la interfaz**. La **Ronda 2 — traducción de contenido** (nombres/instrucciones de ejercicios y rutinas) queda pendiente, con su propio brainstorm — ver la sección final de este doc.
+Pedido directo de Pam: "ahora ayudame a cambiar a bilingue". Decisión de alcance tomada en el brainstorming: dividir en dos rondas independientes. **Ambas rondas están completas**: la Ronda 1 (infraestructura i18n + traducción de la interfaz, mergeada a `main`) y la Ronda 2 (traducción del contenido de ejercicios y rutinas) — ver la sección "Ronda 2 — contenido (completa)" al final de este doc.
 
 - Spec: `docs/superpowers/specs/2026-09-23-bilingue-es-en-design.md`
 - Plan: `docs/superpowers/plans/2026-09-23-bilingue-es-en.md` (17 tareas)
@@ -38,15 +38,63 @@ Persistencia: `localStorage` (clave `selfgains-locale`) + columna `profiles.loca
 - ~~`CreateRoutineForm.tsx` no le pasaba `t`/`disciplines` a `ActivityPicker`~~ — resuelto 2026-09-24: `pickerT`/`disciplinesT` fluyen desde las páginas `rutinas` → `RoutineManager` → `CreateRoutineForm` → `ActivityPicker`.
 - Manifest de la PWA (nombre/descripción al instalar) y el service worker (no precachea `/en/`) quedaron fuera de alcance a propósito — cambios chicos y aislados para cuando se quiera.
 - Templates de email de Supabase (confirmación de cuenta, recuperar contraseña) siguen en español — se configuran desde el dashboard de Supabase, no desde este repo.
+- Deuda derivada de la Ronda 2 (contenido), con detalle en la sección siguiente: `GROUP_LABELS`/`MUSCLES[].label` duplicados con el diccionario; CI sin `npm test`; exports sin uso en `content-i18n.ts`; bloque de carga+localización repetido en 6 páginas ×2; fallback de `progreso`; pulido del test de cobertura; nits de contenido en español; notas de gusto en inglés.
 
-## Lo que falta — Ronda 2 (contenido, para arrancar en otra sesión)
+## Ronda 2 — contenido (completa)
 
-**Alcance:** traducir nombres e instrucciones de los ~86 archivos de contenido (`src/content/activities/*.md`, `src/content/plans/*.md`) — hoy siguen en español en ambos idiomas, a propósito, aunque toda la interfaz ya responde en inglés. Necesita su propio brainstorming (`superpowers:brainstorming`) antes de spec/plan — no arrancar directo a implementar.
+Se tradujo al inglés el contenido de **86 actividades** (`src/content/activities`) y **9 planes** (`src/content/plans`). Estado: rama `bilingue-contenido`, pendiente de merge a `main` (quien haga el merge actualiza esta línea). Fecha: 2026-09-24.
 
-**Preguntas abiertas para ese brainstorming, ya discutidas parcialmente en el de esta ronda:**
-- **Esquema de datos**: ¿un campo `name_en`/`instructions_en` por archivo, un content collection paralelo en inglés, o algo con Astro's i18n content collections? El content collection actual (`src/content.config.ts`) no tiene locale hoy — hay que decidir la forma antes de tocar 86 archivos.
-- **Curación de imágenes compartida vs. separada por idioma**: se discutió explícitamente en el brainstorming de esta ronda y se descartó curar por separado (duplica trabajo, genera inconsistencia visual — mismo ejercicio con fotos distintas según idioma). Decisión tentativa: las imágenes ya curadas (`public/exercises/*.webp`, ver `docs/agents/imagenes-ejercicios-curacion.md`) se reusan tal cual para la versión en inglés — una foto no tiene idioma. Si en algún momento se quiere auditar la curación existente como control de calidad, es más barato pedir una re-revisión de lo ya curado que duplicar el trabajo entero — se puede hacer en cualquier momento, sin depender de esta ronda. Confirmar esta decisión (o revisarla) al arrancar el brainstorming.
-- **Quién traduce**: en el brainstorming de esta ronda se preguntó explícitamente y Pam eligió "yo traduzco todo, vos revisás al final" (en vez de que el agente traduzca todo) — confirmar si ese mismo approach aplica a 86 archivos de contenido o si conviene un mecanismo distinto dado el volumen.
-- **Tono/tecnicismos de gimnasio en inglés**: nombres de ejercicios y equipamiento tienen convenciones específicas en inglés (ej. "Press banca" → "Bench press", no una traducción literal) — vale la pena revisar el estilo de esta ronda (`Dictionary` en `src/i18n/en.ts`) como referencia de tono ya aprobado, pero el vocabulario de fitness necesita su propia pasada de calidad.
+- Spec: `docs/superpowers/specs/2026-09-24-bilingue-contenido-design.md`
+- Plan: `docs/superpowers/plans/2026-09-24-bilingue-contenido.md` (13 tareas, 0–12)
+- Ejecución: `superpowers:subagent-driven-development`, worktree `bilingue-contenido` (rama `bilingue-contenido`, creada desde el HEAD local, no desde `origin/main`)
 
-**No depende de nada más** — la infraestructura completa (ruteo, diccionario, selector de idioma, persistencia, páginas espejo) ya está en `main` y no necesita cambios para que la Ronda 2 arranque.
+### Decisiones de diseño (brainstorming)
+
+- Campos `*_en` dentro de cada `.md` (no una colección paralela), obligatorios en el schema de Zod (`z.string().min(1)`): una traducción faltante rompe el build.
+- Actividades: `name_en` + `instructions_en`. Planes: `name_en` + `goal_en` (el cuerpo del plan no se muestra en ningún lado, así que no lleva `instructions_en`). Los valores son YAML de una línea entre comillas dobles.
+- Imágenes reusadas tal cual, sin curación por idioma.
+- Quién tradujo: el agente tradujo los 95 archivos; primero los nombres, y Pam aprobó esa lista antes de traducir el resto. Después Pam revisó la app en inglés (esto reemplaza el "yo traduzco todo" que se había hablado en la Ronda 1).
+
+### Qué se construyó
+
+- Helper `src/lib/content-i18n.ts` (puro, corre bajo node): `localizeActivity`, `localizePlan`; recibe el diccionario como argumento `vocab`.
+- Namespaces nuevos del diccionario: `equipment` (14 valores, clave = valor en español del `.md`), `planLevels`, `groups` (estilos de natación), `muscles` (17 + "Otros").
+- `fullActivityName` y `ActivityPicker` usan un `groupLabel` ya traducido. `muscleLabel(id, labels?)` recibe las etiquetas por props (no por context: se renderizan dentro del Canvas de R3F) a través de MuscleBody / MuscleExplorer / PRGrid / ProgressList.
+- Las 10 páginas de contenido (5 ES + 5 EN espejo) usan el helper. `level` sigue siendo la clave en español porque `isRecommendedGymPlan` la compara con el nivel del perfil; para mostrar se usa `levelLabel`. Los props de las páginas se recortan a lo que usa cada island. La lista de ejercicios de Progreso se ordena por el nombre traducido.
+- Infra de tests: `npm test` = `node --test tests/*.test.mjs` (Node 22 quita los tipos; sin vitest). Tests de muscles, activities (`fullActivityName`), content-i18n (22, con casos borde) y content-coverage (lee cada `.md` con js-yaml: las traducciones existen y difieren del español, con una allow-list explícita de 12 `name_en` idénticos, como Face pull, Hip thrust, Catch-up y nombres de plan como Full body; los diccionarios cubren todo equipment/level/group/muscle usado). Total 28 tests. `js-yaml` agregado como devDependency (^4.3.2).
+
+### Problemas reales encontrados durante la ejecución (no estaban en el diseño)
+
+- La Ronda 1 se había salteado los 17 nombres de músculos: seguían en español en la UI en inglés. Se detectó al explorar el código antes de diseñar y se arregló acá.
+- `level` parecía traducible pero es una clave de lógica (habría roto "recomendadas" en inglés) → `levelLabel` solo para mostrar.
+- El script `npm test` del plan (`node --test tests/`) falló en Node 22 (trata `tests/` como módulo) → `tests/*.test.mjs`.
+- `npm install --save-dev js-yaml` resolvió js-yaml 5.x, que no tiene export default, y el test de cobertura fallaba → se fijó ^4.
+- Dos subagentes compilando a la vez en el mismo worktree chocaron en `dist/` (race de rmdir en la limpieza de Astro): no correr builds en paralelo.
+- La revisión de traducciones encontró problemas reales en el texto FUENTE en español, corregidos con aprobación de la dueña del producto: el texto de la máquina abductor/aductor describía la posición de los cojines al revés o de forma ambigua ("cojines interiores/exteriores" → "por fuera/por dentro de las rodillas"), y el press cerrado decía "manos casi juntas" (→ "manos al ancho de hombros o un poco más cerradas").
+- Una ronda de revisión atrapó inglés poco idiomático (p. ej. "kick continuously for 6 kicks", "in a plane other than the frontal one"): 3 rondas de pulido. Face pull dijo brevemente "pulley" en vez de "cable" (el término del diccionario) y se corrigió.
+
+### Verificación
+
+- `npm test` 28/28; `npx tsc --noEmit` solo con el error preexistente de `ProgressList.tsx` (`Measurement[]`); `npm run build` con 26 páginas.
+- Props de los islands de las páginas en español comparados contra un build previo al cambio: solo difieren los campos nuevos y los 3 arreglos intencionales de español.
+- El HTML construido de `/en/` no tiene nombres de actividades/planes en español (solo la clave `level` oculta: "Principiante"/"Intermedio").
+- Pasada automatizada con Playwright en `/ejercicios/` (EN + ES): títulos de músculos 3D ("CHEST/ABS/BICEPS/QUADS"), equipamiento e instrucciones en inglés, toggle de idioma en ambos sentidos, sin errores de consola.
+- Las pantallas con login (rutinas, registro, progreso, conexiones en `/en/`) las revisó Pam a mano con su cuenta y quedaron OK en inglés.
+- NO verificado en navegador: el texto del tooltip 3D al hacer hover en inglés (el texto WebGL no está en el DOM; el título del músculo al lado sí se verificó).
+- Integridad de datos (revisión final): nada persiste nombres localizados; las escrituras guardan ids (`exercise_id`/`activity_id`/`routine_ref`) o texto tipeado por el usuario; los planes predefinidos no se pueden copiar a rutinas propias; los nombres localizados viven solo en estado de React.
+
+### Deuda técnica / backlog derivado de las revisiones
+
+- `GROUP_LABELS` en `src/lib/activities.ts` y `MUSCLES[].label` en `src/lib/muscles.ts` duplican `es.groups`/`es.muscles` (ahora solo fallback / orden): armarlos desde el diccionario para tener una única fuente.
+- CI (`.github/workflows/deploy.yml`) corre solo `npm ci` + `npm run build`, no `npm test`: agregarlo. El schema igual rompe el build ante un campo faltante, pero traducciones idénticas al español o claves faltantes en el diccionario solo se detectan en local.
+- Exports sin uso `Locale`, `LocalizedActivity`, `LocalizedPlan` en `src/lib/content-i18n.ts`.
+- Helper compartido para cargar y localizar actividades: el bloque `getCollection → localizeActivity → recortar → ordenar` se repite en 6 páginas ×2. Se dejó así a propósito porque las páginas ES/EN son copias espejo.
+- `progreso` usa `muscle: a.muscles?.[0] ?? ''`: debería caer en 'Otros' (`UNKNOWN_MUSCLE` en `src/lib/prs.ts`).
+- Pulido del test de cobertura (`tests/content-coverage.test.mjs`): usar `fileURLToPath` para rutas con espacios, juntar todas las fallas en vez de frenar en la primera, que la allow-list falle si una entrada deja de ser idéntica, y `.trim()` en el schema de Zod para los `*_en` (`src/content.config.ts`).
+- Comentario de una línea sobre `levelLabel` en `PredefinedRoutine` de `RoutineManager`.
+- Nits del contenido en español detectados y NO cambiados: typo "mantendiendo" en `natacion-crol-fingertip-drag` (→ "manteniendo"); `remo-al-menton` lista equipamiento "Barra o mancuernas" pero el texto describe solo barra; `natacion-dorso-patada` se llama "Patada (tabla)"/"Kick (board)" pero el texto no menciona tabla.
+- Gustos de inglés dejados como están (Pam puede ajustar): `Others` vs `Other` para el bucket de músculos, `Cable` vs `Cable machine`, "glove work" en la clase de boxeo (podría ser pad work).
+
+### Sigue fuera de alcance (sin cambios)
+
+Manifest de la PWA y service worker sin traducir/precachear para `/en/`; templates de email de Supabase en español; refactor del namespace `common` del diccionario.

@@ -9,6 +9,9 @@ export interface ActivityOption {
   discipline: 'gym' | 'running' | 'natacion' | 'combate';
   metricType: 'sets' | 'session';
   group?: string;
+  // Etiqueta del grupo ya traducida (la arma content-i18n en la página);
+  // si falta, los consumidores caen a groupLabel(group) en español.
+  groupLabel?: string;
   description?: string;
   image?: string;
 }
@@ -51,6 +54,8 @@ export default function ActivityPicker({
   const [discipline, setDiscipline] = useState<ActivityOption['discipline']>('gym');
   const byDiscipline = activities.filter((a) => a.discipline === discipline);
   const groups = groupsIn(byDiscipline);
+  const groupLabelFor = (g: string) =>
+    activities.find((a) => a.group === g)?.groupLabel ?? groupLabel(g) ?? g;
 
   const [group, setGroup] = useState<string | undefined>(groups[0]);
   const filtered = groups.length > 0 ? byDiscipline.filter((a) => a.group === group) : byDiscipline;
@@ -109,7 +114,7 @@ export default function ActivityPicker({
                   : 'btn-brutal-sm opacity-60'
               }
             >
-              {groupLabel(g)}
+              {groupLabelFor(g)}
             </button>
           ))}
         </div>

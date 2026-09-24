@@ -2,6 +2,8 @@
 discipline: gym
 metricType: sets
 name: Press Arnold
+instructions_en: "Start with the dumbbells in front of your shoulders and your palms facing you. Press up while rotating your wrists, finishing with your palms facing forward and your arms extended."
+name_en: "Arnold press"
 muscles: [deltoide-frontal, deltoide-lateral, triceps]
 equipment: Mancuernas
 image: press-arnold.webp

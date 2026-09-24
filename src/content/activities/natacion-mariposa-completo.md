@@ -1,5 +1,7 @@
 ---
 name: Completo
+instructions_en: "Continuous butterfly swimming, coordinating your arm stroke, body undulation, and dolphin kick. Log the total distance swum and the session time."
+name_en: "Full stroke"
 discipline: natacion
 group: mariposa
 metricType: session

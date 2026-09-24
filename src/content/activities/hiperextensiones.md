@@ -2,6 +2,8 @@
 discipline: gym
 metricType: sets
 name: Hiperextensiones
+instructions_en: "With your hips supported on the Roman chair and your torso bent downward, come up by extending your back until your body is aligned, without hyperextending at the top."
+name_en: "Back extensions"
 muscles: [lumbares, isquiotibiales, gluteos]
 equipment: Banco romano
 image: hiperextensiones.webp

@@ -1,5 +1,7 @@
 ---
 name: Patada (tabla)
+instructions_en: "Freestyle using only your legs, with a kickboard supporting your arms to isolate the kick. Log the total distance swum and the session time."
+name_en: "Kick (board)"
 discipline: natacion
 group: crol
 metricType: session

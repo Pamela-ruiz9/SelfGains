@@ -40,6 +40,7 @@ interface Props {
   t: Dictionary['progreso'];
   registrarT: Dictionary['registrar']['logger'];
   disciplinesT: Dictionary['disciplines'];
+  musclesT: Dictionary['muscles'];
 }
 
 interface WorkoutWithLogs extends WorkoutWithSets, WorkoutWithSessions {}
@@ -51,6 +52,7 @@ export default function ProgressList({
   t,
   registrarT,
   disciplinesT,
+  musclesT,
 }: Props) {
   const [authChecked, setAuthChecked] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -217,6 +219,7 @@ export default function ProgressList({
             onSelectExercise={setSelectedExerciseId}
             selectedExerciseId={selectedExerciseId}
             t={t.prGrid}
+            muscleLabels={musclesT}
             chart={
               selectedExerciseId && (
                 <ProgressChart

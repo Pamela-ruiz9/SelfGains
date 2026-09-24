@@ -1,5 +1,7 @@
 ---
 name: Catch-up
+instructions_en: "Backstroke drill: one arm stays extended pointing at the ceiling until the other completes its cycle and \"touches\" it before switching. Works stroke tempo and extension. Log the total distance swum and the session time."
+name_en: "Catch-up"
 discipline: natacion
 group: dorso
 metricType: session

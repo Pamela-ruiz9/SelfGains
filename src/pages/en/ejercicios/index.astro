@@ -4,27 +4,32 @@
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import MuscleExplorer from '../../../components/react/MuscleExplorer/MuscleExplorer';
 import { getCollection } from 'astro:content';
+import { localizeActivity } from '../../../lib/content-i18n';
 import { isGymActivity } from '../../../lib/activities';
 import { getDictionary } from '../../../i18n';
 
 const locale = Astro.currentLocale === 'en' ? 'en' : 'es';
-const t = getDictionary(locale).ejercicios;
+const dict = getDictionary(locale);
+const t = dict.ejercicios;
 
 const activityEntries = await getCollection('activities');
 const exercises = activityEntries
   .filter(isGymActivity)
-  .map((e) => ({
-    id: e.id,
-    name: e.data.name,
-    equipment: e.data.equipment,
-    instructions: e.body?.trim() ?? '',
-    muscles: e.data.muscles,
-    image: e.data.image,
-  }))
-  .sort((a, b) => a.name.localeCompare(b.name));
+  .map((e) => {
+    const a = localizeActivity(e, locale, dict);
+    return {
+      id: a.id,
+      name: a.name,
+      equipment: a.equipment ?? '',
+      instructions: a.description,
+      muscles: a.muscles ?? [],
+      image: a.image,
+    };
+  })
+  .sort((a, b) => a.name.localeCompare(b.name, locale));
 ---
 <BaseLayout title={t.pageTitle}>
   <p class="label-brutal mb-3 text-acid">{t.kicker}</p>
   <h1 class="mb-8 font-display text-5xl text-paper sm:text-6xl">{t.heading}</h1>
-  <MuscleExplorer client:load exercises={exercises} t={t} />
+  <MuscleExplorer client:load exercises={exercises} t={t} muscleLabels={dict.muscles} />
 </BaseLayout>

@@ -2,6 +2,8 @@
 discipline: gym
 metricType: sets
 name: Press francés
+instructions_en: "Lie on a bench with your arms extended toward the ceiling, bend only your elbows to lower the weight toward your forehead, and extend back up without moving your shoulders."
+name_en: "Skull crushers"
 muscles: [triceps]
 equipment: Barra o mancuernas
 image: press-frances.webp

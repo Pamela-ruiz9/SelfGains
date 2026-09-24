@@ -1,5 +1,7 @@
 ---
 name: Un brazo
+instructions_en: "Freestyle drill swimming with one arm while the other stays extended in front, alternating arms. Log the total distance swum and the session time."
+name_en: "Single arm"
 discipline: natacion
 group: crol
 metricType: session
