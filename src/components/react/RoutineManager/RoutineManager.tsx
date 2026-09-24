@@ -57,6 +57,7 @@ interface PredefinedRoutine {
   name: string;
   goal: string;
   level: string;
+  levelLabel: string;
   sex?: 'femenino' | 'masculino';
   days: RoutineDays;
 }

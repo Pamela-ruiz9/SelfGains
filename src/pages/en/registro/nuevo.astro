@@ -5,6 +5,7 @@ import BaseLayout from '../../../layouts/BaseLayout.astro';
 import WorkoutLogger from '../../../components/react/WorkoutLogger/WorkoutLogger';
 import InstallPrompt from '../../../components/react/InstallPrompt/InstallPrompt';
 import { getCollection } from 'astro:content';
+import { localizeActivity } from '../../../lib/content-i18n';
 import { getDictionary } from '../../../i18n';
 
 const locale = Astro.currentLocale === 'en' ? 'en' : 'es';
@@ -13,16 +14,8 @@ const t = dict.registrar;
 
 const activityEntries = await getCollection('activities');
 const activities = activityEntries
-  .map((e) => ({
-    id: e.id,
-    name: e.data.name,
-    discipline: e.data.discipline,
-    metricType: e.data.metricType,
-    group: e.data.metricType === 'session' ? e.data.group : undefined,
-    image: e.data.metricType === 'sets' ? e.data.image : undefined,
-    description: e.body?.trim() ?? '',
-  }))
-  .sort((a, b) => a.name.localeCompare(b.name));
+  .map((e) => localizeActivity(e, locale, dict))
+  .sort((a, b) => a.name.localeCompare(b.name, locale));
 
 const planEntries = await getCollection('plans');
 const plans = planEntries.map((p) => ({ id: p.id, days: p.data.days }));

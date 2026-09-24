@@ -4,6 +4,7 @@
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import ProgressList from '../../../components/react/ProgressList/ProgressList';
 import { getCollection } from 'astro:content';
+import { localizeActivity } from '../../../lib/content-i18n';
 import { isGymActivity } from '../../../lib/activities';
 import { getDictionary } from '../../../i18n';
 
@@ -12,24 +13,28 @@ const dict = getDictionary(locale);
 const t = dict.progreso;
 
 const activityEntries = await getCollection('activities');
+const localized = activityEntries.map((e) => localizeActivity(e, locale, dict));
 
-const gymEntries = activityEntries.filter(isGymActivity);
-const exerciseNames = Object.fromEntries(gymEntries.map((e) => [e.id, e.data.name]));
-const exercises = gymEntries.map((e) => ({
-  id: e.id,
-  name: e.data.name,
-  muscle: e.data.muscles[0],
+const gymActivities = activityEntries
+  .filter(isGymActivity)
+  .map((e) => localizeActivity(e, locale, dict));
+const exerciseNames = Object.fromEntries(gymActivities.map((a) => [a.id, a.name]));
+const exercises = gymActivities.map((a) => ({
+  id: a.id,
+  name: a.name,
+  muscle: a.muscles?.[0] ?? '',
 }));
 
-const activities = activityEntries
-  .map((e) => ({
-    id: e.id,
-    name: e.data.name,
-    discipline: e.data.discipline,
-    metricType: e.data.metricType,
-    group: e.data.metricType === 'session' ? e.data.group : undefined,
+const activities = localized
+  .map(({ id, name, discipline, metricType, group, groupLabel }) => ({
+    id,
+    name,
+    discipline,
+    metricType,
+    group,
+    groupLabel,
   }))
-  .sort((a, b) => a.name.localeCompare(b.name));
+  .sort((a, b) => a.name.localeCompare(b.name, locale));
 ---
 <BaseLayout title={t.pageTitle}>
   <p class="label-brutal mb-3 text-acid">{t.kicker}</p>

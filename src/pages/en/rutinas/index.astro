@@ -4,6 +4,7 @@
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import RoutineManager from '../../../components/react/RoutineManager/RoutineManager';
 import { getCollection } from 'astro:content';
+import { localizeActivity, localizePlan } from '../../../lib/content-i18n';
 import { getDictionary } from '../../../i18n';
 
 const locale = Astro.currentLocale === 'en' ? 'en' : 'es';
@@ -12,27 +13,13 @@ const t = dict.rutinas;
 
 const planEntries = await getCollection('plans');
 const predefinedRoutines = planEntries
-  .map((p) => ({
-    id: p.id,
-    name: p.data.name,
-    goal: p.data.goal,
-    level: p.data.level,
-    sex: p.data.sex,
-    days: p.data.days,
-  }))
-  .sort((a, b) => a.name.localeCompare(b.name));
+  .map((p) => localizePlan(p, locale, dict))
+  .sort((a, b) => a.name.localeCompare(b.name, locale));
 
 const activityEntries = await getCollection('activities');
 const activities = activityEntries
-  .map((e) => ({
-    id: e.id,
-    name: e.data.name,
-    discipline: e.data.discipline,
-    metricType: e.data.metricType,
-    group: e.data.metricType === 'session' ? e.data.group : undefined,
-    description: e.body?.trim() ?? '',
-  }))
-  .sort((a, b) => a.name.localeCompare(b.name));
+  .map((e) => localizeActivity(e, locale, dict))
+  .sort((a, b) => a.name.localeCompare(b.name, locale));
 ---
 <BaseLayout title={t.pageTitle}>
   <p class="label-brutal mb-3 text-acid">{t.kicker}</p>
