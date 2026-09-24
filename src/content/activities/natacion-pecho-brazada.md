@@ -1,5 +1,6 @@
 ---
 name: Brazada (pull)
+instructions_en: "Breaststroke using only your arms, with a pull buoy between your legs to isolate the pull without the breaststroke kick. Log the total distance swum and the session time."
 name_en: "Pull (buoy)"
 discipline: natacion
 group: pecho

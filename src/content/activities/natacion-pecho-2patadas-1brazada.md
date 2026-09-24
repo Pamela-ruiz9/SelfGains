@@ -1,5 +1,6 @@
 ---
 name: 2 patadas, 1 brazada
+instructions_en: "Breaststroke drill: two breaststroke kicks for every pull, spending more time in a streamline position with your arms extended. Log the total distance swum and the session time."
 name_en: "2 kicks, 1 pull"
 discipline: natacion
 group: pecho

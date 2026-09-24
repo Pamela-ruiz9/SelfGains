@@ -1,5 +1,6 @@
 ---
 name: Doble brazada
+instructions_en: "Backstroke drill where both arms recover and enter the water together (instead of alternating), removing the help of body rotation and forcing you to keep your balance on your back. Log the total distance swum and the session time."
 name_en: "Double arm"
 discipline: natacion
 group: dorso

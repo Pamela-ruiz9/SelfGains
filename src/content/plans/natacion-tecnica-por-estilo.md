@@ -1,5 +1,6 @@
 ---
 name: Natación — Técnica por estilo
+goal_en: "Technique and endurance"
 name_en: "Swimming — Technique by stroke"
 goal: Técnica y resistencia
 level: Intermedio

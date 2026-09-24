@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Curl de bíceps con barra
+instructions_en: "Stand holding the barbell with an underhand, shoulder-width grip, bend your elbows to bring the bar toward your chest without swinging your torso, and lower it under control."
 name_en: "Barbell biceps curl"
 muscles: [biceps, antebrazo]
 equipment: Barra

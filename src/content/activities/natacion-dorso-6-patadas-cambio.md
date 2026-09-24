@@ -1,5 +1,6 @@
 ---
 name: 6 patadas y cambio
+instructions_en: "Backstroke drill on your side: one arm extended, kick continuously for 6 kicks, then take one stroke to switch sides. Works body position and balance. Log the total distance swum and the session time."
 name_en: "6-kick switch"
 discipline: natacion
 group: dorso

@@ -1,5 +1,6 @@
 ---
 name: Zipper drill
+instructions_en: "Freestyle drill: during the recovery, drag your thumb up the side of your body (as if pulling up a zipper) from your hip to your armpit before extending your arm forward. Forces a high elbow in the recovery. Log the total distance swum and the session time."
 name_en: "Zipper drill"
 discipline: natacion
 group: crol

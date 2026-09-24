@@ -1,5 +1,6 @@
 ---
 name: Un brazo
+instructions_en: "Butterfly drill swimming with one arm per cycle while the other stays extended in front, alternating arms, with a continuous dolphin kick. Log the total distance swum and the session time."
 name_en: "Single arm"
 discipline: natacion
 group: mariposa

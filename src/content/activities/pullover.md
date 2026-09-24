@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Pullover con mancuerna
+instructions_en: "Lie across a bench with only your upper back supported, lower the dumbbell in an arc behind your head keeping your arms slightly bent, and bring it back up over your chest."
 name_en: "Dumbbell pullover"
 muscles: [dorsales, pecho]
 equipment: Mancuerna

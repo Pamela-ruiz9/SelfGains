@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Hip thrust
+instructions_en: "With your back resting on a bench and the barbell across your hips, drive your hips up by squeezing your glutes until your torso is in line with your thighs."
 name_en: "Hip thrust"
 muscles: [gluteos, isquiotibiales]
 equipment: Barra

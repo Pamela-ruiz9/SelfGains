@@ -1,5 +1,6 @@
 ---
 name: Sculling
+instructions_en: "Freestyle drill: floating face down with your arms extended in front, move your hands in a small figure-eight pattern inward and outward, keeping constant pressure on the water without completing a stroke. Works the feel of the catch. Log the total distance swum and the session time."
 name_en: "Sculling"
 discipline: natacion
 group: crol

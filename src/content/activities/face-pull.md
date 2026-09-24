@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Face pull
+instructions_en: "With the cable at face height, pull the rope toward your face while spreading your hands apart, focusing the movement on your rear delts."
 name_en: "Face pull"
 muscles: [deltoide-posterior, trapecio]
 equipment: Polea

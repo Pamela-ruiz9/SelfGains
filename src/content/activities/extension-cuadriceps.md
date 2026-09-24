@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Extensión de cuádriceps
+instructions_en: "Sit in the machine with your knees aligned with the pivot point, extend your legs until they are almost fully straight, and lower under control."
 name_en: "Leg extension"
 muscles: [cuadriceps]
 equipment: Máquina

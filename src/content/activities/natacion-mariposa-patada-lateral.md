@@ -1,5 +1,6 @@
 ---
 name: Patada lateral
+instructions_en: "Dolphin kick drill swimming on your side, without arm strokes, switching sides at set intervals. Works the undulation in a plane other than the frontal one. Log the total distance swum and the session time."
 name_en: "Side kick"
 discipline: natacion
 group: mariposa

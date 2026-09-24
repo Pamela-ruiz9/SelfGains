@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Remo al mentón
+instructions_en: "With the barbell in front of your body and a narrow grip, pull up leading with your elbows above your wrists until the bar almost reaches your chin."
 name_en: "Upright row"
 muscles: [deltoide-lateral, trapecio]
 equipment: Barra o mancuernas

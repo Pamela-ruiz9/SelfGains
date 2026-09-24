@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Sentadilla búlgara
+instructions_en: "With your back foot resting on a bench and your front foot forward, lower yourself by bending your front knee until your back knee almost touches the floor, and come up by pushing through your front heel."
 name_en: "Bulgarian split squat"
 muscles: [cuadriceps, gluteos]
 equipment: Mancuernas

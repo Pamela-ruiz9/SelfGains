@@ -1,5 +1,6 @@
 ---
 name: Catch-up
+instructions_en: "Butterfly drill with a pause: complete one stroke and undulation, then wait with your arms extended in front in a streamline position before starting the next cycle. Works timing control and body position. Log the total distance swum and the session time."
 name_en: "Catch-up"
 discipline: natacion
 group: mariposa

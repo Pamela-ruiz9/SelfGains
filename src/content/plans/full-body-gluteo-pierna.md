@@ -1,5 +1,6 @@
 ---
 name: Full body — Glúteo y pierna
+goal_en: "General strength"
 name_en: "Full body — Glutes and legs"
 goal: Fuerza general
 level: Principiante

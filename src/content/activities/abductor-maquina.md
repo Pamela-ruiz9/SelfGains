@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Abductor en máquina
+instructions_en: "Sit in the machine with your legs resting on the inner pads, push your legs apart against the resistance, and bring them back together under control."
 name_en: "Machine hip abduction"
 muscles: [gluteos]
 equipment: Máquina

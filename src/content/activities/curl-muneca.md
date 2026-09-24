@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Curl de muñeca con barra
+instructions_en: "Sit with your forearms resting on your thighs and your palms facing up, curl your wrists to raise the barbell, and lower it while controlling the stretch."
 name_en: "Barbell wrist curl"
 muscles: [antebrazo]
 equipment: Barra

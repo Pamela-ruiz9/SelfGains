@@ -1,5 +1,6 @@
 ---
 name: Push/Pull/Legs — Empuje y espalda
+goal_en: "Hypertrophy"
 name_en: "Push/Pull/Legs — Push and back"
 goal: Hipertrofia
 level: Intermedio

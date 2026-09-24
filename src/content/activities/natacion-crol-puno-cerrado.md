@@ -1,5 +1,6 @@
 ---
 name: Puño cerrado
+instructions_en: "Freestyle drill swimming with your fists closed instead of open hands, to force a good forearm hold and a high elbow on the catch. Log the total distance swum and the session time."
 name_en: "Closed fist"
 discipline: natacion
 group: crol
