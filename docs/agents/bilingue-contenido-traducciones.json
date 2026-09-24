@@ -1,7 +1,7 @@
 {
   "activities": {
-    "abductor-maquina": { "name_en": "Machine hip abduction", "instructions_en": "Sit in the machine with your legs resting on the inner pads, push your legs apart against the resistance, and bring them back together under control." },
-    "aductor-maquina": { "name_en": "Machine hip adduction", "instructions_en": "Sit in the machine with your legs resting on the outer pads, squeeze your legs together against the resistance, and open them back up under control." },
+    "abductor-maquina": { "name_en": "Machine hip abduction", "instructions_en": "Sit in the machine with the pads against the outside of your knees, push your legs apart against the resistance, and bring them back together under control." },
+    "aductor-maquina": { "name_en": "Machine hip adduction", "instructions_en": "Sit in the machine with the pads against the inside of your knees, squeeze your legs together against the resistance, and open them back up under control." },
     "aperturas-mancuernas": { "name_en": "Dumbbell flyes", "instructions_en": "Lie on a bench with the dumbbells over your chest and your elbows slightly bent, open your arms in an arc until you feel the stretch in your chest, and bring the dumbbells back together at the top." },
     "combate-boxeo-clase": { "name_en": "Boxing — class", "instructions_en": "Group class or boxing training (technique, glove work, light sparring). Log the total session duration." },
     "combate-muay-thai-clase": { "name_en": "Muay Thai — class", "instructions_en": "Muay Thai class (technique, clinch, sparring). Log the total session duration." },
@@ -69,7 +69,7 @@
     "prensa-piernas-vertical": { "name_en": "Vertical leg press", "instructions_en": "Lie on your back with your hips bent and your feet on the platform above your body, push by extending your legs upward, and lower under control until your knees come close to your chest." },
     "press-arnold": { "name_en": "Arnold press", "instructions_en": "Start with the dumbbells in front of your shoulders and your palms facing you. Press up while rotating your wrists, finishing with your palms facing forward and your arms extended." },
     "press-banca": { "name_en": "Bench press", "instructions_en": "Lie on the bench, lower the barbell under control until it lightly touches your chest, and press up until your arms are extended, without lifting your glutes off the bench." },
-    "press-cerrado-banca": { "name_en": "Close-grip bench press", "instructions_en": "Lie on the bench with a narrow grip (hands almost together), lower the barbell to your chest keeping your elbows close to your body, and press back up by extending your arms." },
+    "press-cerrado-banca": { "name_en": "Close-grip bench press", "instructions_en": "Lie on the bench with a narrow grip (hands about shoulder-width apart or slightly closer), lower the barbell to your chest keeping your elbows close to your body, and press back up by extending your arms." },
     "press-frances": { "name_en": "Skull crushers", "instructions_en": "Lie on a bench with your arms extended toward the ceiling, bend only your elbows to lower the weight toward your forehead, and extend back up without moving your shoulders." },
     "press-inclinado-mancuernas": { "name_en": "Incline dumbbell press", "instructions_en": "On an incline bench, press the dumbbells up from chest height until your arms are extended, controlling the descent." },
     "press-militar": { "name_en": "Overhead press", "instructions_en": "Standing with the barbell at shoulder height, press it overhead until your arms are fully extended, without excessively arching your lower back." },
