@@ -670,6 +670,57 @@ export const es = {
     natacion: 'Natación',
     combate: 'Combate',
   },
+  // Vocabularios del contenido (src/content). Las claves de `equipment`,
+  // `planLevels` y `groups` son los valores en español tal como aparecen en
+  // los .md — son la clave de búsqueda, así que NO se renombran. `muscles`
+  // usa los ids de src/lib/muscles.ts, más "Otros" (bucket de prs.ts).
+  equipment: {
+    Banco: 'Banco',
+    'Banco romano': 'Banco romano',
+    Barra: 'Barra',
+    'Barra de dominadas': 'Barra de dominadas',
+    'Barra o mancuernas': 'Barra o mancuernas',
+    Mancuerna: 'Mancuerna',
+    'Mancuerna o pesa rusa': 'Mancuerna o pesa rusa',
+    Mancuernas: 'Mancuernas',
+    'Mancuernas o barra': 'Mancuernas o barra',
+    Máquina: 'Máquina',
+    'Máquina o barra': 'Máquina o barra',
+    'Peso corporal': 'Peso corporal',
+    'Peso corporal o disco': 'Peso corporal o disco',
+    Polea: 'Polea',
+  },
+  planLevels: {
+    Principiante: 'Principiante',
+    Intermedio: 'Intermedio',
+    Avanzado: 'Avanzado',
+  },
+  groups: {
+    crol: 'Crol',
+    dorso: 'Dorso',
+    mariposa: 'Mariposa',
+    pecho: 'Pecho',
+  },
+  muscles: {
+    pecho: 'Pecho',
+    dorsales: 'Dorsales',
+    trapecio: 'Trapecio',
+    'deltoide-frontal': 'Deltoide frontal',
+    'deltoide-lateral': 'Deltoide lateral',
+    'deltoide-posterior': 'Deltoide posterior',
+    biceps: 'Bíceps',
+    triceps: 'Tríceps',
+    antebrazo: 'Antebrazo',
+    abdomen: 'Abdomen',
+    oblicuos: 'Oblicuos',
+    lumbares: 'Lumbares',
+    cuadriceps: 'Cuádriceps',
+    isquiotibiales: 'Isquiotibiales',
+    aductores: 'Aductores',
+    gluteos: 'Glúteos',
+    gemelos: 'Gemelos',
+    Otros: 'Otros',
+  },
 };
 
 export type Dictionary = typeof es;
