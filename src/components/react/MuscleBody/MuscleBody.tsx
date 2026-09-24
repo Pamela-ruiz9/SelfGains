@@ -18,6 +18,7 @@ import { muscleLabel } from '../../../lib/muscles';
 interface MuscleBodyProps {
   selectedMuscle: string | null;
   onSelectMuscle: (id: string) => void;
+  t: { loading: string; webglUnsupported: string };
 }
 
 type PartGeometry =
@@ -639,7 +640,7 @@ function hasWebGL(): boolean {
   }
 }
 
-export default function MuscleBody({ selectedMuscle, onSelectMuscle }: MuscleBodyProps) {
+export default function MuscleBody({ selectedMuscle, onSelectMuscle, t }: MuscleBodyProps) {
   const [hoveredMuscle, setHoveredMuscle] = useState<string | null>(null);
   const [hoverLabel, setHoverLabel] = useState<{
     muscleId: string;
@@ -682,7 +683,7 @@ export default function MuscleBody({ selectedMuscle, onSelectMuscle }: MuscleBod
   if (webglAvailable === null) {
     return (
       <div className="card-brutal flex h-[420px] items-center justify-center text-center sm:h-[520px]">
-        <p className="font-mono text-sm text-paper-dim">Cargando...</p>
+        <p className="font-mono text-sm text-paper-dim">{t.loading}</p>
       </div>
     );
   }
@@ -690,10 +691,7 @@ export default function MuscleBody({ selectedMuscle, onSelectMuscle }: MuscleBod
   if (!webglAvailable) {
     return (
       <div className="card-brutal flex h-[420px] items-center justify-center text-center sm:h-[520px]">
-        <p className="font-mono text-sm text-paper-dim">
-          Tu navegador no soporta WebGL, así que no se puede mostrar el cuerpo 3D. Puedes
-          seguir usando el resto de SelfGains con normalidad.
-        </p>
+        <p className="font-mono text-sm text-paper-dim">{t.webglUnsupported}</p>
       </div>
     );
   }

@@ -75,6 +75,7 @@ export interface Profile {
   leg_cm: number | null;
   accent_color: string;
   theme: 'light' | 'dark';
+  locale: 'es' | 'en';
   is_trainer: boolean;
   sex: 'femenino' | 'masculino' | null;
   training_level: 'principiante' | 'intermedio' | 'avanzado' | null;

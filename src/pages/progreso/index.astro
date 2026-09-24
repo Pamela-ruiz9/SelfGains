@@ -3,6 +3,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import ProgressList from '../../components/react/ProgressList/ProgressList';
 import { getCollection } from 'astro:content';
 import { isGymActivity } from '../../lib/activities';
+import { getDictionary } from '../../i18n';
+
+const locale = Astro.currentLocale === 'en' ? 'en' : 'es';
+const dict = getDictionary(locale);
+const t = dict.progreso;
 
 const activityEntries = await getCollection('activities');
 
@@ -24,13 +29,16 @@ const activities = activityEntries
   }))
   .sort((a, b) => a.name.localeCompare(b.name));
 ---
-<BaseLayout title="Progreso">
-  <p class="label-brutal mb-3 text-acid">Tu bitácora</p>
-  <h1 class="mb-8 font-display text-5xl text-paper sm:text-6xl">HISTORIAL</h1>
+<BaseLayout title={t.pageTitle}>
+  <p class="label-brutal mb-3 text-acid">{t.kicker}</p>
+  <h1 class="mb-8 font-display text-5xl text-paper sm:text-6xl">{t.heading}</h1>
   <ProgressList
     client:load
     exerciseNames={exerciseNames}
     exercises={exercises}
     activities={activities}
+    t={t}
+    registrarT={dict.registrar.logger}
+    disciplinesT={dict.disciplines}
   />
 </BaseLayout>

@@ -93,10 +93,12 @@ export const es = {
     switchToEnglish: 'Cambiar a inglés',
     switchToSpanish: 'Cambiar a español',
   },
-} as const;
+};
 
 export type Dictionary = typeof es;
 ```
+
+(Sin `as const`: con `as const` cada string quedaría con su tipo literal exacto — ej. `"Ejercicios"` en vez de `string` — y entonces `en: Dictionary` exigiría que `en.ts` tuviera literalmente las mismas strings en español, haciendo imposible poner las traducciones al inglés. Sin `as const`, TypeScript infiere `string` para cada hoja, así que `Dictionary` describe la forma — qué claves existen — sin fijar el contenido, que es el mecanismo que realmente se necesita.)
 
 - [ ] **Step 2: Crear `src/i18n/en.ts`**
 
@@ -1175,7 +1177,9 @@ git commit -m "feat: traducir sincronización, invitación, sync banner, install
 - Create: `src/pages/en/conexiones.astro`
 - Create: `src/pages/en/c.astro`
 
-Como cada página ya calcula su propio `locale`/`t` a partir de `Astro.currentLocale` (Tareas 7–15), y Astro deriva `currentLocale` automáticamente de la carpeta de ruteo (`src/pages/en/...` → `en`), cada espejo es una copia **literal, byte-por-byte**, del archivo en español correspondiente — sin editar ni una línea. Esto es intencional y es la razón por la que las Tareas 7–15 pasaron por leer `Astro.currentLocale` en vez de recibir el locale como prop o asumirlo fijo.
+Como cada página ya calcula su propio `locale`/`t` a partir de `Astro.currentLocale` (Tareas 7–15), y Astro deriva `currentLocale` automáticamente de la carpeta de ruteo (`src/pages/en/...` → `en`), cada espejo es casi una copia literal del archivo en español correspondiente — sin tocar lógica, JSX, ni el cálculo de `locale`/`t`. Esto es intencional y es la razón por la que las Tareas 7–15 pasaron por leer `Astro.currentLocale` en vez de recibir el locale como prop o asumirlo fijo.
+
+**Corrección (encontrada al ejecutar esta tarea):** el diseño original de este plan afirmaba que cada copia queda "a la misma profundidad relativa a `src/`" que su original, y que por lo tanto los imports no necesitan tocarse. Eso es **incorrecto** — agregar el segmento `en/` mete un nivel de carpeta extra para TODAS las páginas (las de nivel raíz incluidas), así que cada import relativo (`../layouts/...`, `../i18n`, `../../layouts/...`, etc.) queda un `../` corto. Copias verdaderamente byte-por-byte no compilan (`npm run build` falla con "Could not resolve..." en los 13 archivos). La corrección mínima: cada archivo espejo necesita exactamente un `../` extra prepended a CADA import relativo que tenga, sin tocar ninguna otra línea (nada de JSX, lógica, ni el cálculo de `locale`/`t`) — es decir, "casi byte-por-byte", no literalmente byte-por-byte.
 
 - [ ] **Step 1: Crear la copia — ejemplo con `index.astro`**
 
@@ -1202,9 +1206,13 @@ cp src/pages/conexiones.astro src/pages/en/conexiones.astro
 cp src/pages/c.astro src/pages/en/c.astro
 ```
 
-- [ ] **Step 3: Revisar imports relativos**
+- [ ] **Step 3: Corregir imports relativos (un `../` extra en cada uno)**
 
-Cada archivo copiado a `src/pages/en/<mismo-nombre>.astro` (nivel raíz) o `src/pages/en/<carpeta>/<archivo>.astro` mantiene la MISMA profundidad relativa a `src/` que su original (`src/pages/en/index.astro` está a la misma profundidad que `src/pages/index.astro`; `src/pages/en/ejercicios/index.astro` a la misma que `src/pages/ejercicios/index.astro`), así que los imports relativos (`../layouts/BaseLayout.astro`, `../../i18n`, etc.) no necesitan tocarse — es exactamente por esto que se preservó la misma estructura de subcarpetas dentro de `en/`. Confirmar esto con un build, no asumirlo.
+Cada archivo copiado a `src/pages/en/<mismo-nombre>.astro` (nivel raíz) o `src/pages/en/<carpeta>/<archivo>.astro` queda UN nivel más profundo que su original, porque `en/` es una carpeta nueva de por sí — no importa si el original vivía en la raíz de `src/pages/` o ya estaba anidado (`ejercicios/`, `rutinas/`, `registro/`, `progreso/`), el espejo siempre necesita exactamente un `../` más en cada import relativo que el archivo original tenía. Ejemplos concretos:
+- `src/pages/index.astro` tiene `import BaseLayout from '../layouts/BaseLayout.astro';` → en `src/pages/en/index.astro` pasa a `'../../layouts/BaseLayout.astro'`.
+- `src/pages/registro/nuevo.astro` tiene `import BaseLayout from '../../layouts/BaseLayout.astro';` → en `src/pages/en/registro/nuevo.astro` pasa a `'../../../layouts/BaseLayout.astro'`.
+
+Editar SOLO las rutas de los `import ... from '...'` (agregar un `../` al inicio de cada ruta relativa) — no tocar ninguna otra línea del archivo (JSX, lógica, cálculo de `locale`/`t`, nada). Repetir para cada uno de los 13 archivos, revisando cada import que tengan (`BaseLayout`, componentes React, `../i18n` o `../../i18n`, `astro:content`, etc. — `astro:content` y otros imports de paquete, sin `.` al inicio, NO se tocan, solo los relativos). Confirmar con un build al final, no asumir que quedó bien.
 
 - [ ] **Step 4: Verificar con build + tsc**
 

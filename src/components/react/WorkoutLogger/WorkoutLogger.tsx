@@ -29,6 +29,8 @@ import {
 } from '../../../lib/prs';
 import ActivityPicker, { DISCIPLINES, type ActivityOption } from '../ActivityPicker/ActivityPicker';
 import CollapsibleSection from '../Shared/CollapsibleSection';
+import { es } from '../../../i18n/es';
+import type { Dictionary } from '../../../i18n/es';
 
 interface PredefinedRoutine {
   id: string;
@@ -36,10 +38,6 @@ interface PredefinedRoutine {
 }
 
 interface WorkoutWithLogs extends WorkoutWithSets, WorkoutWithSessions {}
-
-const LABEL_BY_DISCIPLINE: Record<string, string> = Object.fromEntries(
-  DISCIPLINES.map((d) => [d.id, d.label])
-);
 
 interface TodayActivityEntry {
   activity: ActivityOption;
@@ -65,6 +63,8 @@ interface LoggedSession {
 interface Props {
   activities: ActivityOption[];
   plans: PredefinedRoutine[];
+  t: Dictionary['registrar'];
+  disciplinesT: Dictionary['disciplines'];
 }
 
 interface ParsedSet {
@@ -78,26 +78,41 @@ interface ParsedSession {
   distanceKm: number | null;
 }
 
+// `t` defaults straight to the Spanish dictionary (not a hand-copied
+// constant) so consumers that haven't been wired up to pass a `t` slice yet
+// — e.g. ProgressList/WorkoutHistory — stay backward-compatible without a
+// second copy of this copy to keep in sync.
+type SetValidationMessages = Pick<
+  Dictionary['registrar']['logger']['validation'],
+  'repsInvalid' | 'weightInvalid' | 'rpeInvalid'
+>;
+
+type SessionValidationMessages = Pick<
+  Dictionary['registrar']['logger']['validation'],
+  'durationInvalid' | 'distanceInvalid'
+>;
+
 // `weight` is the user-facing string in `weightUnit`; the returned weight is
 // always in kg, which is what actually gets stored (DB column, PR math).
 export function parseSetInput(
   reps: string,
   weight: string,
   rpe: string,
-  weightUnit: WeightUnit = 'kg'
+  weightUnit: WeightUnit = 'kg',
+  t: SetValidationMessages = es.registrar.logger.validation
 ): ParsedSet | { error: string } {
   const repsNum = Number(reps);
   const weightNum = Number(weight);
   const rpeNum = rpe === '' ? null : Number(rpe);
 
   if (!Number.isFinite(repsNum) || repsNum <= 0) {
-    return { error: 'Las repeticiones deben ser un número mayor a 0.' };
+    return { error: t.repsInvalid };
   }
   if (!Number.isFinite(weightNum) || weightNum < 0) {
-    return { error: 'El peso debe ser un número válido.' };
+    return { error: t.weightInvalid };
   }
   if (rpeNum !== null && (!Number.isFinite(rpeNum) || rpeNum < 0 || rpeNum > 10)) {
-    return { error: 'El RPE debe ser un número entre 0 y 10.' };
+    return { error: t.rpeInvalid };
   }
   return { reps: repsNum, weight: displayToKg(weightNum, weightUnit), rpe: rpeNum };
 }
@@ -107,18 +122,19 @@ export function parseSetInput(
 export function parseSessionInput(
   duration: string,
   distance: string,
-  needsDistance: boolean
+  needsDistance: boolean,
+  t: SessionValidationMessages = es.registrar.logger.validation
 ): ParsedSession | { error: string } {
   const durationNum = Number(duration);
   if (!Number.isFinite(durationNum) || durationNum <= 0) {
-    return { error: 'La duración debe ser un número mayor a 0.' };
+    return { error: t.durationInvalid };
   }
   if (!needsDistance) {
     return { durationMin: durationNum, distanceKm: null };
   }
   const distanceMetersNum = Number(distance);
   if (!Number.isFinite(distanceMetersNum) || distanceMetersNum <= 0) {
-    return { error: 'La distancia debe ser un número mayor a 0.' };
+    return { error: t.distanceInvalid };
   }
   return { durationMin: durationNum, distanceKm: metersToKm(distanceMetersNum) };
 }
@@ -129,7 +145,8 @@ export function parseSessionInput(
 function buildSavedMessage(
   justSaved: LoggedSet[],
   pastWorkouts: WorkoutWithSets[],
-  weightUnit: WeightUnit
+  weightUnit: WeightUnit,
+  t: Dictionary['registrar']['logger']['saved']
 ): string {
   const priorPRByExercise = new Map(calculatePRs(pastWorkouts).map((pr) => [pr.exerciseId, pr.weight]));
 
@@ -144,24 +161,34 @@ function buildSavedMessage(
     return prior === undefined || s.weight > prior;
   });
 
-  if (newPRs.length === 0) return 'Entrenamiento guardado correctamente.';
+  if (newPRs.length === 0) return t.success;
   const list = newPRs
     .map((pr) => `${pr.exerciseName} (${kgToDisplay(pr.weight, weightUnit)} ${weightUnit})`)
     .join(', ');
-  return `Entrenamiento guardado correctamente. ¡Nuevo PR en ${list}!`;
+  return `${t.success} ${t.newPrPrefix} ${list}${t.newPrSuffixMark}`;
 }
 
-function suggestionHint(suggestion: SuggestedSet, weightUnit: WeightUnit): string {
+function suggestionHint(
+  suggestion: SuggestedSet,
+  weightUnit: WeightUnit,
+  t: Dictionary['registrar']['logger']['suggestion']
+): string {
   const weight = kgToDisplay(suggestion.weight, weightUnit);
-  const base = `Sugerido: ${suggestion.reps} reps × ${weight} ${weightUnit}`;
+  const base = `${t.prefix}: ${suggestion.reps} reps × ${weight} ${weightUnit}`;
   if (suggestion.status === 'progress') {
-    return `${base} (+2.5 kg — llevas 3 sesiones con RPE bajo)`;
+    return `${base} ${t.progress}`;
   }
   if (suggestion.status === 'deload') {
-    return `${base} (-10% — llevas 3 sesiones al límite sin avanzar, toca bajar peso)`;
+    return `${base} ${t.deload}`;
   }
-  return `${base} (igual que tu última sesión)`;
+  return `${base} ${t.same}`;
 }
+
+// `labels` defaults straight to the Spanish dictionary so consumers that
+// haven't been wired up to pass a `labels` slice yet — e.g.
+// ProgressList/WorkoutHistory — stay backward-compatible without a second
+// copy of this copy to keep in sync.
+type SetFieldsLabels = Dictionary['registrar']['logger']['fields']['set'];
 
 export function SetFields({
   reps,
@@ -171,6 +198,7 @@ export function SetFields({
   onRepsChange,
   onWeightChange,
   onRpeChange,
+  labels = es.registrar.logger.fields.set,
 }: {
   reps: string;
   weight: string;
@@ -179,11 +207,12 @@ export function SetFields({
   onRepsChange: (v: string) => void;
   onWeightChange: (v: string) => void;
   onRpeChange: (v: string) => void;
+  labels?: SetFieldsLabels;
 }) {
   return (
     <div className="grid grid-cols-3 gap-3">
       <label className="flex flex-col gap-2">
-        <span className="label-brutal">Reps</span>
+        <span className="label-brutal">{labels.reps}</span>
         <input
           type="number"
           value={reps}
@@ -194,7 +223,9 @@ export function SetFields({
         />
       </label>
       <label className="flex flex-col gap-2">
-        <span className="label-brutal">Peso ({weightUnit})</span>
+        <span className="label-brutal">
+          {labels.weight} ({weightUnit})
+        </span>
         <input
           type="number"
           value={weight}
@@ -206,7 +237,7 @@ export function SetFields({
         />
       </label>
       <label className="flex flex-col gap-2">
-        <span className="label-brutal">RPE</span>
+        <span className="label-brutal">{labels.rpe}</span>
         <input
           type="number"
           value={rpe}
@@ -217,10 +248,7 @@ export function SetFields({
           className="input-brutal"
         />
       </label>
-      <p className="col-span-3 font-mono text-xs text-paper-dim">
-        Escala RPE: 10 = al fallo · 8–9 = 1–2 reps en reserva · 6–7 = varias reps en reserva · ≤4 =
-        fácil
-      </p>
+      <p className="col-span-3 font-mono text-xs text-paper-dim">{labels.rpeScale}</p>
     </div>
   );
 }
@@ -245,6 +273,8 @@ function SteppedNumberField({
   presets,
   unit,
   onChange,
+  decreaseAriaLabel,
+  increaseAriaLabel,
 }: {
   label: string;
   value: string;
@@ -252,6 +282,8 @@ function SteppedNumberField({
   presets: number[];
   unit: string;
   onChange: (v: string) => void;
+  decreaseAriaLabel: string;
+  increaseAriaLabel: string;
 }) {
   return (
     <div className="flex flex-col gap-2">
@@ -260,7 +292,7 @@ function SteppedNumberField({
         <button
           type="button"
           onClick={() => onChange(bumpValue(value, -step))}
-          aria-label={`Restar ${step} ${unit}`}
+          aria-label={`${decreaseAriaLabel} ${step} ${unit}`}
           className="h-14 w-14 shrink-0 rounded-control border border-paper-dim/50 font-display text-2xl text-paper transition-transform duration-100 active:scale-95 active:border-acid active:text-acid"
         >
           −
@@ -277,7 +309,7 @@ function SteppedNumberField({
         <button
           type="button"
           onClick={() => onChange(bumpValue(value, step))}
-          aria-label={`Sumar ${step} ${unit}`}
+          aria-label={`${increaseAriaLabel} ${step} ${unit}`}
           className="h-14 w-14 shrink-0 rounded-control border border-paper-dim/50 font-display text-2xl text-paper transition-transform duration-100 active:scale-95 active:border-acid active:text-acid"
         >
           +
@@ -303,38 +335,50 @@ function SteppedNumberField({
   );
 }
 
+// `labels` defaults straight to the Spanish dictionary so consumers that
+// haven't been wired up to pass a `labels` slice yet — e.g.
+// ProgressList/WorkoutHistory — stay backward-compatible without a second
+// copy of this copy to keep in sync.
+type SessionFieldsLabels = Dictionary['registrar']['logger']['fields']['session'];
+
 export function SessionFields({
   duration,
   distance,
   requiresDistance,
   onDurationChange,
   onDistanceChange,
+  labels = es.registrar.logger.fields.session,
 }: {
   duration: string;
   distance: string;
   requiresDistance: boolean;
   onDurationChange: (v: string) => void;
   onDistanceChange: (v: string) => void;
+  labels?: SessionFieldsLabels;
 }) {
   return (
     <div className="flex flex-col gap-4">
       {requiresDistance && (
         <SteppedNumberField
-          label="Distancia (m)"
+          label={labels.distance}
           value={distance}
           step={DISTANCE_STEP}
           presets={DISTANCE_PRESETS}
           unit="m"
           onChange={onDistanceChange}
+          decreaseAriaLabel={labels.decreaseAriaLabel}
+          increaseAriaLabel={labels.increaseAriaLabel}
         />
       )}
       <SteppedNumberField
-        label="Tiempo (min)"
+        label={labels.duration}
         value={duration}
         step={DURATION_STEP}
         presets={DURATION_PRESETS}
         unit="min"
         onChange={onDurationChange}
+        decreaseAriaLabel={labels.decreaseAriaLabel}
+        increaseAriaLabel={labels.increaseAriaLabel}
       />
     </div>
   );
@@ -349,6 +393,7 @@ function RoutineActivityCard({
   onAddSession,
   done,
   progressLabel,
+  t,
 }: {
   activity: ActivityOption;
   target: Omit<RoutineActivityTarget, 'activityId'>;
@@ -358,6 +403,7 @@ function RoutineActivityCard({
   onAddSession: (activityId: string, activityName: string, parsed: ParsedSession) => void;
   done: boolean;
   progressLabel: string | null;
+  t: Pick<Dictionary['registrar']['logger'], 'validation' | 'suggestion' | 'card' | 'fields'>;
 }) {
   const suggestion =
     activity.metricType === 'sets' ? suggestNextSet(workouts, activity.id) : null;
@@ -378,7 +424,7 @@ function RoutineActivityCard({
   function handleAdd(e: FormEvent) {
     e.preventDefault();
     if (activity.metricType === 'sets') {
-      const parsed = parseSetInput(reps, weight, rpe, weightUnit);
+      const parsed = parseSetInput(reps, weight, rpe, weightUnit, t.validation);
       if ('error' in parsed) {
         setError(parsed.error);
         return;
@@ -389,7 +435,7 @@ function RoutineActivityCard({
       setWeight('');
       setRpe('');
     } else {
-      const parsed = parseSessionInput(duration, distance, requiresDistance(activity));
+      const parsed = parseSessionInput(duration, distance, requiresDistance(activity), t.validation);
       if ('error' in parsed) {
         setError(parsed.error);
         return;
@@ -410,7 +456,7 @@ function RoutineActivityCard({
         <p className="font-display text-xl text-paper">{fullActivityName(activity)}</p>
         {done && (
           <span className="shrink-0 rounded-control border border-acid px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-acid">
-            ✓ Hecho
+            {t.card.done}
           </span>
         )}
       </div>
@@ -427,12 +473,19 @@ function RoutineActivityCard({
       )}
       {goal && (
         <p className="font-mono text-xs text-acid">
-          Meta: {goal}
-          {progressLabel && <span className="text-paper-dim"> — llevas {progressLabel}</span>}
+          {t.card.goalLabel}: {goal}
+          {progressLabel && (
+            <span className="text-paper-dim">
+              {' '}
+              — {t.card.progressPrefix} {progressLabel}
+            </span>
+          )}
         </p>
       )}
       {suggestion && (
-        <p className="font-mono text-xs text-paper-dim">{suggestionHint(suggestion, weightUnit)}</p>
+        <p className="font-mono text-xs text-paper-dim">
+          {suggestionHint(suggestion, weightUnit, t.suggestion)}
+        </p>
       )}
       {activity.metricType === 'sets' ? (
         <SetFields
@@ -443,6 +496,7 @@ function RoutineActivityCard({
           onRepsChange={setReps}
           onWeightChange={setWeight}
           onRpeChange={setRpe}
+          labels={t.fields.set}
         />
       ) : (
         <SessionFields
@@ -451,17 +505,18 @@ function RoutineActivityCard({
           requiresDistance={requiresDistance(activity)}
           onDurationChange={setDuration}
           onDistanceChange={setDistance}
+          labels={t.fields.session}
         />
       )}
       {error && <p className="font-mono text-xs text-blood">{error}</p>}
       <button type="submit" className="btn-brutal-sm self-start">
-        {activity.metricType === 'sets' ? '+ Agregar serie' : '+ Agregar sesión'}
+        {activity.metricType === 'sets' ? t.card.addSet : t.card.addSession}
       </button>
     </form>
   );
 }
 
-export default function WorkoutLogger({ activities, plans }: Props) {
+export default function WorkoutLogger({ activities, plans, t, disciplinesT }: Props) {
   const [authChecked, setAuthChecked] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
@@ -679,12 +734,12 @@ export default function WorkoutLogger({ activities, plans }: Props) {
     setSavedMessage(null);
 
     if (!selectedActivity) {
-      setError('Elige una actividad.');
+      setError(t.logger.validation.noActivitySelected);
       return;
     }
 
     if (selectedActivity.metricType === 'sets') {
-      const parsed = parseSetInput(reps, weight, rpe, weightUnit);
+      const parsed = parseSetInput(reps, weight, rpe, weightUnit, t.logger.validation);
       if ('error' in parsed) {
         setError(parsed.error);
         return;
@@ -694,7 +749,12 @@ export default function WorkoutLogger({ activities, plans }: Props) {
       setWeight('');
       setRpe('');
     } else {
-      const parsed = parseSessionInput(duration, distance, requiresDistance(selectedActivity));
+      const parsed = parseSessionInput(
+        duration,
+        distance,
+        requiresDistance(selectedActivity),
+        t.logger.validation
+      );
       if ('error' in parsed) {
         setError(parsed.error);
         return;
@@ -722,7 +782,7 @@ export default function WorkoutLogger({ activities, plans }: Props) {
 
   async function handleSaveWorkout() {
     if (loggedSets.length === 0 && loggedSessions.length === 0) {
-      setError('Agrega al menos una serie o sesión antes de guardar.');
+      setError(t.logger.validation.emptyWorkout);
       return;
     }
     setError(null);
@@ -736,31 +796,31 @@ export default function WorkoutLogger({ activities, plans }: Props) {
       for (const s of loggedSessions) {
         await addSession(workout.id, s.activityId, s.durationMin, s.distanceKm ?? undefined);
       }
-      setSavedMessage(buildSavedMessage(loggedSets, pastWorkouts, weightUnit));
+      setSavedMessage(buildSavedMessage(loggedSets, pastWorkouts, weightUnit, t.logger.saved));
       setLoggedSets([]);
       setLoggedSessions([]);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo guardar el entrenamiento.');
+      setError(err instanceof Error ? err.message : t.logger.saved.saveError);
     } finally {
       setSaving(false);
     }
   }
 
   if (!authChecked) {
-    return <p className="font-mono text-sm text-paper-dim">Cargando...</p>;
+    return <p className="font-mono text-sm text-paper-dim">{t.logger.loading}</p>;
   }
 
   if (!isLoggedIn) {
     return (
       <p className="font-mono text-sm text-paper-dim">
-        Debes{' '}
+        {t.logger.notLoggedIn.prefix}{' '}
         <a
           href={`${import.meta.env.BASE_URL}login/`}
           className="text-acid underline underline-offset-4 hover:text-paper"
         >
-          iniciar sesión
+          {t.logger.notLoggedIn.link}
         </a>{' '}
-        para registrar un entrenamiento.
+        {t.logger.notLoggedIn.suffix}
       </p>
     );
   }
@@ -770,7 +830,7 @@ export default function WorkoutLogger({ activities, plans }: Props) {
   return (
     <div className="flex max-w-2xl flex-col gap-8">
       <label className="flex max-w-xs flex-col gap-2">
-        <span className="label-brutal">Fecha</span>
+        <span className="label-brutal">{t.logger.dateLabel}</span>
         <input
           type="date"
           value={date}
@@ -781,12 +841,13 @@ export default function WorkoutLogger({ activities, plans }: Props) {
 
       {todayActivities.length > 0 && (
         <CollapsibleSection
-          title={date === localDateStr() ? 'Hoy toca' : 'Ese día toca'}
+          title={date === localDateStr() ? t.logger.today.titleToday : t.logger.today.titleOtherDay}
           open={todaySectionOpen}
           onToggle={() => setTodaySectionOpen((prev) => !prev)}
           badge={
             <span className="font-mono text-xs text-paper-dim">
-              {completedCount} de {totalTodayCount} completado{totalTodayCount === 1 ? '' : 's'}
+              {completedCount} {t.logger.today.of} {totalTodayCount} {t.logger.today.completedLabel}
+              {totalTodayCount === 1 ? '' : t.logger.today.completedPluralSuffix}
             </span>
           }
         >
@@ -804,7 +865,7 @@ export default function WorkoutLogger({ activities, plans }: Props) {
                 const count = loggedCountFor(activity);
                 const progressLabel =
                   activity.metricType === 'sets' && target.targetSets
-                    ? `${count}/${target.targetSets} series`
+                    ? `${count}/${target.targetSets} ${t.logger.card.setsUnit}`
                     : null;
                 return (
                   <RoutineActivityCard
@@ -817,6 +878,7 @@ export default function WorkoutLogger({ activities, plans }: Props) {
                     onAddSession={addLoggedSession}
                     done={isActivityDone(activity, target)}
                     progressLabel={progressLabel}
+                    t={t.logger}
                   />
                 );
               })}
@@ -827,13 +889,13 @@ export default function WorkoutLogger({ activities, plans }: Props) {
 
       {pastWorkouts.length > 0 && (
         <CollapsibleSection
-          title="Copiar un entrenamiento anterior"
+          title={t.logger.copy.sectionTitle}
           open={copySectionOpen}
           onToggle={() => setCopySectionOpen((prev) => !prev)}
         >
           <div className="card-brutal flex flex-col gap-3">
             <label className="flex flex-col gap-2">
-              <span className="label-brutal">Día a copiar</span>
+              <span className="label-brutal">{t.logger.copy.dayLabel}</span>
               <select
                 value={copySourceId}
                 onChange={(e) => handleCopySourceChange(e.target.value)}
@@ -841,11 +903,11 @@ export default function WorkoutLogger({ activities, plans }: Props) {
               >
                 <option value="">
                   {todayActivities.length === 0
-                    ? 'Elige un día para copiar aquí (sin rutina asignada hoy)'
-                    : 'Elige un día para sumar otra disciplina hoy'}
+                    ? t.logger.copy.chooseNoRoutine
+                    : t.logger.copy.chooseWithRoutine}
                 </option>
                 {pastWorkouts.map((w) => {
-                  const labels = disciplinesForPastWorkout(w).map((id) => LABEL_BY_DISCIPLINE[id] ?? id);
+                  const labels = disciplinesForPastWorkout(w).map((id) => disciplinesT[id as keyof Dictionary['disciplines']] ?? id);
                   return (
                     <option key={w.id} value={w.id}>
                       {w.date}
@@ -874,9 +936,9 @@ export default function WorkoutLogger({ activities, plans }: Props) {
                           })
                         }
                       />
-                      {name} — serie {s.set_number}: {s.reps} reps x {kgToDisplay(s.weight, weightUnit)}{' '}
-                      {weightUnit}
-                      {s.rpe !== null ? ` (RPE ${s.rpe})` : ''}
+                      {name} — {t.logger.copy.set} {s.set_number}: {s.reps} {t.logger.copy.repsX}{' '}
+                      {kgToDisplay(s.weight, weightUnit)} {weightUnit}
+                      {s.rpe !== null ? ` (${t.logger.table.rpe} ${s.rpe})` : ''}
                     </label>
                   );
                 })}
@@ -897,8 +959,11 @@ export default function WorkoutLogger({ activities, plans }: Props) {
                           })
                         }
                       />
-                      {name} — {s.distance_km !== null ? `${kmToMeters(s.distance_km)} m en ` : ''}
-                      {s.duration_min} min
+                      {name} —{' '}
+                      {s.distance_km !== null
+                        ? `${kmToMeters(s.distance_km)} ${t.logger.copy.distanceIn} `
+                        : ''}
+                      {s.duration_min} {t.logger.copy.min}
                     </label>
                   );
                 })}
@@ -910,19 +975,23 @@ export default function WorkoutLogger({ activities, plans }: Props) {
               disabled={selectedSetIds.size + selectedSessionIds.size === 0}
               className="btn-brutal-sm shrink-0 self-start"
             >
-              Copiar seleccionados ({selectedSetIds.size + selectedSessionIds.size})
+              {t.logger.copy.copySelected} ({selectedSetIds.size + selectedSessionIds.size})
             </button>
           </div>
         </CollapsibleSection>
       )}
 
       <CollapsibleSection
-        title="Agregar otra actividad"
+        title={t.logger.addActivity.sectionTitle}
         open={addActivitySectionOpen}
         onToggle={() => setAddActivitySectionOpen((prev) => !prev)}
       >
         <form onSubmit={handleAddActivity} className="card-brutal flex flex-col gap-4">
-          <ActivityPicker activities={activities} onSelect={setSelectedActivity} />
+          <ActivityPicker
+            activities={activities}
+            onSelect={setSelectedActivity}
+            t={{ ...t.picker, disciplines: disciplinesT }}
+          />
           {selectedActivity?.image && (
             <img
               src={`${import.meta.env.BASE_URL}exercises/${selectedActivity.image}`}
@@ -936,7 +1005,7 @@ export default function WorkoutLogger({ activities, plans }: Props) {
           )}
           {freeFormSuggestion && (
             <p className="font-mono text-xs text-paper-dim">
-              {suggestionHint(freeFormSuggestion, weightUnit)}
+              {suggestionHint(freeFormSuggestion, weightUnit, t.logger.suggestion)}
             </p>
           )}
           {selectedActivity?.metricType === 'sets' && (
@@ -948,6 +1017,7 @@ export default function WorkoutLogger({ activities, plans }: Props) {
               onRepsChange={setReps}
               onWeightChange={setWeight}
               onRpeChange={setRpe}
+              labels={t.logger.fields.set}
             />
           )}
           {selectedActivity?.metricType === 'session' && (
@@ -957,10 +1027,11 @@ export default function WorkoutLogger({ activities, plans }: Props) {
               requiresDistance={requiresDistance(selectedActivity)}
               onDurationChange={setDuration}
               onDistanceChange={setDistance}
+              labels={t.logger.fields.session}
             />
           )}
           <button type="submit" className="btn-brutal-sm self-start">
-            + Agregar
+            {t.logger.addActivity.submit}
           </button>
         </form>
       </CollapsibleSection>
@@ -970,11 +1041,13 @@ export default function WorkoutLogger({ activities, plans }: Props) {
           <table className="w-full min-w-[480px] text-left font-mono text-sm">
             <thead>
               <tr className="border-b border-acid text-xs uppercase tracking-[0.15em] text-paper-dim">
-                <th className="px-3 py-2 font-normal">Ejercicio</th>
-                <th className="px-3 py-2 font-normal">Serie</th>
-                <th className="px-3 py-2 font-normal">Reps</th>
-                <th className="px-3 py-2 font-normal">Peso ({weightUnit})</th>
-                <th className="px-3 py-2 font-normal">RPE</th>
+                <th className="px-3 py-2 font-normal">{t.logger.table.exercise}</th>
+                <th className="px-3 py-2 font-normal">{t.logger.table.set}</th>
+                <th className="px-3 py-2 font-normal">{t.logger.table.reps}</th>
+                <th className="px-3 py-2 font-normal">
+                  {t.logger.table.weight} ({weightUnit})
+                </th>
+                <th className="px-3 py-2 font-normal">{t.logger.table.rpe}</th>
                 <th className="px-3 py-2"></th>
               </tr>
             </thead>
@@ -992,7 +1065,7 @@ export default function WorkoutLogger({ activities, plans }: Props) {
                       onClick={() => handleRemoveSet(i)}
                       className="text-blood hover:text-paper"
                     >
-                      Quitar
+                      {t.logger.table.remove}
                     </button>
                   </td>
                 </tr>
@@ -1007,9 +1080,9 @@ export default function WorkoutLogger({ activities, plans }: Props) {
           <table className="w-full min-w-[420px] text-left font-mono text-sm">
             <thead>
               <tr className="border-b border-acid text-xs uppercase tracking-[0.15em] text-paper-dim">
-                <th className="px-3 py-2 font-normal">Actividad</th>
-                <th className="px-3 py-2 font-normal">Distancia</th>
-                <th className="px-3 py-2 font-normal">Tiempo</th>
+                <th className="px-3 py-2 font-normal">{t.logger.table.activity}</th>
+                <th className="px-3 py-2 font-normal">{t.logger.table.distance}</th>
+                <th className="px-3 py-2 font-normal">{t.logger.table.duration}</th>
                 <th className="px-3 py-2"></th>
               </tr>
             </thead>
@@ -1027,7 +1100,7 @@ export default function WorkoutLogger({ activities, plans }: Props) {
                       onClick={() => handleRemoveSession(i)}
                       className="text-blood hover:text-paper"
                     >
-                      Quitar
+                      {t.logger.table.remove}
                     </button>
                   </td>
                 </tr>
@@ -1050,7 +1123,7 @@ export default function WorkoutLogger({ activities, plans }: Props) {
         disabled={saving}
         className="btn-brutal self-start"
       >
-        {saving ? 'Guardando...' : 'Guardar entrenamiento'}
+        {saving ? t.logger.actions.saving : t.logger.actions.submit}
       </button>
     </div>
   );

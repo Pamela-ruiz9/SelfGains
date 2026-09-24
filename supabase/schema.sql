@@ -536,3 +536,11 @@ revoke execute on function delete_own_account() from public;
 revoke execute on function delete_own_account() from anon;
 revoke execute on function delete_own_account() from service_role;
 grant execute on function delete_own_account() to authenticated;
+
+-- Idioma bilingüe ES/EN (2026-09-23) — infraestructura i18n
+-- (docs/superpowers/specs/2026-09-23-bilingue-es-en-design.md). Mismo
+-- patrón dual que theme/accent_color: local (localStorage) para el primer
+-- paint sin sesión, esta columna como fuente de verdad entre dispositivos
+-- una vez que hay sesión. Default 'es' porque toda la app ya es en
+-- español hoy — ningún perfil existente cambia de idioma con este ALTER.
+alter table profiles add column locale text not null default 'es' check (locale in ('es', 'en'));

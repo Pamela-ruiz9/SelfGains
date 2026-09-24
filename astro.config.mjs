@@ -7,6 +7,11 @@ export default defineConfig({
   base: '/SelfGains/',
   output: 'static',
   integrations: [react()],
+  i18n: {
+    defaultLocale: 'es',
+    locales: ['es', 'en'],
+    routing: { prefixDefaultLocale: false },
+  },
   vite: {
     plugins: [tailwindcss()],
   },

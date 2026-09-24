@@ -4,12 +4,12 @@ import {
   entryTarget,
   targetSummary,
   WEEKDAYS,
-  weekdayLabel,
   type RoutineDays,
 } from '../../../lib/weekdays';
 import { fullActivityName } from '../../../lib/activities';
 import { getMyConnections, type ConnectionSummary } from '../../../lib/connections';
 import { proposeRoutineShare } from '../../../lib/routineShares';
+import type { Dictionary } from '../../../i18n/es';
 import type { ActivityOption } from '../ActivityPicker/ActivityPicker';
 
 export interface RoutineOption {
@@ -31,9 +31,14 @@ interface RoutineListProps {
   onActivate: (source: 'predefined' | 'custom', ref: string, weeks: number) => void;
   onEdit?: (ref: string) => void;
   onDelete?: (ref: string) => void;
+  t: Dictionary['rutinas'];
 }
 
-function daysSummary(days: RoutineDays, activities: ActivityOption[]): string {
+function daysSummary(
+  days: RoutineDays,
+  activities: ActivityOption[],
+  t: Dictionary['rutinas']
+): string {
   return WEEKDAYS.filter((day) => days[day].length > 0)
     .map((day) => {
       const names = days[day].map((entry) => {
@@ -43,12 +48,18 @@ function daysSummary(days: RoutineDays, activities: ActivityOption[]): string {
         const summary = activity ? targetSummary(activity.metricType, entryTarget(entry)) : null;
         return summary ? `${label} (${summary})` : label;
       });
-      return `${weekdayLabel(day)}: ${names.join(', ')}`;
+      return `${t.days[day]}: ${names.join(', ')}`;
     })
     .join(' · ');
 }
 
-function ShareRoutinePicker({ routineId }: { routineId: string }) {
+function ShareRoutinePicker({
+  routineId,
+  t,
+}: {
+  routineId: string;
+  t: Dictionary['rutinas']['list']['share'];
+}) {
   const [open, setOpen] = useState(false);
   const [connections, setConnections] = useState<ConnectionSummary[] | null>(null);
   const [sharing, setSharing] = useState<string | null>(null);
@@ -62,7 +73,7 @@ function ShareRoutinePicker({ routineId }: { routineId: string }) {
       try {
         setConnections(await getMyConnections());
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'No se pudieron cargar tus conexiones.');
+        setError(err instanceof Error ? err.message : t.loadConnectionsError);
       }
     }
   }
@@ -74,7 +85,7 @@ function ShareRoutinePicker({ routineId }: { routineId: string }) {
       await proposeRoutineShare(routineId, toUserId);
       setDone(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo compartir la rutina.');
+      setError(err instanceof Error ? err.message : t.shareError);
     } finally {
       setSharing(null);
     }
@@ -87,22 +98,22 @@ function ShareRoutinePicker({ routineId }: { routineId: string }) {
         onClick={handleOpen}
         className="rounded-control border border-paper-dim/60 bg-transparent px-2 py-1 font-mono text-xs uppercase tracking-wide text-paper transition duration-150 hover:border-paper hover:bg-paper hover:text-ink active:scale-95"
       >
-        Compartir
+        {t.button}
       </button>
     );
   }
 
   if (done) {
-    return <p className="font-mono text-xs text-paper-dim">Propuesta enviada.</p>;
+    return <p className="font-mono text-xs text-paper-dim">{t.sent}</p>;
   }
 
   return (
     <div className="flex flex-col gap-2">
       {connections === null && !error && (
-        <p className="font-mono text-xs text-paper-dim">Cargando...</p>
+        <p className="font-mono text-xs text-paper-dim">{t.loading}</p>
       )}
       {connections !== null && connections.length === 0 && (
-        <p className="font-mono text-xs text-paper-dim">No tienes conexiones todavía.</p>
+        <p className="font-mono text-xs text-paper-dim">{t.noConnections}</p>
       )}
       {connections !== null &&
         connections.length > 0 &&
@@ -114,7 +125,7 @@ function ShareRoutinePicker({ routineId }: { routineId: string }) {
             onClick={() => handleShare(c.userId)}
             className="text-left font-mono text-xs text-paper hover:text-acid"
           >
-            {sharing === c.userId ? 'Compartiendo...' : c.displayName ?? 'Sin nombre'}
+            {sharing === c.userId ? t.sharing : c.displayName ?? t.unnamedConnection}
           </button>
         ))}
       {error && <p className="font-mono text-xs text-blood">{error}</p>}
@@ -123,7 +134,7 @@ function ShareRoutinePicker({ routineId }: { routineId: string }) {
         onClick={() => setOpen(false)}
         className="rounded-control border border-paper-dim/60 bg-transparent px-2 py-1 font-mono text-xs uppercase tracking-wide text-paper-dim transition duration-150 hover:border-paper hover:text-paper active:scale-95"
       >
-        Cancelar
+        {t.cancel}
       </button>
     </div>
   );
@@ -136,6 +147,7 @@ function RoutineCard({
   onActivate,
   onEdit,
   onDelete,
+  t,
 }: {
   routine: RoutineOption;
   source: 'predefined' | 'custom';
@@ -143,6 +155,7 @@ function RoutineCard({
   onActivate: (source: 'predefined' | 'custom', ref: string, weeks: number) => void;
   onEdit?: (ref: string) => void;
   onDelete?: (ref: string) => void;
+  t: Dictionary['rutinas'];
 }) {
   const [weeks, setWeeks] = useState('8');
 
@@ -152,12 +165,12 @@ function RoutineCard({
         <div>
           <p className="font-display text-2xl text-paper">{routine.name}</p>
           {routine.subtitle && <p className="label-brutal">{routine.subtitle}</p>}
-          {routine.recommended && <p className="label-brutal text-acid">Recomendada para vos</p>}
+          {routine.recommended && <p className="label-brutal text-acid">{t.list.recommended}</p>}
           {routine.assignedByName && (
             <p className="font-mono text-xs text-paper-dim">
-              Compartida por: {routine.assignedByName}
+              {t.list.sharedByPrefix} {routine.assignedByName}
               {routine.originalAuthorName && routine.originalAuthorName !== routine.assignedByName
-                ? ` (originalmente de ${routine.originalAuthorName})`
+                ? ` ${t.list.originallyFromPrefix} ${routine.originalAuthorName}${t.list.originallyFromSuffix}`
                 : ''}
             </p>
           )}
@@ -170,21 +183,23 @@ function RoutineCard({
                 onClick={() => onEdit?.(routine.ref)}
                 className="rounded-control border border-paper-dim/60 bg-transparent px-2 py-1 font-mono text-xs uppercase tracking-wide text-paper transition duration-150 hover:border-paper hover:bg-paper hover:text-ink active:scale-95"
               >
-                Editar
+                {t.list.edit}
               </button>
               <button
                 type="button"
                 onClick={() => onDelete?.(routine.ref)}
                 className="rounded-control border border-blood bg-transparent px-2 py-1 font-mono text-xs uppercase tracking-wide text-blood transition duration-150 hover:bg-blood hover:text-paper active:scale-95"
               >
-                Eliminar
+                {t.list.delete}
               </button>
             </div>
-            {!routine.assignedByName && <ShareRoutinePicker routineId={routine.ref} />}
+            {!routine.assignedByName && (
+              <ShareRoutinePicker routineId={routine.ref} t={t.list.share} />
+            )}
           </div>
         )}
       </div>
-      <p className="font-mono text-sm text-paper-dim">{daysSummary(routine.days, activities)}</p>
+      <p className="font-mono text-sm text-paper-dim">{daysSummary(routine.days, activities, t)}</p>
       <div className="flex items-center gap-2">
         <input
           type="number"
@@ -193,13 +208,13 @@ function RoutineCard({
           min={1}
           className="input-brutal w-20"
         />
-        <span className="label-brutal">semanas</span>
+        <span className="label-brutal">{t.list.weeks}</span>
         <button
           type="button"
           onClick={() => onActivate(source, routine.ref, Number(weeks))}
           className="btn-brutal-sm ml-auto"
         >
-          Activar
+          {t.list.activate}
         </button>
       </div>
     </div>
@@ -215,6 +230,7 @@ export default function RoutineList({
   onActivate,
   onEdit,
   onDelete,
+  t,
 }: RoutineListProps) {
   return (
     <div className="flex flex-col gap-3">
@@ -232,6 +248,7 @@ export default function RoutineList({
               onActivate={onActivate}
               onEdit={onEdit}
               onDelete={onDelete}
+              t={t}
             />
           ))}
         </div>

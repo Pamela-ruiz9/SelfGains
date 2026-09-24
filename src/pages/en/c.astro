@@ -1,0 +1,16 @@
+---
+// Espejo de ../c.astro — mismo contenido, solo cambian las rutas de import
+// por la carpeta en/ extra. Si cambiás la estructura/JSX en español, replicá el cambio acá.
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import RedeemInvite from '../../components/react/Connections/RedeemInvite';
+import { getDictionary } from '../../i18n';
+
+const locale = Astro.currentLocale === 'en' ? 'en' : 'es';
+const dict = getDictionary(locale);
+const t = dict.sync.invite;
+---
+<BaseLayout title={t.pageTitle}>
+  <p class="label-brutal mb-3 text-acid">{t.kicker}</p>
+  <h1 class="mb-8 font-display text-5xl text-paper sm:text-6xl">{t.heading}</h1>
+  <RedeemInvite client:load t={dict.conexiones.redeemInvite} />
+</BaseLayout>

@@ -2,6 +2,11 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Connections from '../components/react/Connections/Connections';
 import { getCollection } from 'astro:content';
+import { getDictionary } from '../i18n';
+
+const locale = Astro.currentLocale === 'en' ? 'en' : 'es';
+const dict = getDictionary(locale);
+const t = dict.conexiones;
 
 const activityEntries = await getCollection('activities');
 const activities = activityEntries
@@ -15,8 +20,8 @@ const activities = activityEntries
   }))
   .sort((a, b) => a.name.localeCompare(b.name));
 ---
-<BaseLayout title="Conexiones">
-  <p class="label-brutal mb-3 text-acid">Tu red</p>
-  <h1 class="mb-8 font-display text-5xl text-paper sm:text-6xl">CONEXIONES</h1>
-  <Connections client:load activities={activities} />
+<BaseLayout title={t.pageTitle}>
+  <p class="label-brutal mb-3 text-acid">{t.kicker}</p>
+  <h1 class="mb-8 font-display text-5xl text-paper sm:text-6xl">{t.heading}</h1>
+  <Connections client:load activities={activities} t={t} routinePreviewT={dict.rutinas} avatarT={dict.sync.avatar} />
 </BaseLayout>

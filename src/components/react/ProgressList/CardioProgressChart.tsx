@@ -2,12 +2,14 @@ import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YA
 import { formatPace, type CardioProgressPoint } from '../../../lib/prs';
 import { fullActivityName } from '../../../lib/activities';
 import type { ActivityOption } from '../ActivityPicker/ActivityPicker';
+import type { Dictionary } from '../../../i18n/es';
 
 interface Props {
   activityId: string;
   points: CardioProgressPoint[];
   activities: ActivityOption[];
   onSelectActivity: (id: string) => void;
+  t: Dictionary['progreso']['cardioProgressChart'];
 }
 
 function ChartTooltip({
@@ -33,6 +35,7 @@ export default function CardioProgressChart({
   points,
   activities,
   onSelectActivity,
+  t,
 }: Props) {
   const selected = activities.find((a) => a.id === activityId);
   const activityName = selected ? fullActivityName(selected) : activityId;
@@ -43,7 +46,7 @@ export default function CardioProgressChart({
   return (
     <div className="flex flex-col gap-4">
       <label className="flex max-w-xs flex-col gap-2">
-        <span className="label-brutal">Actividad</span>
+        <span className="label-brutal">{t.activityLabel}</span>
         <select
           value={activityId}
           onChange={(e) => onSelectActivity(e.target.value)}
@@ -58,7 +61,7 @@ export default function CardioProgressChart({
       </label>
       <div className="card-brutal">
         <p className="mb-1 font-display text-2xl text-paper">{activityName}</p>
-        <p className="mb-4 font-mono text-xs text-paper-dim">Ritmo — más abajo es más rápido</p>
+        <p className="mb-4 font-mono text-xs text-paper-dim">{t.paceHint}</p>
         <div className="h-72 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={points} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>

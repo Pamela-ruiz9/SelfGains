@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from 'react';
 import { supabase } from '../../../lib/supabase';
+import type { Dictionary } from '../../../i18n';
 
-export default function SignupForm() {
+export default function SignupForm({ t }: { t: Dictionary['auth']['signup'] }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -38,12 +39,12 @@ export default function SignupForm() {
     return (
       <div className="card-brutal max-w-sm border-acid">
         <p className="font-mono text-sm text-paper">
-          Cuenta creada. Revisa tu correo para confirmar la cuenta y luego{' '}
+          {t.doneText}{' '}
           <a
             href={`${import.meta.env.BASE_URL}login/`}
             className="text-acid underline underline-offset-4 hover:text-paper"
           >
-            inicia sesión
+            {t.doneLoginLink}
           </a>
           .
         </p>
@@ -60,16 +61,16 @@ export default function SignupForm() {
         className="btn-brutal-outline flex items-center justify-center gap-3"
       >
         <GoogleIcon />
-        Continuar con Google
+        {t.continueWithGoogle}
       </button>
       <div className="flex items-center gap-3 text-paper-dim">
         <div className="h-px flex-1 bg-paper-dim/30" />
-        <span className="font-mono text-xs">O</span>
+        <span className="font-mono text-xs">{t.or}</span>
         <div className="h-px flex-1 bg-paper-dim/30" />
       </div>
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         <label className="flex flex-col gap-2">
-          <span className="label-brutal">Email</span>
+          <span className="label-brutal">{t.email}</span>
           <input
             type="email"
             value={email}
@@ -81,7 +82,7 @@ export default function SignupForm() {
           />
         </label>
         <label className="flex flex-col gap-2">
-          <span className="label-brutal">Contraseña</span>
+          <span className="label-brutal">{t.password}</span>
           <input
             type="password"
             value={password}
@@ -95,7 +96,7 @@ export default function SignupForm() {
         </label>
         {error && <p className="border-l border-blood pl-3 font-mono text-sm text-blood">{error}</p>}
         <button type="submit" disabled={loading} className="btn-brutal">
-          {loading ? 'Creando cuenta...' : 'Crear cuenta'}
+          {loading ? t.submitting : t.submit}
         </button>
       </form>
     </div>

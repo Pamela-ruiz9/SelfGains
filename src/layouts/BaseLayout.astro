@@ -3,6 +3,7 @@ import '../styles/global.css';
 import Nav from '../components/astro/Nav.astro';
 import SyncBanner from '../components/react/SyncBanner/SyncBanner';
 import { ClientRouter, fade } from 'astro:transitions';
+import { getDictionary } from '../i18n';
 
 interface Props {
   title: string;
@@ -10,8 +11,10 @@ interface Props {
 
 const { title } = Astro.props;
 const base = import.meta.env.BASE_URL;
+const locale = Astro.currentLocale === 'en' ? 'en' : 'es';
+const t = getDictionary(locale).sync.banner;
 ---
-<html lang="es">
+<html lang={Astro.currentLocale === "en" ? "en" : "es"}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -30,6 +33,38 @@ const base = import.meta.env.BASE_URL;
       rel="stylesheet"
     />
     <title>{title} · SelfGains</title>
+    <script is:inline define:vars={{ base }}>
+      (function () {
+        // Corre en cada carga de página completa (no en navegación interna
+        // vía ClientRouter, que ya aterriza en la URL correcta sola). Dos
+        // casos: (1) primera visita real — sin preferencia guardada todavía
+        // — detecta el idioma del navegador y lo guarda; (2) cualquier otra
+        // carga completa — respeta la preferencia ya guardada (sin volver a
+        // mirar el navegador) y redirige si la URL actual no coincide con
+        // ella. Este segundo caso es necesario porque la PWA instalada
+        // siempre reabre en la start_url en español del manifest — sin este
+        // chequeo, elegir inglés desde el toggle del Nav o desde Perfil se
+        // perdería en el próximo arranque
+        // (ver docs/superpowers/specs/2026-09-23-bilingue-es-en-design.md, sección 4).
+        try {
+          var STORAGE_KEY = 'selfgains-locale';
+          var stored = localStorage.getItem(STORAGE_KEY);
+          if (!stored) {
+            var browserLang = (navigator.language || '').toLowerCase();
+            stored = browserLang.indexOf('en') === 0 ? 'en' : 'es';
+            localStorage.setItem(STORAGE_KEY, stored);
+          }
+          var wantsEnglish = stored === 'en';
+          var path = window.location.pathname;
+          var isEnglishPath = path.indexOf(base + 'en/') === 0;
+          if (wantsEnglish && !isEnglishPath) {
+            window.location.replace(base + 'en/' + path.slice(base.length));
+          } else if (!wantsEnglish && isEnglishPath) {
+            window.location.replace(base + path.slice((base + 'en/').length));
+          }
+        } catch (e) {}
+      })();
+    </script>
     <script is:inline>
       (function () {
         // Duplica ACCENT_GRADIENTS de src/lib/theme.ts a propósito — este
@@ -79,7 +114,7 @@ const base = import.meta.env.BASE_URL;
   </head>
   <body class="min-h-screen">
     <Nav />
-    <SyncBanner client:load />
+    <SyncBanner client:load t={t} />
     <main transition:animate={fade({ duration: '0.2s' })} class="mx-auto max-w-5xl px-4 py-10 pb-24 sm:px-6 sm:py-14">
       <slot />
     </main>

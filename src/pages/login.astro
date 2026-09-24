@@ -1,22 +1,25 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import LoginForm from '../components/react/Auth/LoginForm';
+import { getDictionary } from '../i18n';
 
 const base = import.meta.env.BASE_URL;
+const locale = Astro.currentLocale === 'en' ? 'en' : 'es';
+const t = getDictionary(locale).auth.login;
 ---
-<BaseLayout title="Iniciar sesión">
-  <p class="label-brutal mb-3 text-acid">Bienvenido de vuelta</p>
-  <h1 class="mb-8 font-display text-5xl text-paper sm:text-6xl">INICIAR SESIÓN</h1>
-  <LoginForm client:load />
+<BaseLayout title={t.pageTitle}>
+  <p class="label-brutal mb-3 text-acid">{t.welcomeBack}</p>
+  <h1 class="mb-8 font-display text-5xl text-paper sm:text-6xl">{t.heading}</h1>
+  <LoginForm client:load t={t} />
   <p class="mt-6 flex flex-col gap-2 font-mono text-sm text-paper-dim">
     <span>
-      ¿No tienes cuenta?
+      {t.noAccount}
       <a href={`${base}registro-cuenta/`} class="text-acid underline underline-offset-4 hover:text-paper">
-        Crea una
+        {t.createOne}
       </a>
     </span>
     <a href={`${base}olvide-contrasena/`} class="text-acid underline underline-offset-4 hover:text-paper">
-      ¿Olvidaste tu contraseña?
+      {t.forgotPassword}
     </a>
   </p>
 </BaseLayout>

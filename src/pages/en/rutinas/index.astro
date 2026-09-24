@@ -1,0 +1,40 @@
+---
+// Espejo de ../../rutinas/index.astro — mismo contenido, solo cambian las
+// rutas de import por la carpeta en/ extra. Si cambiás la estructura/JSX en español, replicá el cambio acá.
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import RoutineManager from '../../../components/react/RoutineManager/RoutineManager';
+import { getCollection } from 'astro:content';
+import { getDictionary } from '../../../i18n';
+
+const locale = Astro.currentLocale === 'en' ? 'en' : 'es';
+const t = getDictionary(locale).rutinas;
+
+const planEntries = await getCollection('plans');
+const predefinedRoutines = planEntries
+  .map((p) => ({
+    id: p.id,
+    name: p.data.name,
+    goal: p.data.goal,
+    level: p.data.level,
+    sex: p.data.sex,
+    days: p.data.days,
+  }))
+  .sort((a, b) => a.name.localeCompare(b.name));
+
+const activityEntries = await getCollection('activities');
+const activities = activityEntries
+  .map((e) => ({
+    id: e.id,
+    name: e.data.name,
+    discipline: e.data.discipline,
+    metricType: e.data.metricType,
+    group: e.data.metricType === 'session' ? e.data.group : undefined,
+    description: e.body?.trim() ?? '',
+  }))
+  .sort((a, b) => a.name.localeCompare(b.name));
+---
+<BaseLayout title={t.pageTitle}>
+  <p class="label-brutal mb-3 text-acid">{t.kicker}</p>
+  <h1 class="mb-8 font-display text-5xl text-paper sm:text-6xl">{t.heading}</h1>
+  <RoutineManager client:load predefinedRoutines={predefinedRoutines} activities={activities} t={t} />
+</BaseLayout>

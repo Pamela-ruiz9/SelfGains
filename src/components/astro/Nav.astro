@@ -1,13 +1,18 @@
 ---
+import { getDictionary, localePath, otherLocaleHref } from "../../i18n";
+
 const base = import.meta.env.BASE_URL;
 const path = Astro.url.pathname;
+const locale = Astro.currentLocale === "en" ? "en" : "es";
+const t = getDictionary(locale).nav;
+const otherHref = otherLocaleHref(path, base);
 
 const links = [
-  { id: "ejercicios", href: `${base}ejercicios/`, label: "Ejercicios" },
-  { id: "rutinas", href: `${base}rutinas/`, label: "Rutinas" },
-  { id: "registrar", href: `${base}registro/nuevo/`, label: "Registrar" },
-  { id: "progreso", href: `${base}progreso/`, label: "Progreso" },
-  { id: "perfil", href: `${base}perfil/`, label: "Perfil" },
+  { id: "ejercicios", href: localePath(locale, base, "ejercicios/"), label: t.ejercicios },
+  { id: "rutinas", href: localePath(locale, base, "rutinas/"), label: t.rutinas },
+  { id: "registrar", href: localePath(locale, base, "registro/nuevo/"), label: t.registrar },
+  { id: "progreso", href: localePath(locale, base, "progreso/"), label: t.progreso },
+  { id: "perfil", href: localePath(locale, base, "perfil/"), label: t.perfil },
 ];
 
 function isActive(href: string) {
@@ -32,7 +37,7 @@ function iconSvg(id: string, strokeWidth = 2) {
 ---
 <header class="sticky top-0 z-50 border-b border-paper/20 bg-ink/95 backdrop-blur">
   <nav class="mx-auto flex max-w-5xl items-center justify-between px-4 py-4 sm:px-6">
-    <a href={base} class="group flex items-center gap-2">
+    <a href={localePath(locale, base, "")} class="group flex items-center gap-2">
       <svg viewBox="0 0 100 100" class="h-8 w-8 shrink-0 text-acid" aria-hidden="true">
         <polygon
           points="16,4 84,4 96,16 96,84 84,96 16,96 4,84 4,16"
@@ -49,27 +54,38 @@ function iconSvg(id: string, strokeWidth = 2) {
         <span class="font-display text-3xl tracking-wide text-acid">GAINS</span>
       </span>
     </a>
-    <div class="hidden items-center gap-2 font-mono text-sm uppercase tracking-[0.15em] sm:flex">
-      {
-        links.map((link) => (
-          <a
-            href={link.href}
-            class:list={[
-              "flex items-center gap-2 rounded-control border px-3 py-2 transition-colors duration-150",
-              isActive(link.href)
-                ? "pill-selected"
-                : "border-transparent text-paper hover:border-paper-dim/50 hover:text-acid",
-            ]}
-          >
-            <span
-              class:list={["h-4 w-4 shrink-0", link.id === "perfil" && "overflow-hidden rounded-full"]}
-              data-nav-avatar={link.id === "perfil" ? "true" : undefined}
-              set:html={iconSvg(link.id)}
-            />
-            {link.label}
-          </a>
-        ))
-      }
+    <div class="flex items-center gap-3">
+      <div class="hidden items-center gap-2 font-mono text-sm uppercase tracking-[0.15em] sm:flex">
+        {
+          links.map((link) => (
+            <a
+              href={link.href}
+              class:list={[
+                "flex items-center gap-2 rounded-control border px-3 py-2 transition-colors duration-150",
+                isActive(link.href)
+                  ? "pill-selected"
+                  : "border-transparent text-paper hover:border-paper-dim/50 hover:text-acid",
+              ]}
+            >
+              <span
+                class:list={["h-4 w-4 shrink-0", link.id === "perfil" && "overflow-hidden rounded-full"]}
+                data-nav-avatar={link.id === "perfil" ? "true" : undefined}
+                set:html={iconSvg(link.id)}
+              />
+              {link.label}
+            </a>
+          ))
+        }
+      </div>
+      <a
+        href={otherHref}
+        data-lang-toggle={locale === "en" ? "es" : "en"}
+        aria-label={locale === "en" ? t.switchToSpanish : t.switchToEnglish}
+        class="flex items-center overflow-hidden rounded-full border border-paper-dim/40 font-mono text-[10px] uppercase tracking-wide transition-colors duration-150 hover:border-paper-dim/70"
+      >
+        <span class:list={["px-2 py-1", locale === "es" ? "pill-selected" : "text-paper-dim"]}>ES</span>
+        <span class:list={["px-2 py-1", locale === "en" ? "pill-selected" : "text-paper-dim"]}>EN</span>
+      </a>
     </div>
   </nav>
 </header>
@@ -136,6 +152,33 @@ function iconSvg(id: string, strokeWidth = 2) {
     } catch {
       // A failed profile fetch shouldn't break navigation — the fallback
       // person icon just stays put.
+    }
+  });
+</script>
+
+<script>
+  // El toggle ES/EN es solo un <a href> — la navegación sola no persiste la
+  // elección. La detección de primera visita en BaseLayout.astro y el
+  // selector de Perfil ya escriben esta misma clave; sin esto, un click acá
+  // se perdería en el próximo arranque de la PWA instalada (que abre en la
+  // start_url del manifest, no en la página donde se hizo el toggle).
+  //
+  // Delegado en document (en vez de attachear el listener directo al <a>):
+  // el ClientRouter de Astro reemplaza el DOM de Nav en cada navegación
+  // interna, así que un listener puesto directo en el <a> de la carga
+  // inicial queda huérfano apenas el usuario navega una vez adentro de la
+  // app — que es el caso común, no el raro. document en sí nunca se
+  // reemplaza, así que este listener sigue vivo sin importar cuántas
+  // navegaciones internas pasen, sin necesidad de re-attachear en
+  // astro:after-swap.
+  document.addEventListener("click", (e) => {
+    const toggle = (e.target as HTMLElement).closest<HTMLAnchorElement>("[data-lang-toggle]");
+    if (!toggle) return;
+    try {
+      localStorage.setItem("selfgains-locale", toggle.dataset.langToggle!);
+    } catch {
+      // Sin localStorage (privado/bloqueado), la navegación sigue andando
+      // igual — solo se pierde la persistencia entre visitas.
     }
   });
 </script>

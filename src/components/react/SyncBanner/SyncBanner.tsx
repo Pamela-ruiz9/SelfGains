@@ -1,8 +1,13 @@
 import { useEffect, useState } from 'react';
 import { flushQueue } from '../../../lib/workouts';
 import { getConflictCount, getQueueCount } from '../../../lib/offlineQueue';
+import type { Dictionary } from '../../../i18n/es';
 
-export default function SyncBanner() {
+interface Props {
+  t: Dictionary['sync']['banner'];
+}
+
+export default function SyncBanner({ t }: Props) {
   const [pending, setPending] = useState(0);
   const [conflicts, setConflicts] = useState(0);
 
@@ -42,14 +47,14 @@ export default function SyncBanner() {
         href={`${base}sincronizacion/`}
         className="reveal block border-b border-blood bg-surface px-4 py-2 text-center font-mono text-sm text-blood hover:text-paper"
       >
-        {conflicts} {conflicts === 1 ? 'conflicto' : 'conflictos'} — revisar
+        {conflicts} {conflicts === 1 ? t.conflictSingular : t.conflictPlural} {t.reviewSuffix}
       </a>
     );
   }
 
   return (
     <p className="reveal border-b border-acid bg-surface px-4 py-2 text-center font-mono text-sm text-paper-dim">
-      {pending} {pending === 1 ? 'cambio pendiente' : 'cambios pendientes'} de sincronizar
+      {pending} {pending === 1 ? t.pendingSingular : t.pendingPlural} {t.syncSuffix}
     </p>
   );
 }

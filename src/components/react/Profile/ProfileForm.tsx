@@ -10,19 +10,27 @@ import { DISCIPLINES } from '../ActivityPicker/ActivityPicker';
 import MapPicker from '../Shared/MapPicker';
 import Avatar from '../Shared/Avatar';
 import type { Profile } from '../../../types/db';
-
-const MEASUREMENT_FIELDS: { key: keyof Profile; label: string }[] = [
-  { key: 'weight_kg', label: 'Peso (kg)' },
-  { key: 'height_cm', label: 'Estatura (cm)' },
-  { key: 'waist_cm', label: 'Cintura (cm)' },
-  { key: 'hip_cm', label: 'Cadera (cm)' },
-  { key: 'arm_cm', label: 'Brazo (cm)' },
-  { key: 'leg_cm', label: 'Pierna (cm)' },
-];
+import type { Dictionary } from '../../../i18n';
 
 const ACCENT_PRESETS = ['#d7ff3f', '#3fd7ff', '#ff3fb8', '#ff9c3f', '#8f3fff', '#3fff8f'];
 
-export default function ProfileForm() {
+export default function ProfileForm({
+  t,
+  avatarT,
+  disciplinesT,
+}: {
+  t: Dictionary['perfil'];
+  avatarT: Dictionary['sync']['avatar'];
+  disciplinesT: Dictionary['disciplines'];
+}) {
+  const MEASUREMENT_FIELDS: { key: keyof Profile; label: string }[] = [
+    { key: 'weight_kg', label: t.measurements.weight },
+    { key: 'height_cm', label: t.measurements.height },
+    { key: 'waist_cm', label: t.measurements.waist },
+    { key: 'hip_cm', label: t.measurements.hip },
+    { key: 'arm_cm', label: t.measurements.arm },
+    { key: 'leg_cm', label: t.measurements.leg },
+  ];
   const [authChecked, setAuthChecked] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [email, setEmail] = useState('');
@@ -31,6 +39,7 @@ export default function ProfileForm() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [measurements, setMeasurements] = useState<Record<string, string>>({});
   const [theme, setTheme] = useState<ThemeMode>('dark');
+  const [locale, setLocale] = useState<'es' | 'en'>('es');
   // string, no AccentGradientId — accentColor termina guardando tanto ids de
   // preset ("f1"/"f2"/"f3") como hex sueltos del selector de color libre,
   // y también lo que venga de profile.accent_color (columna text en
@@ -79,6 +88,7 @@ export default function ProfileForm() {
       const profile = await getMyProfile();
       if (profile) {
         setTheme(profile.theme);
+        setLocale(profile.locale);
         setAccentColor(profile.accent_color);
         setIsTrainer(profile.is_trainer);
         setSex(profile.sex);
@@ -138,7 +148,7 @@ export default function ProfileForm() {
       await upsertProfile({ avatar_url: url });
       setAvatarUrl(url);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo subir la foto.');
+      setError(err instanceof Error ? err.message : t.photo.uploadError);
     } finally {
       setUploadingPhoto(false);
       e.target.value = '';
@@ -151,8 +161,24 @@ export default function ProfileForm() {
     try {
       await upsertProfile({ theme: next });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo guardar el tema.');
+      setError(err instanceof Error ? err.message : t.appearance.themeSaveError);
     }
+  }
+
+  async function handleLocaleChange(next: 'es' | 'en') {
+    setLocale(next);
+    try {
+      localStorage.setItem('selfgains-locale', next);
+    } catch {}
+    try {
+      await upsertProfile({ locale: next });
+    } catch (err) {
+      // La navegación de abajo corre igual, con o sin error — el banner de
+      // error nunca llega a pintarse, así que esto es solo para debug.
+      console.error(err);
+    }
+    const base = import.meta.env.BASE_URL;
+    window.location.href = next === 'en' ? `${base}en/perfil/` : `${base}perfil/`;
   }
 
   async function handleAccentChange(next: string) {
@@ -161,7 +187,7 @@ export default function ProfileForm() {
     try {
       await upsertProfile({ accent_color: next });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo guardar el color.');
+      setError(err instanceof Error ? err.message : t.appearance.colorSaveError);
     }
   }
 
@@ -175,7 +201,7 @@ export default function ProfileForm() {
     try {
       await upsertProfile({ sex: next });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo guardar el sexo.');
+      setError(err instanceof Error ? err.message : t.sex.saveError);
     }
   }
 
@@ -184,7 +210,7 @@ export default function ProfileForm() {
     try {
       await upsertProfile({ training_level: next });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo guardar el nivel.');
+      setError(err instanceof Error ? err.message : t.trainingLevel.saveError);
     }
   }
 
@@ -193,7 +219,7 @@ export default function ProfileForm() {
     try {
       await upsertProfile({ is_trainer: next });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo guardar el cambio.');
+      setError(err instanceof Error ? err.message : t.trainer.toggleSaveError);
     }
   }
 
@@ -208,7 +234,7 @@ export default function ProfileForm() {
     try {
       const amount = trainerRateAmount === '' ? null : Number(trainerRateAmount);
       if (amount !== null && (!Number.isFinite(amount) || amount < 0)) {
-        throw new Error('La tarifa debe ser un número válido.');
+        throw new Error(t.trainer.invalidRate);
       }
       const pin = trainerPin ?? DEFAULT_MAP_CENTER;
       await upsertTrainerProfile({
@@ -221,9 +247,9 @@ export default function ProfileForm() {
         rate_currency: trainerRateCurrency.trim() || null,
         rate_period: trainerRatePeriod,
       });
-      setSavedMessage('Buscador de entrenadores guardado.');
+      setSavedMessage(t.trainer.saved);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo guardar.');
+      setError(err instanceof Error ? err.message : t.trainer.saveError);
     } finally {
       setSavingTrainerProfile(false);
     }
@@ -244,15 +270,15 @@ export default function ProfileForm() {
         }
         const num = Number(raw);
         if (!Number.isFinite(num) || num < 0) {
-          throw new Error(`${label}: debe ser un número válido.`);
+          throw new Error(`${label}: ${t.measurements.invalidNumber}`);
         }
         parsed[key] = num;
       }
       await upsertProfile({ display_name: displayName.trim() || null, ...parsed });
       await logMeasurement(parsed);
-      setSavedMessage('Perfil guardado correctamente.');
+      setSavedMessage(t.saved);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo guardar el perfil.');
+      setError(err instanceof Error ? err.message : t.saveError);
     } finally {
       setSaving(false);
     }
@@ -264,11 +290,7 @@ export default function ProfileForm() {
   }
 
   async function handleDeleteAccount() {
-    if (
-      !confirm(
-        '¿Eliminar tu cuenta? Esto borra todos tus entrenamientos, rutinas, medidas y conexiones de forma permanente. Esta acción no se puede deshacer.'
-      )
-    ) {
+    if (!confirm(t.deleteAccount.confirm)) {
       return;
     }
     setDeletingAccount(true);
@@ -278,26 +300,26 @@ export default function ProfileForm() {
       await supabase.auth.signOut();
       window.location.href = import.meta.env.BASE_URL;
     } catch (err) {
-      setDeleteError(err instanceof Error ? err.message : 'No se pudo borrar la cuenta.');
+      setDeleteError(err instanceof Error ? err.message : t.deleteAccount.error);
       setDeletingAccount(false);
     }
   }
 
   if (!authChecked) {
-    return <p className="font-mono text-sm text-paper-dim">Cargando...</p>;
+    return <p className="font-mono text-sm text-paper-dim">{t.loading}</p>;
   }
 
   if (!isLoggedIn) {
     return (
       <p className="font-mono text-sm text-paper-dim">
-        Debes{' '}
+        {t.notLoggedIn.prefix}{' '}
         <a
           href={`${import.meta.env.BASE_URL}login/`}
           className="text-acid underline underline-offset-4 hover:text-paper"
         >
-          iniciar sesión
+          {t.notLoggedIn.link}
         </a>{' '}
-        para ver tu perfil.
+        {t.notLoggedIn.suffix}
       </p>
     );
   }
@@ -305,10 +327,10 @@ export default function ProfileForm() {
   return (
     <div className="flex max-w-sm flex-col gap-10">
       <div className="flex items-center gap-4">
-        <Avatar avatarUrl={avatarUrl} displayName={displayName || email} isTrainer={isTrainer} size={80} />
+        <Avatar avatarUrl={avatarUrl} displayName={displayName || email} isTrainer={isTrainer} size={80} t={avatarT} />
         <div className="flex flex-col gap-1">
           <label className="btn-brutal-outline w-fit cursor-pointer px-4 py-2 text-sm">
-            {uploadingPhoto ? 'Subiendo...' : 'Cambiar foto'}
+            {uploadingPhoto ? t.photo.uploading : t.photo.change}
             <input
               type="file"
               accept="image/*"
@@ -322,21 +344,41 @@ export default function ProfileForm() {
       </div>
 
       <div className="flex flex-col gap-3">
-        <p className="label-brutal text-acid">Apariencia</p>
+        <p className="label-brutal text-acid">{t.language.label}</p>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => handleLocaleChange('es')}
+            className={locale === 'es' ? 'btn-brutal-sm pill-selected' : 'btn-brutal-sm'}
+          >
+            {t.language.es}
+          </button>
+          <button
+            type="button"
+            onClick={() => handleLocaleChange('en')}
+            className={locale === 'en' ? 'btn-brutal-sm pill-selected' : 'btn-brutal-sm'}
+          >
+            {t.language.en}
+          </button>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <p className="label-brutal text-acid">{t.appearance.label}</p>
         <div className="flex gap-2">
           <button
             type="button"
             onClick={() => handleThemeChange('dark')}
             className={theme === 'dark' ? 'btn-brutal-sm pill-selected' : 'btn-brutal-sm'}
           >
-            Oscuro
+            {t.appearance.dark}
           </button>
           <button
             type="button"
             onClick={() => handleThemeChange('light')}
             className={theme === 'light' ? 'btn-brutal-sm pill-selected' : 'btn-brutal-sm'}
           >
-            Claro
+            {t.appearance.light}
           </button>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -345,7 +387,7 @@ export default function ProfileForm() {
               <button
                 key={id}
                 type="button"
-                aria-label={`Degradado ${id}`}
+                aria-label={`${t.appearance.gradientAriaLabel} ${id}`}
                 onClick={() => handleAccentChange(id)}
                 style={{ backgroundImage: preset.gradient }}
                 className={`h-8 w-8 rounded-full border transition-transform duration-150 ${
@@ -358,7 +400,7 @@ export default function ProfileForm() {
             <button
               key={color}
               type="button"
-              aria-label={`Color ${color}`}
+              aria-label={`${t.appearance.colorAriaLabel} ${color}`}
               onClick={() => handleAccentChange(color)}
               style={{ backgroundColor: color }}
               className={`h-8 w-8 rounded-full border transition-transform duration-150 ${
@@ -374,14 +416,14 @@ export default function ProfileForm() {
                 : (ACCENT_GRADIENTS[accentColor as AccentGradientId]?.solid ?? '#000000')
             }
             onChange={(e) => handleAccentChange(e.target.value)}
-            aria-label="Elegir color personalizado"
+            aria-label={t.appearance.customColorAriaLabel}
             className="h-8 w-8 cursor-pointer rounded-control border border-paper-dim/40 bg-transparent p-0"
           />
         </div>
       </div>
 
       <div className="flex flex-col gap-3">
-        <p className="label-brutal text-acid">Unidad de peso</p>
+        <p className="label-brutal text-acid">{t.weightUnit.label}</p>
         <div className="flex gap-2">
           <button
             type="button"
@@ -390,7 +432,7 @@ export default function ProfileForm() {
               weightUnit === 'kg' ? 'btn-brutal-sm pill-selected' : 'btn-brutal-sm'
             }
           >
-            Kilos (kg)
+            {t.weightUnit.kg}
           </button>
           <button
             type="button"
@@ -399,43 +441,41 @@ export default function ProfileForm() {
               weightUnit === 'lb' ? 'btn-brutal-sm pill-selected' : 'btn-brutal-sm'
             }
           >
-            Libras (lb)
+            {t.weightUnit.lb}
           </button>
         </div>
-        <p className="font-mono text-xs text-paper-dim">
-          Se aplica al peso que registras en tus series de gym. Se guarda en este dispositivo.
-        </p>
+        <p className="font-mono text-xs text-paper-dim">{t.weightUnit.hint}</p>
       </div>
 
       <div className="flex flex-col gap-3">
-        <p className="label-brutal text-acid">Sexo</p>
+        <p className="label-brutal text-acid">{t.sex.label}</p>
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
             onClick={() => handleSexChange('femenino')}
             className={sex === 'femenino' ? 'btn-brutal-sm pill-selected' : 'btn-brutal-sm'}
           >
-            Femenino
+            {t.sex.femenino}
           </button>
           <button
             type="button"
             onClick={() => handleSexChange('masculino')}
             className={sex === 'masculino' ? 'btn-brutal-sm pill-selected' : 'btn-brutal-sm'}
           >
-            Masculino
+            {t.sex.masculino}
           </button>
           <button
             type="button"
             onClick={() => handleSexChange(null)}
             className={sex === null ? 'btn-brutal-sm pill-selected' : 'btn-brutal-sm'}
           >
-            Sin especificar
+            {t.sex.unspecified}
           </button>
         </div>
       </div>
 
       <div className="flex flex-col gap-3">
-        <p className="label-brutal text-acid">Nivel de entrenamiento</p>
+        <p className="label-brutal text-acid">{t.trainingLevel.label}</p>
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
@@ -444,7 +484,7 @@ export default function ProfileForm() {
               trainingLevel === 'principiante' ? 'btn-brutal-sm pill-selected' : 'btn-brutal-sm'
             }
           >
-            Principiante
+            {t.trainingLevel.principiante}
           </button>
           <button
             type="button"
@@ -453,7 +493,7 @@ export default function ProfileForm() {
               trainingLevel === 'intermedio' ? 'btn-brutal-sm pill-selected' : 'btn-brutal-sm'
             }
           >
-            Intermedio
+            {t.trainingLevel.intermedio}
           </button>
           <button
             type="button"
@@ -462,7 +502,7 @@ export default function ProfileForm() {
               trainingLevel === 'avanzado' ? 'btn-brutal-sm pill-selected' : 'btn-brutal-sm'
             }
           >
-            Avanzado
+            {t.trainingLevel.avanzado}
           </button>
           <button
             type="button"
@@ -471,19 +511,15 @@ export default function ProfileForm() {
               trainingLevel === null ? 'btn-brutal-sm pill-selected' : 'btn-brutal-sm'
             }
           >
-            Sin especificar
+            {t.trainingLevel.unspecified}
           </button>
         </div>
-        <p className="font-mono text-xs text-paper-dim">
-          Se usa para recomendarte rutinas predefinidas de gym en Rutinas.
-        </p>
+        <p className="font-mono text-xs text-paper-dim">{t.trainingLevel.hint}</p>
       </div>
 
       {routineExpired && (
         <div className="card-brutal border-acid">
-          <p className="font-mono text-sm text-paper">
-            Tu rutina activa venció — buen momento para actualizar tus medidas y ver cómo vas.
-          </p>
+          <p className="font-mono text-sm text-paper">{t.routineExpired}</p>
         </div>
       )}
 
@@ -497,19 +533,19 @@ export default function ProfileForm() {
             : 'btn-brutal-sm self-start'
         }
       >
-        {isTrainer ? '★ Soy entrenador' : 'Soy entrenador'}
+        {isTrainer ? t.trainer.toggleOn : t.trainer.toggleOff}
       </button>
 
       {isTrainer && (
         <div className="card-brutal flex flex-col gap-4">
-          <p className="label-brutal text-acid">Buscador de entrenadores</p>
+          <p className="label-brutal text-acid">{t.trainer.sectionTitle}</p>
           <MapPicker
             center={trainerPin ?? DEFAULT_MAP_CENTER}
             draggableMarker={trainerPin ?? DEFAULT_MAP_CENTER}
             onDraggableMarkerMove={(lat, lng) => setTrainerPin([lat, lng])}
             height={220}
           />
-          <p className="font-mono text-xs text-paper-dim">Arrastrá el pin hasta tu zona de trabajo.</p>
+          <p className="font-mono text-xs text-paper-dim">{t.trainer.dragPinHint}</p>
           <button
             type="button"
             onClick={() => setTrainerVisible(!trainerVisible)}
@@ -520,7 +556,7 @@ export default function ProfileForm() {
                 : 'btn-brutal-sm self-start'
             }
           >
-            {trainerVisible ? '✓ Visible en el buscador' : 'Visible en el buscador'}
+            {trainerVisible ? t.trainer.visibleOn : t.trainer.visibleOff}
           </button>
           <div className="flex flex-wrap gap-2">
             {DISCIPLINES.map((d) => (
@@ -534,12 +570,12 @@ export default function ProfileForm() {
                     : 'btn-brutal-sm'
                 }
               >
-                {d.label}
+                {disciplinesT[d.id]}
               </button>
             ))}
           </div>
           <label className="flex flex-col gap-2">
-            <span className="label-brutal">Bio corta</span>
+            <span className="label-brutal">{t.trainer.bio}</span>
             <textarea
               value={trainerBio}
               onChange={(e) => setTrainerBio(e.target.value)}
@@ -549,7 +585,7 @@ export default function ProfileForm() {
           </label>
           <div className="grid grid-cols-3 gap-3">
             <label className="flex flex-col gap-2">
-              <span className="label-brutal">Monto</span>
+              <span className="label-brutal">{t.trainer.amount}</span>
               <input
                 type="number"
                 value={trainerRateAmount}
@@ -559,7 +595,7 @@ export default function ProfileForm() {
               />
             </label>
             <label className="flex flex-col gap-2">
-              <span className="label-brutal">Moneda</span>
+              <span className="label-brutal">{t.trainer.currency}</span>
               <input
                 type="text"
                 value={trainerRateCurrency}
@@ -569,15 +605,15 @@ export default function ProfileForm() {
               />
             </label>
             <label className="flex flex-col gap-2">
-              <span className="label-brutal">Período</span>
+              <span className="label-brutal">{t.trainer.period}</span>
               <select
                 value={trainerRatePeriod}
                 onChange={(e) => setTrainerRatePeriod(e.target.value as 'clase' | 'mes' | 'hora')}
                 className="input-brutal"
               >
-                <option value="clase">Por clase</option>
-                <option value="mes">Por mes</option>
-                <option value="hora">Por hora</option>
+                <option value="clase">{t.trainer.periodClass}</option>
+                <option value="mes">{t.trainer.periodMonth}</option>
+                <option value="hora">{t.trainer.periodHour}</option>
               </select>
             </label>
           </div>
@@ -587,7 +623,7 @@ export default function ProfileForm() {
             disabled={savingTrainerProfile}
             className="btn-brutal-sm self-start"
           >
-            {savingTrainerProfile ? 'Guardando...' : 'Guardar buscador'}
+            {savingTrainerProfile ? t.trainer.saving : t.trainer.save}
           </button>
           {error && <p className="font-mono text-xs text-blood">{error}</p>}
           {savedMessage && <p className="font-mono text-xs text-acid">{savedMessage}</p>}
@@ -596,7 +632,7 @@ export default function ProfileForm() {
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         <label className="flex flex-col gap-2">
-          <span className="label-brutal">Nombre en la app</span>
+          <span className="label-brutal">{t.displayName}</span>
           <input
             type="text"
             value={displayName}
@@ -629,7 +665,7 @@ export default function ProfileForm() {
         )}
 
         <button type="submit" disabled={saving} className="btn-brutal self-start">
-          {saving ? 'Guardando...' : 'Guardar perfil'}
+          {saving ? t.saving : t.save}
         </button>
       </form>
 
@@ -638,7 +674,7 @@ export default function ProfileForm() {
         onClick={handleLogout}
         className="self-start rounded-control border border-blood bg-transparent px-4 py-2 font-mono text-sm uppercase tracking-wide text-blood transition duration-150 hover:bg-blood hover:text-paper active:scale-95"
       >
-        Cerrar sesión
+        {t.logout}
       </button>
 
       <button
@@ -647,7 +683,7 @@ export default function ProfileForm() {
         disabled={deletingAccount}
         className="self-start rounded-control border border-blood bg-transparent px-4 py-2 font-mono text-sm uppercase tracking-wide text-blood transition duration-150 hover:bg-blood hover:text-paper active:scale-95 disabled:opacity-50"
       >
-        {deletingAccount ? 'Borrando...' : 'Borrar cuenta'}
+        {deletingAccount ? t.deleteAccount.deleting : t.deleteAccount.button}
       </button>
       {deleteError && (
         <p className="border-l border-blood pl-3 font-mono text-sm text-blood">{deleteError}</p>

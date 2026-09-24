@@ -1,0 +1,46 @@
+---
+// Espejo de ../../progreso/index.astro — mismo contenido, solo cambian las
+// rutas de import por la carpeta en/ extra. Si cambiás la estructura/JSX en español, replicá el cambio acá.
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import ProgressList from '../../../components/react/ProgressList/ProgressList';
+import { getCollection } from 'astro:content';
+import { isGymActivity } from '../../../lib/activities';
+import { getDictionary } from '../../../i18n';
+
+const locale = Astro.currentLocale === 'en' ? 'en' : 'es';
+const dict = getDictionary(locale);
+const t = dict.progreso;
+
+const activityEntries = await getCollection('activities');
+
+const gymEntries = activityEntries.filter(isGymActivity);
+const exerciseNames = Object.fromEntries(gymEntries.map((e) => [e.id, e.data.name]));
+const exercises = gymEntries.map((e) => ({
+  id: e.id,
+  name: e.data.name,
+  muscle: e.data.muscles[0],
+}));
+
+const activities = activityEntries
+  .map((e) => ({
+    id: e.id,
+    name: e.data.name,
+    discipline: e.data.discipline,
+    metricType: e.data.metricType,
+    group: e.data.metricType === 'session' ? e.data.group : undefined,
+  }))
+  .sort((a, b) => a.name.localeCompare(b.name));
+---
+<BaseLayout title={t.pageTitle}>
+  <p class="label-brutal mb-3 text-acid">{t.kicker}</p>
+  <h1 class="mb-8 font-display text-5xl text-paper sm:text-6xl">{t.heading}</h1>
+  <ProgressList
+    client:load
+    exerciseNames={exerciseNames}
+    exercises={exercises}
+    activities={activities}
+    t={t}
+    registrarT={dict.registrar.logger}
+    disciplinesT={dict.disciplines}
+  />
+</BaseLayout>

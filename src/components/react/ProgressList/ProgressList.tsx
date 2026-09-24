@@ -25,6 +25,7 @@ import ProgressChart from './ProgressChart';
 import CardioPRGrid from './CardioPRGrid';
 import CardioProgressChart from './CardioProgressChart';
 import WorkoutHistory from './WorkoutHistory';
+import type { Dictionary } from '../../../i18n/es';
 
 interface ExerciseInfo {
   id: string;
@@ -36,11 +37,21 @@ interface Props {
   exerciseNames: Record<string, string>;
   exercises: ExerciseInfo[];
   activities: ActivityOption[];
+  t: Dictionary['progreso'];
+  registrarT: Dictionary['registrar']['logger'];
+  disciplinesT: Dictionary['disciplines'];
 }
 
 interface WorkoutWithLogs extends WorkoutWithSets, WorkoutWithSessions {}
 
-export default function ProgressList({ exerciseNames, exercises, activities }: Props) {
+export default function ProgressList({
+  exerciseNames,
+  exercises,
+  activities,
+  t,
+  registrarT,
+  disciplinesT,
+}: Props) {
   const [authChecked, setAuthChecked] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [workouts, setWorkouts] = useState<WorkoutWithLogs[]>([]);
@@ -71,7 +82,7 @@ export default function ProgressList({ exerciseNames, exercises, activities }: P
       );
       setWorkouts(withLogs);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo cargar el historial.');
+      setError(err instanceof Error ? err.message : t.list.loadError);
     } finally {
       setLoading(false);
     }
@@ -132,20 +143,20 @@ export default function ProgressList({ exerciseNames, exercises, activities }: P
   }, [selectedDiscipline]);
 
   if (!authChecked || loading) {
-    return <p className="font-mono text-sm text-paper-dim">Cargando...</p>;
+    return <p className="font-mono text-sm text-paper-dim">{t.list.loading}</p>;
   }
 
   if (!isLoggedIn) {
     return (
       <p className="font-mono text-sm text-paper-dim">
-        Debes{' '}
+        {t.list.notLoggedIn.prefix}{' '}
         <a
           href={`${import.meta.env.BASE_URL}login/`}
           className="text-acid underline underline-offset-4 hover:text-paper"
         >
-          iniciar sesión
+          {t.list.notLoggedIn.link}
         </a>{' '}
-        para ver tu historial.
+        {t.list.notLoggedIn.suffix}
       </p>
     );
   }
@@ -157,7 +168,7 @@ export default function ProgressList({ exerciseNames, exercises, activities }: P
   if (workouts.length === 0 && measurements.length === 0) {
     return (
       <p className="font-mono text-sm text-paper-dim">
-        Todavía no tienes entrenamientos ni medidas registradas.
+        {t.list.empty}
       </p>
     );
   }
@@ -167,7 +178,7 @@ export default function ProgressList({ exerciseNames, exercises, activities }: P
   return (
     <div className="flex flex-col gap-6">
       <CollapsibleSection
-        title="Medidas corporales"
+        title={t.list.sections.measurements}
         open={openSection === 'medidas'}
         onToggle={() => toggleSection('medidas')}
       >
@@ -175,10 +186,11 @@ export default function ProgressList({ exerciseNames, exercises, activities }: P
           latest={latestMeasurement}
           selected={selectedMeasurement}
           onSelect={setSelectedMeasurement}
+          t={t.measurementsSummary}
         />
         {selectedMeasurementField && (
           <MeasurementsChart
-            label={selectedMeasurementField.label}
+            label={t.measurementsSummary.fields[selectedMeasurementField.labelKey]}
             unit={selectedMeasurementField.unit}
             points={progressForMeasurement(measurements, selectedMeasurementField.key)}
           />
@@ -186,7 +198,7 @@ export default function ProgressList({ exerciseNames, exercises, activities }: P
       </CollapsibleSection>
 
       <CollapsibleSection
-        title="Resumen por disciplina"
+        title={t.list.sections.discipline}
         open={openSection === 'disciplina'}
         onToggle={() => toggleSection('disciplina')}
       >
@@ -194,6 +206,8 @@ export default function ProgressList({ exerciseNames, exercises, activities }: P
           summaries={disciplineSummaries}
           selected={selectedDiscipline}
           onSelect={setSelectedDiscipline}
+          t={t.disciplineSummary}
+          disciplinesT={disciplinesT}
         />
 
         {selectedDiscipline === 'gym' && (
@@ -202,6 +216,7 @@ export default function ProgressList({ exerciseNames, exercises, activities }: P
             exercises={exercises}
             onSelectExercise={setSelectedExerciseId}
             selectedExerciseId={selectedExerciseId}
+            t={t.prGrid}
             chart={
               selectedExerciseId && (
                 <ProgressChart
@@ -209,6 +224,7 @@ export default function ProgressList({ exerciseNames, exercises, activities }: P
                   points={progressForExercise(workouts, selectedExerciseId)}
                   exercises={exercises}
                   onSelectExercise={setSelectedExerciseId}
+                  t={t.progressChart}
                 />
               )
             }
@@ -221,6 +237,8 @@ export default function ProgressList({ exerciseNames, exercises, activities }: P
             activities={cardioActivitiesForSelected}
             onSelectActivity={setSelectedCardioActivityId}
             selectedActivityId={selectedCardioActivityId}
+            t={t.cardioPrGrid}
+            disciplinesT={disciplinesT}
             chart={
               selectedCardioActivityId && (
                 <CardioProgressChart
@@ -228,6 +246,7 @@ export default function ProgressList({ exerciseNames, exercises, activities }: P
                   points={progressForCardioActivity(workouts, selectedCardioActivityId)}
                   activities={cardioActivitiesForSelected}
                   onSelectActivity={setSelectedCardioActivityId}
+                  t={t.cardioProgressChart}
                 />
               )
             }
@@ -235,14 +254,12 @@ export default function ProgressList({ exerciseNames, exercises, activities }: P
         )}
 
         {selectedDiscipline === 'combate' && (
-          <p className="font-mono text-sm text-paper-dim">
-            Combate no tiene récords de ritmo — solo se registra el tiempo total (ya lo ves arriba).
-          </p>
+          <p className="font-mono text-sm text-paper-dim">{t.list.combateNoRecords}</p>
         )}
       </CollapsibleSection>
 
       <CollapsibleSection
-        title="Entrenamientos"
+        title={t.list.sections.workouts}
         open={openSection === 'entrenamientos'}
         onToggle={() => toggleSection('entrenamientos')}
       >
@@ -252,6 +269,9 @@ export default function ProgressList({ exerciseNames, exercises, activities }: P
           activities={activities}
           onChanged={loadWorkouts}
           filterDiscipline={selectedDiscipline}
+          t={t.workoutHistory}
+          registrarT={registrarT}
+          disciplinesT={disciplinesT}
         />
       </CollapsibleSection>
     </div>

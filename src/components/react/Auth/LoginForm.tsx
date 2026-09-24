@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from 'react';
 import { supabase } from '../../../lib/supabase';
+import type { Dictionary } from '../../../i18n';
 
-export default function LoginForm() {
+export default function LoginForm({ t }: { t: Dictionary['auth']['login'] }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -42,16 +43,16 @@ export default function LoginForm() {
         className="btn-brutal-outline flex items-center justify-center gap-3"
       >
         <GoogleIcon />
-        Continuar con Google
+        {t.continueWithGoogle}
       </button>
       <div className="flex items-center gap-3 text-paper-dim">
         <div className="h-px flex-1 bg-paper-dim/30" />
-        <span className="font-mono text-xs">O</span>
+        <span className="font-mono text-xs">{t.or}</span>
         <div className="h-px flex-1 bg-paper-dim/30" />
       </div>
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         <label className="flex flex-col gap-2">
-          <span className="label-brutal">Email</span>
+          <span className="label-brutal">{t.email}</span>
           <input
             type="email"
             value={email}
@@ -63,7 +64,7 @@ export default function LoginForm() {
           />
         </label>
         <label className="flex flex-col gap-2">
-          <span className="label-brutal">Contraseña</span>
+          <span className="label-brutal">{t.password}</span>
           <input
             type="password"
             value={password}
@@ -77,7 +78,7 @@ export default function LoginForm() {
         </label>
         {error && <p className="border-l border-blood pl-3 font-mono text-sm text-blood">{error}</p>}
         <button type="submit" disabled={loading} className="btn-brutal">
-          {loading ? 'Entrando...' : 'Entrar'}
+          {loading ? t.submitting : t.submit}
         </button>
       </form>
     </div>

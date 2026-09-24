@@ -2,6 +2,7 @@ import { Fragment, useState, type ReactNode } from 'react';
 import { muscleLabel } from '../../../lib/muscles';
 import { groupPRsByMuscle, type ExercisePR } from '../../../lib/prs';
 import { getWeightUnit, kgToDisplay } from '../../../lib/weightUnit';
+import type { Dictionary } from '../../../i18n/es';
 
 interface ExerciseInfo {
   id: string;
@@ -15,9 +16,17 @@ interface Props {
   onSelectExercise: (id: string) => void;
   selectedExerciseId: string | null;
   chart: ReactNode;
+  t: Dictionary['progreso']['prGrid'];
 }
 
-export default function PRGrid({ prs, exercises, onSelectExercise, selectedExerciseId, chart }: Props) {
+export default function PRGrid({
+  prs,
+  exercises,
+  onSelectExercise,
+  selectedExerciseId,
+  chart,
+  t,
+}: Props) {
   const [weightUnit] = useState(() => getWeightUnit());
   const exerciseNameById = new Map(exercises.map((e) => [e.id, e.name]));
   const groups = groupPRsByMuscle(prs, exercises);
@@ -26,7 +35,7 @@ export default function PRGrid({ prs, exercises, onSelectExercise, selectedExerc
 
   return (
     <div className="flex flex-col gap-6">
-      <p className="label-brutal text-acid">Récords personales</p>
+      <p className="label-brutal text-acid">{t.title}</p>
       {groups.map((group) => (
         <div key={group.muscleId} className="flex flex-col gap-3">
           <p className="label-brutal">{muscleLabel(group.muscleId)}</p>

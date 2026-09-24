@@ -1,9 +1,13 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import SignupForm from '../components/react/Auth/SignupForm';
+import { getDictionary } from '../i18n';
+
+const locale = Astro.currentLocale === 'en' ? 'en' : 'es';
+const t = getDictionary(locale).auth.signup;
 ---
-<BaseLayout title="Crear cuenta">
-  <p class="label-brutal mb-3 text-acid">Empieza hoy</p>
-  <h1 class="mb-8 font-display text-5xl text-paper sm:text-6xl">CREAR CUENTA</h1>
-  <SignupForm client:load />
+<BaseLayout title={t.pageTitle}>
+  <p class="label-brutal mb-3 text-acid">{t.kicker}</p>
+  <h1 class="mb-8 font-display text-5xl text-paper sm:text-6xl">{t.heading}</h1>
+  <SignupForm client:load t={t} />
 </BaseLayout>

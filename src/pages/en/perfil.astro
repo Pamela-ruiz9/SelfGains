@@ -1,0 +1,23 @@
+---
+// Espejo de ../perfil.astro — mismo contenido, solo cambian las rutas de
+// import por la carpeta en/ extra. Si cambiás la estructura/JSX en español, replicá el cambio acá.
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ProfileForm from '../../components/react/Profile/ProfileForm';
+import InstallPrompt from '../../components/react/InstallPrompt/InstallPrompt';
+import { getDictionary } from '../../i18n';
+const base = import.meta.env.BASE_URL;
+const locale = Astro.currentLocale === 'en' ? 'en' : 'es';
+const dict = getDictionary(locale);
+const t = dict.perfil;
+---
+<BaseLayout title={t.pageTitle}>
+  <p class="label-brutal mb-3 text-acid">{t.kicker}</p>
+  <h1 class="mb-8 font-display text-5xl text-paper sm:text-6xl">{t.heading}</h1>
+  <a href={`${base}conexiones/`} class="btn-brutal-outline mb-8 block w-full text-center sm:w-fit">
+    {t.connections}
+  </a>
+  <ProfileForm client:load t={t} avatarT={dict.sync.avatar} disciplinesT={dict.disciplines} />
+  <div class="mt-6">
+    <InstallPrompt client:load variant="card" t={dict.sync.installPrompt} />
+  </div>
+</BaseLayout>
