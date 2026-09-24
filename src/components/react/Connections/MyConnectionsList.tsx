@@ -3,15 +3,18 @@ import type { ConnectionSummary } from '../../../lib/connections';
 import { assignRoutineToStudent } from '../../../lib/routines';
 import type { Routine } from '../../../types/db';
 import Avatar from '../Shared/Avatar';
+import type { Dictionary } from '../../../i18n/es';
 
 function AssignRoutinePicker({
   studentId,
   routines,
   onAssigned,
+  t,
 }: {
   studentId: string;
   routines: Routine[];
   onAssigned: () => void;
+  t: Dictionary['conexiones']['myConnectionsList']['assignRoutine'];
 }) {
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -25,7 +28,7 @@ function AssignRoutinePicker({
       setOpen(false);
       onAssigned();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo asignar la rutina.');
+      setError(err instanceof Error ? err.message : t.assignError);
     } finally {
       setSaving(false);
     }
@@ -34,7 +37,7 @@ function AssignRoutinePicker({
   if (!open) {
     return (
       <button type="button" onClick={() => setOpen(true)} className="btn-brutal-sm">
-        Asignar rutina
+        {t.button}
       </button>
     );
   }
@@ -42,7 +45,7 @@ function AssignRoutinePicker({
   return (
     <div className="flex flex-col gap-2">
       {routines.length === 0 ? (
-        <p className="font-mono text-xs text-paper-dim">No tienes rutinas propias para asignar todavía.</p>
+        <p className="font-mono text-xs text-paper-dim">{t.empty}</p>
       ) : (
         routines.map((r) => (
           <button
@@ -62,7 +65,7 @@ function AssignRoutinePicker({
         onClick={() => setOpen(false)}
         className="rounded-control border border-paper-dim/60 bg-transparent px-2 py-1 font-mono text-xs uppercase tracking-wide text-paper-dim transition duration-150 hover:border-paper hover:text-paper active:scale-95"
       >
-        Cancelar
+        {t.cancel}
       </button>
     </div>
   );
@@ -74,6 +77,7 @@ interface Props {
   myRoutines: Routine[];
   onRemove: (connectionId: string) => void;
   onRoutineAssigned: () => void;
+  t: Dictionary['conexiones']['myConnectionsList'];
 }
 
 export default function MyConnectionsList({
@@ -82,27 +86,33 @@ export default function MyConnectionsList({
   myRoutines,
   onRemove,
   onRoutineAssigned,
+  t,
 }: Props) {
   return (
     <div className="flex flex-col gap-3">
-      <p className="label-brutal text-acid">Mis conexiones</p>
+      <p className="label-brutal text-acid">{t.title}</p>
       {connections.length === 0 ? (
-        <p className="font-mono text-sm text-paper-dim">Todavía no tienes ninguna conexión.</p>
+        <p className="font-mono text-sm text-paper-dim">{t.empty}</p>
       ) : (
         connections.map((c) => (
           <div key={c.connectionId} className="card-brutal flex items-center gap-4">
             <Avatar avatarUrl={c.avatarUrl} displayName={c.displayName} isTrainer={c.isTrainer} />
-            <p className="flex-1 font-display text-xl text-paper">{c.displayName ?? 'Sin nombre'}</p>
+            <p className="flex-1 font-display text-xl text-paper">{c.displayName ?? t.unnamedUser}</p>
             <div className="flex flex-col items-end gap-2">
               {isTrainer && (
-                <AssignRoutinePicker studentId={c.userId} routines={myRoutines} onAssigned={onRoutineAssigned} />
+                <AssignRoutinePicker
+                  studentId={c.userId}
+                  routines={myRoutines}
+                  onAssigned={onRoutineAssigned}
+                  t={t.assignRoutine}
+                />
               )}
               <button
                 type="button"
                 onClick={() => onRemove(c.connectionId)}
                 className="rounded-control border border-blood bg-transparent px-2 py-1 font-mono text-xs uppercase tracking-wide text-blood transition duration-150 hover:bg-blood hover:text-paper active:scale-95"
               >
-                Desvincular
+                {t.unlink}
               </button>
             </div>
           </div>

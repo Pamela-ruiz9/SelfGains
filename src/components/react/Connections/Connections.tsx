@@ -42,12 +42,15 @@ import IncomingRequests from './IncomingRequests';
 import TrainerSearch from './TrainerSearch';
 import PendingRoutineShares from './PendingRoutineShares';
 import MyConnectionsList from './MyConnectionsList';
+import type { Dictionary } from '../../../i18n/es';
 
 interface Props {
   activities: ActivityOption[];
+  t: Dictionary['conexiones'];
+  routinePreviewT: Pick<Dictionary['rutinas'], 'preview' | 'days'>;
 }
 
-export default function Connections({ activities }: Props) {
+export default function Connections({ activities, t, routinePreviewT }: Props) {
   const [authChecked, setAuthChecked] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isTrainer, setIsTrainer] = useState(false);
@@ -103,7 +106,7 @@ export default function Connections({ activities }: Props) {
         try {
           await refresh();
         } catch (err) {
-          setError(err instanceof Error ? err.message : 'No se pudo cargar la información.');
+          setError(err instanceof Error ? err.message : t.errors.loadError);
         }
       }
     });
@@ -125,7 +128,7 @@ export default function Connections({ activities }: Props) {
     if (!trainerCenter) return;
     getVisibleTrainersNear(trainerCenter[0], trainerCenter[1], trainerRadiusKm)
       .then(setNearbyTrainers)
-      .catch((err) => setError(err instanceof Error ? err.message : 'No se pudo cargar el mapa.'));
+      .catch((err) => setError(err instanceof Error ? err.message : t.errors.loadMapError));
   }, [trainerCenter, trainerRadiusKm]);
 
   async function handleShare() {
@@ -134,7 +137,7 @@ export default function Connections({ activities }: Props) {
       const newCode = await createOrRegenerateInviteCode();
       setCode(newCode);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo generar el código.');
+      setError(err instanceof Error ? err.message : t.errors.generateCodeError);
     }
   }
 
@@ -145,7 +148,7 @@ export default function Connections({ activities }: Props) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo copiar el link.');
+      setError(err instanceof Error ? err.message : t.errors.copyLinkError);
     }
   }
 
@@ -157,17 +160,17 @@ export default function Connections({ activities }: Props) {
       setRedeemInput('');
       await refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo conectar con ese código.');
+      setError(err instanceof Error ? err.message : t.errors.redeemError);
     }
   }
 
   async function handleRemove(connectionId: string) {
-    if (!confirm('¿Desvincularte de esta persona?')) return;
+    if (!confirm(t.removeConfirm)) return;
     try {
       await removeConnection(connectionId);
       await refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo desvincular.');
+      setError(err instanceof Error ? err.message : t.errors.removeError);
     }
   }
 
@@ -179,7 +182,7 @@ export default function Connections({ activities }: Props) {
     try {
       setSearchResults(await searchUsers(searchQuery));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo buscar.');
+      setError(err instanceof Error ? err.message : t.errors.searchError);
     } finally {
       setSearching(false);
     }
@@ -193,7 +196,7 @@ export default function Connections({ activities }: Props) {
         prev.map((r) => (r.userId === userId ? { ...r, status: 'request-sent' } : r))
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo enviar la solicitud.');
+      setError(err instanceof Error ? err.message : t.errors.sendRequestError);
     }
   }
 
@@ -203,7 +206,7 @@ export default function Connections({ activities }: Props) {
       await sendConnectionRequest(userId);
       setSentTrainerRequests((prev) => new Set(prev).add(userId));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo enviar la solicitud.');
+      setError(err instanceof Error ? err.message : t.errors.sendRequestError);
     }
   }
 
@@ -213,10 +216,10 @@ export default function Connections({ activities }: Props) {
       await acceptConnectionRequest(requestId);
       await refresh();
       setNearbyTrainers((prev) =>
-        prev.map((t) => (t.requestId === requestId ? { ...t, status: 'connected', requestId: null } : t))
+        prev.map((tr) => (tr.requestId === requestId ? { ...tr, status: 'connected', requestId: null } : tr))
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo aceptar la solicitud.');
+      setError(err instanceof Error ? err.message : t.errors.acceptRequestError);
     }
   }
 
@@ -227,7 +230,7 @@ export default function Connections({ activities }: Props) {
       setSearchResults((prev) => prev.map((r) => (r.userId === userId ? { ...r, status: 'connected' } : r)));
       await refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo aceptar la solicitud.');
+      setError(err instanceof Error ? err.message : t.errors.acceptRequestError);
     }
   }
 
@@ -238,7 +241,7 @@ export default function Connections({ activities }: Props) {
       await refresh();
       if (hasSearched) setSearchResults(await searchUsers(searchQuery));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo aceptar la solicitud.');
+      setError(err instanceof Error ? err.message : t.errors.acceptRequestError);
     }
   }
 
@@ -249,7 +252,7 @@ export default function Connections({ activities }: Props) {
       await refresh();
       if (hasSearched) setSearchResults(await searchUsers(searchQuery));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo rechazar la solicitud.');
+      setError(err instanceof Error ? err.message : t.errors.rejectRequestError);
     }
   }
 
@@ -260,7 +263,7 @@ export default function Connections({ activities }: Props) {
       setPreviewDays(routine?.days ?? null);
       setPreviewShareId(share.shareId);
     } catch (err) {
-      setShareActionError(err instanceof Error ? err.message : 'No se pudo cargar la rutina.');
+      setShareActionError(err instanceof Error ? err.message : t.errors.loadRoutinePreviewError);
     }
   }
 
@@ -272,7 +275,7 @@ export default function Connections({ activities }: Props) {
       setPreviewShareId((id) => (id === share.shareId ? null : id));
       await refresh();
     } catch (err) {
-      setShareActionError(err instanceof Error ? err.message : 'No se pudo agregar la rutina.');
+      setShareActionError(err instanceof Error ? err.message : t.errors.addRoutineError);
     } finally {
       setActingShareId(null);
     }
@@ -286,27 +289,27 @@ export default function Connections({ activities }: Props) {
       setPreviewShareId((id) => (id === shareId ? null : id));
       await refresh();
     } catch (err) {
-      setShareActionError(err instanceof Error ? err.message : 'No se pudo rechazar.');
+      setShareActionError(err instanceof Error ? err.message : t.errors.rejectShareError);
     } finally {
       setActingShareId(null);
     }
   }
 
   if (!authChecked) {
-    return <p className="font-mono text-sm text-paper-dim">Cargando...</p>;
+    return <p className="font-mono text-sm text-paper-dim">{t.loading}</p>;
   }
 
   if (!isLoggedIn) {
     return (
       <p className="font-mono text-sm text-paper-dim">
-        Debes{' '}
+        {t.notLoggedIn.prefix}{' '}
         <a
           href={`${import.meta.env.BASE_URL}login/`}
           className="text-acid underline underline-offset-4 hover:text-paper"
         >
-          iniciar sesión
+          {t.notLoggedIn.link}
         </a>{' '}
-        para ver tus conexiones.
+        {t.notLoggedIn.suffix}
       </p>
     );
   }
@@ -315,9 +318,9 @@ export default function Connections({ activities }: Props) {
     <div className="flex max-w-2xl flex-col gap-10">
       {error && <p className="border-l border-blood pl-3 font-mono text-sm text-blood">{error}</p>}
 
-      <InviteLinkCard code={code} copied={copied} onShare={handleShare} onCopy={handleCopy} />
+      <InviteLinkCard code={code} copied={copied} onShare={handleShare} onCopy={handleCopy} t={t.inviteLinkCard} />
 
-      <RedeemCodeForm value={redeemInput} onChange={setRedeemInput} onSubmit={handleRedeem} />
+      <RedeemCodeForm value={redeemInput} onChange={setRedeemInput} onSubmit={handleRedeem} t={t.redeemCodeForm} />
 
       <UserSearch
         query={searchQuery}
@@ -328,12 +331,14 @@ export default function Connections({ activities }: Props) {
         hasSearched={hasSearched}
         onSendRequest={handleSendRequest}
         onAcceptFromSearch={handleAcceptFromSearch}
+        t={t.userSearch}
       />
 
       <IncomingRequests
         requests={incomingRequests}
         onAccept={handleAcceptIncoming}
         onReject={handleRejectIncoming}
+        t={t.incomingRequests}
       />
 
       <TrainerSearch
@@ -349,6 +354,7 @@ export default function Connections({ activities }: Props) {
         sentRequests={sentTrainerRequests}
         onConnect={handleConnectTrainer}
         onAcceptRequest={handleAcceptTrainerRequest}
+        t={t.trainerSearch}
       />
 
       <PendingRoutineShares
@@ -361,6 +367,8 @@ export default function Connections({ activities }: Props) {
         onPreview={handlePreviewShare}
         onAccept={handleAcceptShare}
         onReject={handleRejectShare}
+        t={t.pendingRoutineShares}
+        routinePreviewT={routinePreviewT}
       />
 
       <MyConnectionsList
@@ -369,6 +377,7 @@ export default function Connections({ activities }: Props) {
         myRoutines={myRoutines}
         onRemove={handleRemove}
         onRoutineAssigned={refresh}
+        t={t.myConnectionsList}
       />
     </div>
   );

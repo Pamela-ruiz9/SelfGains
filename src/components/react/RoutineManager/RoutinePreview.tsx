@@ -13,9 +13,9 @@ import type { ActivityOption } from '../ActivityPicker/ActivityPicker';
 interface RoutinePreviewProps {
   days: RoutineDays;
   activities: ActivityOption[];
-  // Optional: PendingRoutineShares (Connections) renders this without a
-  // locale yet, so it falls back to Spanish there until that screen gets
-  // its own translation pass.
+  // Optional: kept as a defensive Spanish fallback for any future caller
+  // that forgets to pass a locale. The current caller (Connections'
+  // PendingRoutineShares) passes the real `t` explicitly.
   t?: Pick<Dictionary['rutinas'], 'preview' | 'days'>;
 }
 

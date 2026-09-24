@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import type { VisibleTrainer } from '../../../lib/trainerProfiles';
 import Avatar from '../Shared/Avatar';
 import MapPicker from '../Shared/MapPicker';
+import type { Dictionary } from '../../../i18n/es';
 
 interface Props {
   open: boolean;
@@ -16,6 +17,7 @@ interface Props {
   sentRequests: Set<string>;
   onConnect: (userId: string) => void;
   onAcceptRequest: (requestId: string) => void;
+  t: Dictionary['conexiones']['trainerSearch'];
 }
 
 export default function TrainerSearch({
@@ -31,22 +33,23 @@ export default function TrainerSearch({
   sentRequests,
   onConnect,
   onAcceptRequest,
+  t,
 }: Props) {
   const trainerMarkers = useMemo(
     () =>
-      trainers.map((t) => ({
-        id: t.user_id,
-        lat: t.lat!,
-        lng: t.lng!,
-        label: t.displayName ?? 'Entrenador',
+      trainers.map((tr) => ({
+        id: tr.user_id,
+        lat: tr.lat!,
+        lng: tr.lng!,
+        label: tr.displayName ?? t.defaultTrainerLabel,
       })),
-    [trainers]
+    [trainers, t.defaultTrainerLabel]
   );
 
   if (!open) {
     return (
       <button type="button" onClick={() => onToggle(true)} className="btn-brutal self-start">
-        + Buscar entrenadores cerca
+        {t.toggleOpen}
       </button>
     );
   }
@@ -54,17 +57,17 @@ export default function TrainerSearch({
   return (
     <div className="card-brutal flex flex-col gap-4">
       <div className="flex items-center justify-between gap-3">
-        <p className="label-brutal text-acid">Buscador de entrenadores</p>
+        <p className="label-brutal text-acid">{t.title}</p>
         <button
           type="button"
           onClick={() => onToggle(false)}
           className="rounded-control border border-paper-dim/60 bg-transparent px-2 py-1 font-mono text-xs uppercase tracking-wide text-paper-dim transition duration-150 hover:border-paper hover:text-paper active:scale-95"
         >
-          Cerrar
+          {t.close}
         </button>
       </div>
       <div className="flex items-center gap-2">
-        <span className="label-brutal">Radio</span>
+        <span className="label-brutal">{t.radiusLabel}</span>
         {[5, 10, 20, 50].map((km) => (
           <button
             key={km}
@@ -72,7 +75,7 @@ export default function TrainerSearch({
             onClick={() => onRadiusChange(km)}
             className={radiusKm === km ? 'btn-brutal-sm pill-selected' : 'btn-brutal-sm'}
           >
-            {km} km
+            {km} {t.kmUnit}
           </button>
         ))}
       </div>
@@ -86,54 +89,55 @@ export default function TrainerSearch({
         />
       )}
       {trainers.length === 0 ? (
-        <p className="font-mono text-sm text-paper-dim">No hay entrenadores visibles en este radio.</p>
+        <p className="font-mono text-sm text-paper-dim">{t.empty}</p>
       ) : (
-        trainers.map((t) => {
-          const effectiveStatus = sentRequests.has(t.user_id) ? 'request-sent' : t.status;
+        trainers.map((tr) => {
+          const effectiveStatus = sentRequests.has(tr.user_id) ? 'request-sent' : tr.status;
           return (
             <div
-              key={t.user_id}
+              key={tr.user_id}
               className={
-                selectedTrainerId === t.user_id
+                selectedTrainerId === tr.user_id
                   ? 'card-brutal flex flex-col gap-2 border-acid'
                   : 'card-brutal flex flex-col gap-2'
               }
             >
               <div className="flex items-center gap-3">
-                <Avatar avatarUrl={t.avatarUrl} displayName={t.displayName} isTrainer />
+                <Avatar avatarUrl={tr.avatarUrl} displayName={tr.displayName} isTrainer />
                 <div>
-                  <p className="font-display text-lg text-paper">{t.displayName ?? 'Sin nombre'}</p>
-                  <p className="font-mono text-xs text-paper-dim">{t.distanceKm.toFixed(1)} km</p>
+                  <p className="font-display text-lg text-paper">{tr.displayName ?? t.unnamedUser}</p>
+                  <p className="font-mono text-xs text-paper-dim">{tr.distanceKm.toFixed(1)} {t.kmUnit}</p>
                 </div>
               </div>
-              {t.disciplines.length > 0 && (
-                <p className="font-mono text-xs text-paper-dim">{t.disciplines.join(', ')}</p>
+              {tr.disciplines.length > 0 && (
+                <p className="font-mono text-xs text-paper-dim">{tr.disciplines.join(', ')}</p>
               )}
-              {t.bio && <p className="font-mono text-sm text-paper">{t.bio}</p>}
-              {t.rate_amount !== null && (
+              {tr.bio && <p className="font-mono text-sm text-paper">{tr.bio}</p>}
+              {tr.rate_amount !== null && (
                 <p className="font-mono text-xs text-paper-dim">
-                  {t.rate_amount}
-                  {t.rate_currency ? ` ${t.rate_currency}` : ''} / {t.rate_period}
+                  {tr.rate_amount}
+                  {tr.rate_currency ? ` ${tr.rate_currency}` : ''} /{' '}
+                  {tr.rate_period ? t.period[tr.rate_period] : ''}
                 </p>
               )}
               {effectiveStatus === 'connected' && (
-                <p className="font-mono text-xs text-paper-dim">Ya conectado</p>
+                <p className="font-mono text-xs text-paper-dim">{t.alreadyConnected}</p>
               )}
               {effectiveStatus === 'request-sent' && (
-                <p className="font-mono text-xs text-paper-dim">Solicitud enviada</p>
+                <p className="font-mono text-xs text-paper-dim">{t.requestSent}</p>
               )}
-              {effectiveStatus === 'request-received' && t.requestId && (
-                <button type="button" onClick={() => onAcceptRequest(t.requestId!)} className="btn-brutal-sm">
-                  Aceptar
+              {effectiveStatus === 'request-received' && tr.requestId && (
+                <button type="button" onClick={() => onAcceptRequest(tr.requestId!)} className="btn-brutal-sm">
+                  {t.accept}
                 </button>
               )}
               {effectiveStatus === 'none' && (
                 <button
                   type="button"
-                  onClick={() => onConnect(t.user_id)}
+                  onClick={() => onConnect(tr.user_id)}
                   className="btn-brutal-sm self-start"
                 >
-                  Conectar
+                  {t.connect}
                 </button>
               )}
             </div>
