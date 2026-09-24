@@ -1,0 +1,50 @@
+---
+// Espejo de ../index.astro — mismo contenido, solo cambian las rutas de
+// import por la carpeta en/ extra. Si cambiás la estructura/JSX en español, replicá el cambio acá.
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getDictionary } from '../../i18n';
+
+const base = import.meta.env.BASE_URL;
+const locale = Astro.currentLocale === 'en' ? 'en' : 'es';
+const t = getDictionary(locale).home;
+---
+<BaseLayout title={t.pageTitle}>
+  <section class="border-b border-paper-dim/30 pb-12">
+    <p class="reveal label-brutal mb-4 text-acid">{t.eyebrow}</p>
+    <h1
+      class="reveal font-display text-6xl leading-[0.95] text-paper sm:text-8xl"
+      style="animation-delay: 60ms"
+    >
+      {t.headingLine1}<br />
+      {t.headingLine2}<br />
+      <span class="text-acid">{t.headingLine3Acid1}</span> {t.headingLine3Middle} <span class="text-acid">{t.headingLine3Acid2}</span>
+    </h1>
+    <p
+      class="reveal mt-6 max-w-xl font-body text-lg text-paper-dim"
+      style="animation-delay: 140ms"
+    >
+      {t.subtitle}
+    </p>
+    <div class="reveal mt-8 flex flex-wrap gap-4" style="animation-delay: 200ms">
+      <a href={`${base}registro/nuevo/`} class="btn-brutal">
+        {t.ctaLog}
+      </a>
+      <a href={`${base}progreso/`} class="btn-brutal-outline"> {t.ctaProgress} </a>
+    </div>
+  </section>
+
+  <section class="mt-12 grid gap-px overflow-hidden rounded-card border border-paper-dim/30 sm:grid-cols-3">
+    {
+      t.pillars.map((p, i) => (
+        <div
+          class="reveal border-paper-dim/30 bg-surface p-6 sm:border-l sm:first:border-l-0"
+          style={`animation-delay: ${260 + i * 90}ms`}
+        >
+          <span class="font-mono text-sm text-acid">{p.n}</span>
+          <h2 class="mt-2 font-display text-2xl tracking-wide text-paper">{p.title}</h2>
+          <p class="mt-2 font-body text-sm text-paper-dim">{p.body}</p>
+        </div>
+      ))
+    }
+  </section>
+</BaseLayout>

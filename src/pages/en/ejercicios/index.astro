@@ -1,0 +1,30 @@
+---
+// Espejo de ../../ejercicios/index.astro — mismo contenido, solo cambian las
+// rutas de import por la carpeta en/ extra. Si cambiás la estructura/JSX en español, replicá el cambio acá.
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import MuscleExplorer from '../../../components/react/MuscleExplorer/MuscleExplorer';
+import { getCollection } from 'astro:content';
+import { isGymActivity } from '../../../lib/activities';
+import { getDictionary } from '../../../i18n';
+
+const locale = Astro.currentLocale === 'en' ? 'en' : 'es';
+const t = getDictionary(locale).ejercicios;
+
+const activityEntries = await getCollection('activities');
+const exercises = activityEntries
+  .filter(isGymActivity)
+  .map((e) => ({
+    id: e.id,
+    name: e.data.name,
+    equipment: e.data.equipment,
+    instructions: e.body?.trim() ?? '',
+    muscles: e.data.muscles,
+    image: e.data.image,
+  }))
+  .sort((a, b) => a.name.localeCompare(b.name));
+---
+<BaseLayout title={t.pageTitle}>
+  <p class="label-brutal mb-3 text-acid">{t.kicker}</p>
+  <h1 class="mb-8 font-display text-5xl text-paper sm:text-6xl">{t.heading}</h1>
+  <MuscleExplorer client:load exercises={exercises} t={t} />
+</BaseLayout>

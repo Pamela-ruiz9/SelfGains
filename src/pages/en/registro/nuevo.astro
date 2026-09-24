@@ -1,0 +1,38 @@
+---
+// Espejo de ../../registro/nuevo.astro — mismo contenido, solo cambian las
+// rutas de import por la carpeta en/ extra. Si cambiás la estructura/JSX en español, replicá el cambio acá.
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import WorkoutLogger from '../../../components/react/WorkoutLogger/WorkoutLogger';
+import InstallPrompt from '../../../components/react/InstallPrompt/InstallPrompt';
+import { getCollection } from 'astro:content';
+import { getDictionary } from '../../../i18n';
+
+const locale = Astro.currentLocale === 'en' ? 'en' : 'es';
+const dict = getDictionary(locale);
+const t = dict.registrar;
+
+const activityEntries = await getCollection('activities');
+const activities = activityEntries
+  .map((e) => ({
+    id: e.id,
+    name: e.data.name,
+    discipline: e.data.discipline,
+    metricType: e.data.metricType,
+    group: e.data.metricType === 'session' ? e.data.group : undefined,
+    image: e.data.metricType === 'sets' ? e.data.image : undefined,
+    description: e.body?.trim() ?? '',
+  }))
+  .sort((a, b) => a.name.localeCompare(b.name));
+
+const planEntries = await getCollection('plans');
+const plans = planEntries.map((p) => ({ id: p.id, days: p.data.days }));
+---
+<BaseLayout title={t.pageTitle}>
+  <p class="label-brutal mb-3 text-acid">{t.eyebrow}</p>
+  <h1 class="mb-8 font-display text-5xl text-paper sm:text-6xl">{t.heading}</h1>
+  <p class="card-brutal mb-6 border-acid font-mono text-sm text-paper">
+    {t.warmupTip}
+  </p>
+  <InstallPrompt client:load variant="banner" t={dict.sync.installPrompt} />
+  <WorkoutLogger client:load activities={activities} plans={plans} t={t} />
+</BaseLayout>

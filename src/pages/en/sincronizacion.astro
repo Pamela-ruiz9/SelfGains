@@ -1,0 +1,15 @@
+---
+// Espejo de ../sincronizacion.astro — mismo contenido, solo cambian las
+// rutas de import por la carpeta en/ extra. Si cambiás la estructura/JSX en español, replicá el cambio acá.
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ConflictResolution from '../../components/react/SyncBanner/ConflictResolution';
+import { getDictionary } from '../../i18n';
+
+const locale = Astro.currentLocale === 'en' ? 'en' : 'es';
+const t = getDictionary(locale).sync;
+---
+<BaseLayout title={t.sincronizacion.pageTitle}>
+  <p class="label-brutal mb-3 text-acid">{t.sincronizacion.kicker}</p>
+  <h1 class="mb-8 font-display text-5xl text-paper sm:text-6xl">{t.sincronizacion.heading}</h1>
+  <ConflictResolution client:load t={t.conflictResolution} />
+</BaseLayout>

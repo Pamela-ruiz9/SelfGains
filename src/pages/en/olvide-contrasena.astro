@@ -1,0 +1,21 @@
+---
+// Espejo de ../olvide-contrasena.astro — mismo contenido, solo cambian las
+// rutas de import por la carpeta en/ extra. Si cambiás la estructura/JSX en español, replicá el cambio acá.
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ForgotPasswordForm from '../../components/react/Auth/ForgotPasswordForm';
+import { getDictionary } from '../../i18n';
+
+const base = import.meta.env.BASE_URL;
+const locale = Astro.currentLocale === 'en' ? 'en' : 'es';
+const t = getDictionary(locale).auth.forgotPassword;
+---
+<BaseLayout title={t.pageTitle}>
+  <p class="label-brutal mb-3 text-acid">{t.kicker}</p>
+  <h1 class="mb-8 font-display text-5xl text-paper sm:text-6xl">{t.heading}</h1>
+  <ForgotPasswordForm client:load t={t} />
+  <p class="mt-6 font-mono text-sm text-paper-dim">
+    <a href={`${base}login/`} class="text-acid underline underline-offset-4 hover:text-paper">
+      {t.backToLogin}
+    </a>
+  </p>
+</BaseLayout>
