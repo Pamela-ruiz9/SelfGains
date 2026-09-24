@@ -15,9 +15,10 @@ export interface ExerciseWithMuscles {
 interface Props {
   exercises: ExerciseWithMuscles[];
   t: Dictionary['ejercicios'];
+  muscleLabels: Dictionary['muscles'];
 }
 
-export default function MuscleExplorer({ exercises, t }: Props) {
+export default function MuscleExplorer({ exercises, t, muscleLabels }: Props) {
   const [selectedMuscle, setSelectedMuscle] = useState<string | null>(null);
   const [expandedExercise, setExpandedExercise] = useState<string | null>(null);
 
@@ -35,12 +36,12 @@ export default function MuscleExplorer({ exercises, t }: Props) {
       <MuscleBody
         selectedMuscle={selectedMuscle}
         onSelectMuscle={handleSelectMuscle}
-        t={{ loading: t.loading, webglUnsupported: t.webglUnsupported }}
+        t={{ loading: t.loading, webglUnsupported: t.webglUnsupported, muscleLabels }}
       />
 
       <div className="flex flex-col gap-3">
         <p className="label-brutal text-acid">
-          {selectedMuscle ? muscleLabel(selectedMuscle) : t.noMuscleSelected}
+          {selectedMuscle ? muscleLabel(selectedMuscle, muscleLabels) : t.noMuscleSelected}
         </p>
 
         {!selectedMuscle && (

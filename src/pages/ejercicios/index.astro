@@ -6,7 +6,8 @@ import { isGymActivity } from '../../lib/activities';
 import { getDictionary } from '../../i18n';
 
 const locale = Astro.currentLocale === 'en' ? 'en' : 'es';
-const t = getDictionary(locale).ejercicios;
+const dict = getDictionary(locale);
+const t = dict.ejercicios;
 
 const activityEntries = await getCollection('activities');
 const exercises = activityEntries
@@ -24,5 +25,5 @@ const exercises = activityEntries
 <BaseLayout title={t.pageTitle}>
   <p class="label-brutal mb-3 text-acid">{t.kicker}</p>
   <h1 class="mb-8 font-display text-5xl text-paper sm:text-6xl">{t.heading}</h1>
-  <MuscleExplorer client:load exercises={exercises} t={t} />
+  <MuscleExplorer client:load exercises={exercises} t={t} muscleLabels={dict.muscles} />
 </BaseLayout>

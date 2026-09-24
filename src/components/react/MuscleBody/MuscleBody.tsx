@@ -18,7 +18,7 @@ import { muscleLabel } from '../../../lib/muscles';
 interface MuscleBodyProps {
   selectedMuscle: string | null;
   onSelectMuscle: (id: string) => void;
-  t: { loading: string; webglUnsupported: string };
+  t: { loading: string; webglUnsupported: string; muscleLabels: Record<string, string> };
 }
 
 type PartGeometry =
@@ -512,11 +512,19 @@ function StaticMesh({ part }: { part: StaticPartDef }) {
   );
 }
 
-function MuscleLabel({ muscleId, offset }: { muscleId: string; offset: number }) {
+function MuscleLabel({
+  muscleId,
+  offset,
+  labels,
+}: {
+  muscleId: string;
+  offset: number;
+  labels: Record<string, string>;
+}) {
   return (
     <Html position={[0, offset, 0]} center zIndexRange={[100, 0]}>
       <div className="pointer-events-none whitespace-nowrap border border-acid bg-ink px-2 py-1 font-mono text-xs uppercase tracking-[0.15em] text-acid">
-        {muscleLabel(muscleId)}
+        {muscleLabel(muscleId, labels)}
       </div>
     </Html>
   );
@@ -525,14 +533,16 @@ function MuscleLabel({ muscleId, offset }: { muscleId: string; offset: number })
 function MuscleLabelAt({
   muscleId,
   position,
+  labels,
 }: {
   muscleId: string;
   position: [number, number, number];
+  labels: Record<string, string>;
 }) {
   return (
     <Html position={position} center zIndexRange={[100, 0]}>
       <div className="pointer-events-none whitespace-nowrap border border-acid bg-ink px-2 py-1 font-mono text-xs uppercase tracking-[0.15em] text-acid">
-        {muscleLabel(muscleId)}
+        {muscleLabel(muscleId, labels)}
       </div>
     </Html>
   );
@@ -542,6 +552,7 @@ function MuscleMesh({
   part,
   active,
   hovered,
+  labels,
   onHover,
   onUnhover,
   onClick,
@@ -549,6 +560,7 @@ function MuscleMesh({
   part: MusclePartDef;
   active: boolean;
   hovered: boolean;
+  labels: Record<string, string>;
   onHover: () => void;
   onUnhover: () => void;
   onClick: () => void;
@@ -582,7 +594,7 @@ function MuscleMesh({
       >
         <meshStandardMaterial color={color} roughness={0.55} metalness={0.05} />
         {active && <Edges color={COLOR_ACTIVE} />}
-        {hovered && <MuscleLabel muscleId={part.muscleId} offset={h / 2 + 0.05} />}
+        {hovered && <MuscleLabel muscleId={part.muscleId} offset={h / 2 + 0.05} labels={labels} />}
       </RoundedBox>
     );
   }
@@ -594,7 +606,7 @@ function MuscleMesh({
         <meshStandardMaterial color={color} roughness={0.55} metalness={0.05} />
         {active && <Edges color={COLOR_ACTIVE} />}
       </mesh>
-      {hovered && <MuscleLabel muscleId={part.muscleId} offset={labelOffset(part.geometry)} />}
+      {hovered && <MuscleLabel muscleId={part.muscleId} offset={labelOffset(part.geometry)} labels={labels} />}
     </group>
   );
 }
@@ -732,12 +744,13 @@ export default function MuscleBody({ selectedMuscle, onSelectMuscle, t }: Muscle
             part={part}
             active={part.muscleId === selectedMuscle || part.muscleId === hoveredMuscle}
             hovered={part.muscleId === hoveredMuscle}
+            labels={t.muscleLabels}
             onHover={() => setHoveredMuscle(part.muscleId)}
             onUnhover={() => setHoveredMuscle((prev) => (prev === part.muscleId ? null : prev))}
             onClick={() => onSelectMuscle(part.muscleId)}
           />
         ))}
-        {hoverLabel && <MuscleLabelAt muscleId={hoverLabel.muscleId} position={hoverLabel.position} />}
+        {hoverLabel && <MuscleLabelAt muscleId={hoverLabel.muscleId} position={hoverLabel.position} labels={t.muscleLabels} />}
         <OrbitControls enablePan={false} minDistance={2.5} maxDistance={6} target={[0, 0.3, 0]} />
       </Canvas>
     </div>
