@@ -1,5 +1,6 @@
 ---
 name: Muay Thai — clase
+name_en: "Muay Thai — class"
 discipline: combate
 metricType: session
 ---

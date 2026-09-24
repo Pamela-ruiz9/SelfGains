@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Zancadas
+name_en: "Lunges"
 muscles: [cuadriceps, gluteos, aductores]
 equipment: Mancuernas
 image: zancadas.webp

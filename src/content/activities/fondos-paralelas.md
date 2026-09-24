@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Fondos en paralelas
+name_en: "Parallel bar dips"
 muscles: [triceps, pecho]
 equipment: Peso corporal
 image: fondos-paralelas.webp

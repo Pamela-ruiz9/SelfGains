@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Press de banca
+name_en: "Bench press"
 muscles: [pecho, triceps]
 equipment: Barra
 image: press-banca.webp

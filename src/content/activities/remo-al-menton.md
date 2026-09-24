@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Remo al mentón
+name_en: "Upright row"
 muscles: [deltoide-lateral, trapecio]
 equipment: Barra o mancuernas
 image: remo-al-menton.webp

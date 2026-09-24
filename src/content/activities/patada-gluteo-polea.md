@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Patada de glúteo en polea
+name_en: "Cable glute kickback"
 muscles: [gluteos, isquiotibiales]
 equipment: Polea
 image: patada-gluteo-polea.webp

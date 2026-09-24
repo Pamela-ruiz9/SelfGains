@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Puente de glúteo
+name_en: "Glute bridge"
 muscles: [gluteos, isquiotibiales]
 equipment: Peso corporal o disco
 image: puente-gluteo.webp

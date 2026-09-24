@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Extensión de cuádriceps
+name_en: "Leg extension"
 muscles: [cuadriceps]
 equipment: Máquina
 image: extension-cuadriceps.webp

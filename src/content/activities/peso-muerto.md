@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Peso muerto
+name_en: "Deadlift"
 muscles: [isquiotibiales, gluteos, dorsales, lumbares]
 equipment: Barra
 image: peso-muerto.webp

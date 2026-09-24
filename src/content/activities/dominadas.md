@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Dominadas
+name_en: "Pull-ups"
 muscles: [dorsales, biceps, antebrazo]
 equipment: Barra de dominadas
 image: dominadas.webp

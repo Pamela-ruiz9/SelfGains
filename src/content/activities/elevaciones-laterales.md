@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Elevaciones laterales
+name_en: "Lateral raises"
 muscles: [deltoide-lateral]
 equipment: Mancuernas
 image: elevaciones-laterales.webp

@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Press francés
+name_en: "Skull crushers"
 muscles: [triceps]
 equipment: Barra o mancuernas
 image: press-frances.webp

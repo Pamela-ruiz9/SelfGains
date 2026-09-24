@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Press cerrado en banca
+name_en: "Close-grip bench press"
 muscles: [triceps, pecho]
 equipment: Barra
 image: press-cerrado-banca.webp

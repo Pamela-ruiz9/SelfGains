@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Press Arnold
+name_en: "Arnold press"
 muscles: [deltoide-frontal, deltoide-lateral, triceps]
 equipment: Mancuernas
 image: press-arnold.webp

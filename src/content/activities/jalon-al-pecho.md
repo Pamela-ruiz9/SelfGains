@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Jalón al pecho
+name_en: "Lat pulldown"
 muscles: [dorsales, biceps]
 equipment: Polea
 image: jalon-al-pecho.webp

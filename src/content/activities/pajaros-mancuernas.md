@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Pájaros con mancuernas
+name_en: "Dumbbell reverse flyes"
 muscles: [deltoide-posterior, trapecio]
 equipment: Mancuernas
 image: pajaros-mancuernas.webp

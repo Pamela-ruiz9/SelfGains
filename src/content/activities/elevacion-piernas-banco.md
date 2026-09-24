@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Elevación de piernas acostado
+name_en: "Lying leg raise"
 muscles: [abdomen]
 equipment: Banco
 image: elevacion-piernas-banco.webp

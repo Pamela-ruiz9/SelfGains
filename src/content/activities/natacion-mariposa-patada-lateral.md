@@ -1,5 +1,6 @@
 ---
 name: Patada lateral
+name_en: "Side kick"
 discipline: natacion
 group: mariposa
 metricType: session

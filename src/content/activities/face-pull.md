@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Face pull
+name_en: "Face pull"
 muscles: [deltoide-posterior, trapecio]
 equipment: Polea
 image: face-pull.webp

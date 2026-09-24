@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Curl femoral
+name_en: "Lying leg curl"
 muscles: [isquiotibiales]
 equipment: Máquina
 image: curl-femoral.webp

@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Sentadilla con barra
+name_en: "Barbell squat"
 muscles: [cuadriceps, gluteos, aductores]
 equipment: Barra
 image: sentadilla.webp

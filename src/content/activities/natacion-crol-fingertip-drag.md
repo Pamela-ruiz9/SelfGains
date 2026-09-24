@@ -1,5 +1,6 @@
 ---
 name: Fingertip drag
+name_en: "Fingertip drag"
 discipline: natacion
 group: crol
 metricType: session

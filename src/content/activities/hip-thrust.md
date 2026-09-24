@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Hip thrust
+name_en: "Hip thrust"
 muscles: [gluteos, isquiotibiales]
 equipment: Barra
 image: hip-thrust.webp

@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Plancha lateral
+name_en: "Side plank"
 muscles: [oblicuos]
 equipment: Peso corporal
 image: plancha-lateral.webp

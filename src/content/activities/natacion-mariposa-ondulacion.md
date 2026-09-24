@@ -1,5 +1,6 @@
 ---
 name: Ondulación de cuerpo
+name_en: "Body undulation"
 discipline: natacion
 group: mariposa
 metricType: session

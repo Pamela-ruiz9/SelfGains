@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Patada de tríceps con mancuerna
+name_en: "Dumbbell triceps kickback"
 muscles: [triceps]
 equipment: Mancuerna
 image: patada-triceps-mancuerna.webp

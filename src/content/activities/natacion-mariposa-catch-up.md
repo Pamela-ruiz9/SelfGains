@@ -1,5 +1,6 @@
 ---
 name: Catch-up
+name_en: "Catch-up"
 discipline: natacion
 group: mariposa
 metricType: session

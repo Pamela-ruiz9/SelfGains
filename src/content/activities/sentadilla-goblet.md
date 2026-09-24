@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Sentadilla goblet
+name_en: "Goblet squat"
 muscles: [cuadriceps, gluteos, aductores]
 equipment: Mancuerna o pesa rusa
 image: sentadilla-goblet.webp

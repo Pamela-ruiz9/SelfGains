@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Prensa de piernas unilateral
+name_en: "Single-leg press"
 muscles: [cuadriceps, gluteos]
 equipment: Máquina
 ---

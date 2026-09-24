@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Prensa de piernas vertical
+name_en: "Vertical leg press"
 muscles: [cuadriceps, gluteos]
 equipment: Máquina
 ---

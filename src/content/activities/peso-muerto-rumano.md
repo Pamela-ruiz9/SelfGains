@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Peso muerto rumano
+name_en: "Romanian deadlift"
 muscles: [isquiotibiales, gluteos, lumbares]
 equipment: Barra
 image: peso-muerto-rumano.webp

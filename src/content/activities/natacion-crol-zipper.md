@@ -1,5 +1,6 @@
 ---
 name: Zipper drill
+name_en: "Zipper drill"
 discipline: natacion
 group: crol
 metricType: session

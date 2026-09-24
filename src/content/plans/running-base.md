@@ -1,5 +1,6 @@
 ---
 name: Running — Base
+name_en: "Running — Base"
 goal: Resistencia aeróbica
 level: Principiante
 days:

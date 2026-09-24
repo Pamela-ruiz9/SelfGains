@@ -1,5 +1,6 @@
 ---
 name: Puño cerrado
+name_en: "Closed fist"
 discipline: natacion
 group: crol
 metricType: session

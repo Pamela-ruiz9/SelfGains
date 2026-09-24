@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Aperturas con mancuernas
+name_en: "Dumbbell flyes"
 muscles: [pecho]
 equipment: Mancuernas
 image: aperturas-mancuernas.webp

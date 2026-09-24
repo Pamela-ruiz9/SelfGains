@@ -1,5 +1,6 @@
 ---
 name: Series de 400m
+name_en: "400m repeats"
 discipline: running
 metricType: session
 ---

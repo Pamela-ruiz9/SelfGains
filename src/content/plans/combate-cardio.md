@@ -1,5 +1,6 @@
 ---
 name: Combate — Cardio y técnica
+name_en: "Combat — Cardio and technique"
 goal: Cardio y técnica de combate
 level: Principiante
 days:

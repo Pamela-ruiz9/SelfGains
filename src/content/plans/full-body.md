@@ -1,5 +1,6 @@
 ---
 name: Full body
+name_en: "Full body"
 goal: Fuerza general
 level: Principiante
 days:

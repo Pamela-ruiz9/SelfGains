@@ -1,5 +1,6 @@
 ---
 name: Trote libre
+name_en: "Easy run"
 discipline: running
 metricType: session
 ---

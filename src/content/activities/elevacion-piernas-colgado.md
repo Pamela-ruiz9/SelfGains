@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Elevación de piernas colgado
+name_en: "Hanging leg raise"
 muscles: [abdomen, oblicuos]
 equipment: Barra de dominadas
 image: elevacion-piernas-colgado.webp

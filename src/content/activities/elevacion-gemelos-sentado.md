@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Elevación de gemelos sentado
+name_en: "Seated calf raise"
 muscles: [gemelos]
 equipment: Máquina
 image: elevacion-gemelos-sentado.webp

@@ -1,5 +1,6 @@
 ---
 name: 6 patadas y cambio
+name_en: "6-kick switch"
 discipline: natacion
 group: crol
 metricType: session

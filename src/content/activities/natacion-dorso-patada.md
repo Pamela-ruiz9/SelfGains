@@ -1,5 +1,6 @@
 ---
 name: Patada (tabla)
+name_en: "Kick (board)"
 discipline: natacion
 group: dorso
 metricType: session

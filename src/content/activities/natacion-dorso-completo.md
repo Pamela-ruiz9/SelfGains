@@ -1,5 +1,6 @@
 ---
 name: Completo
+name_en: "Full stroke"
 discipline: natacion
 group: dorso
 metricType: session

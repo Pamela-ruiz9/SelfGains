@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Prensa de piernas 45°
+name_en: "45° leg press"
 muscles: [cuadriceps, gluteos]
 equipment: Máquina
 image: prensa-piernas-45.webp

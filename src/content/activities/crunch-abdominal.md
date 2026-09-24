@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Crunch abdominal
+name_en: "Crunch"
 muscles: [abdomen]
 equipment: Peso corporal
 image: crunch-abdominal.webp

@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Abductor en máquina
+name_en: "Machine hip abduction"
 muscles: [gluteos]
 equipment: Máquina
 image: abductor-maquina.webp

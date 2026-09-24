@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Curl de muñeca con barra
+name_en: "Barbell wrist curl"
 muscles: [antebrazo]
 equipment: Barra
 image: curl-muneca.webp

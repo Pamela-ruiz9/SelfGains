@@ -1,5 +1,6 @@
 ---
 name: Full body — Empuje y espalda
+name_en: "Full body — Push and back"
 goal: Fuerza general
 level: Principiante
 sex: masculino

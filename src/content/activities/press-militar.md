@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Press militar
+name_en: "Overhead press"
 muscles: [deltoide-frontal, triceps]
 equipment: Barra
 image: press-militar.webp

@@ -1,5 +1,6 @@
 ---
 name: Doble brazada
+name_en: "Double arm"
 discipline: natacion
 group: dorso
 metricType: session

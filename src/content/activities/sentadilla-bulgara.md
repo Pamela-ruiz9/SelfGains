@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Sentadilla búlgara
+name_en: "Bulgarian split squat"
 muscles: [cuadriceps, gluteos]
 equipment: Mancuernas
 image: sentadilla-bulgara.webp

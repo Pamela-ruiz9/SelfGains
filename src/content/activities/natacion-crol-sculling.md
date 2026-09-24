@@ -1,5 +1,6 @@
 ---
 name: Sculling
+name_en: "Sculling"
 discipline: natacion
 group: crol
 metricType: session

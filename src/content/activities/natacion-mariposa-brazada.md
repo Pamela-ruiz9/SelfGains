@@ -1,5 +1,6 @@
 ---
 name: Brazada (pull)
+name_en: "Pull (buoy)"
 discipline: natacion
 group: mariposa
 metricType: session

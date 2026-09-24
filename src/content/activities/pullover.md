@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Pullover con mancuerna
+name_en: "Dumbbell pullover"
 muscles: [dorsales, pecho]
 equipment: Mancuerna
 image: pullover.webp

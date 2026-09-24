@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Remo con barra
+name_en: "Barbell row"
 muscles: [dorsales, trapecio, biceps, deltoide-posterior]
 equipment: Barra
 image: remo-barra.webp

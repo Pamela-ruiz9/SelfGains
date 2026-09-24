@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Plancha abdominal
+name_en: "Plank"
 muscles: [abdomen, oblicuos]
 equipment: Peso corporal
 image: plancha-abdominal.webp

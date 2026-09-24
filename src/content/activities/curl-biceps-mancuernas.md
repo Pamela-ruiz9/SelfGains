@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Curl de bíceps con mancuernas
+name_en: "Dumbbell biceps curl"
 muscles: [biceps, antebrazo]
 equipment: Mancuernas
 image: curl-biceps-mancuernas.webp

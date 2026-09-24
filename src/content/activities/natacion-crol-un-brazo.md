@@ -1,5 +1,6 @@
 ---
 name: Un brazo
+name_en: "Single arm"
 discipline: natacion
 group: crol
 metricType: session

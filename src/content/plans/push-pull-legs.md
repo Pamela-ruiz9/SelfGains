@@ -1,5 +1,6 @@
 ---
 name: Push/Pull/Legs
+name_en: "Push/Pull/Legs"
 goal: Hipertrofia
 level: Intermedio
 days:

@@ -1,5 +1,6 @@
 ---
 name: Boxeo — clase
+name_en: "Boxing — class"
 discipline: combate
 metricType: session
 ---

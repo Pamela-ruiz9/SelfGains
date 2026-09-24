@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Elevación de gemelos de pie
+name_en: "Standing calf raise"
 muscles: [gemelos]
 equipment: Máquina o barra
 image: elevacion-gemelos.webp

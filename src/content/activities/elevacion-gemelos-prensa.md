@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Elevación de gemelos en prensa
+name_en: "Leg press calf raise"
 muscles: [gemelos]
 equipment: Máquina
 image: elevacion-gemelos-prensa.webp

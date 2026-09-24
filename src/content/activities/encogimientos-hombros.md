@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Encogimientos de hombros
+name_en: "Shrugs"
 muscles: [trapecio]
 equipment: Mancuernas o barra
 image: encogimientos-hombros.webp

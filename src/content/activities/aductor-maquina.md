@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Aductor en máquina
+name_en: "Machine hip adduction"
 muscles: [aductores]
 equipment: Máquina
 image: aductor-maquina.webp

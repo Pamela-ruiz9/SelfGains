@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Hiperextensiones
+name_en: "Back extensions"
 muscles: [lumbares, isquiotibiales, gluteos]
 equipment: Banco romano
 image: hiperextensiones.webp

@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Giro ruso
+name_en: "Russian twist"
 muscles: [oblicuos, abdomen]
 equipment: Peso corporal o disco
 image: giro-ruso.webp

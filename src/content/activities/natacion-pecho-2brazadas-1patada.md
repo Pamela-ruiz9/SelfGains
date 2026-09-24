@@ -1,5 +1,6 @@
 ---
 name: 2 brazadas, 1 patada
+name_en: "2 pulls, 1 kick"
 discipline: natacion
 group: pecho
 metricType: session

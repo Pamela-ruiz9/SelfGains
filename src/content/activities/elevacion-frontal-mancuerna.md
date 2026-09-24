@@ -2,6 +2,7 @@
 discipline: gym
 metricType: sets
 name: Elevación frontal con mancuerna
+name_en: "Dumbbell front raise"
 muscles: [deltoide-frontal]
 equipment: Mancuernas
 image: elevacion-frontal-mancuerna.webp
