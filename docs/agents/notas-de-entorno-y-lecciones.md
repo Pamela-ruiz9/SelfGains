@@ -27,6 +27,13 @@ Dos salidas que sí funcionan:
 - **Después de cada corrida**, incluso si salió bien: repetir el mismo chequeo. No asumir que `with_server.py` limpió todo.
 - Si una corrida fallida se cortó por el timeout de la herramienta Bash (proceso matado a la fuerza a mitad de ejecución), es casi seguro que dejó un `astro dev` huérfano — revisar ahí primero antes de re-intentar.
 
+## Worktrees, builds y tests en Node 22
+
+- **Un worktree no tiene `.env`** (está en `.gitignore`, solo existe en el repo principal): los builds ahí necesitan variables placeholder inline — `PUBLIC_SUPABASE_URL=https://placeholder.supabase.co PUBLIC_SUPABASE_ANON_KEY=placeholder npm run build`. Copiar el `.env` real está (con razón) bloqueado. Además `astro build` genera los tipos de `.astro/`, así que `tsc --noEmit` muestra decenas de errores espurios hasta que se corrió un build una vez en ese worktree.
+- **`npm install` en un worktree cuyo `node_modules` es un symlink al del repo principal reemplaza el symlink por una copia real** (el del principal queda intacto). En un worktree con symlink no correr `npm install`; y para borrar un worktree así, chequear primero con `test -L` antes de eliminar nada.
+- **Nunca correr dos `npm run build` a la vez en el mismo worktree**: chocan en la limpieza de `dist/` (error de `rmdirSync`).
+- **Node 22 (≥22.18) ejecuta `.ts` directo** (type stripping). Los tests en `tests/*.test.mjs` importan `src/lib/*.ts` con extensión `.ts` explícita y solo funcionan si esos archivos usan `import type` para todo lo que no es runtime (sin enums, sin imports runtime sin extensión). `npm test` = `node --test tests/*.test.mjs`; `node --test tests/` NO funciona en Node 22.
+
 ## Auto-verificación de Artifacts antes de publicar
 
 Para cualquier Artifact con SVG/CSS hecho a mano (íconos, layouts con coordenadas específicas), conviene renderizarlo con Playwright (`page.goto("file://...")` o `page.set_content(...)`) y sacar una captura **antes** de publicarlo, no confiar en la lectura del código. En este proyecto esto encontró 3 bugs reales que no eran obvios leyendo el HTML/CSS:

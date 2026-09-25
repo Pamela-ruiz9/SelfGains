@@ -4,7 +4,7 @@ Este documento junta ideas de negocio que salieron en brainstorming (2026-08-16)
 
 **Actualizado 2026-08-19**: se resolvieron "Rol de entrenador" (`docs/agents/rol-entrenador-status.md`), "Compartir rutinas entre usuarios normales" y "Buscador de entrenadores cercanos" (ambas en `docs/agents/descubrimiento-conexiones-status.md`) — se sacaron de este backlog. Más tarde ese mismo día se resolvió también "Rutinas predefinidas para otras disciplinas" (`docs/agents/rutinas-otras-disciplinas-status.md`) y, por último, "Perfil enriquecido" (`docs/agents/perfil-enriquecido-status.md`). No queda ninguna idea de producto abierta en este backlog — solo la lista de deuda técnica compilada de los docs de cada feature (antes vivía dispersa en la sección "Lo que falta" de cada uno).
 
-**Actualizado 2026-09-24**: se resolvió "App bilingüe ES/EN — infraestructura + interfaz" (`docs/agents/bilingue-es-en-status.md`) — mergeado a `main`. También se resolvió la Ronda 2 (traducción del contenido de ejercicios y rutinas, `docs/agents/bilingue-es-en-status.md`). Otra vez no queda ninguna idea de producto abierta en este backlog.
+**Actualizado 2026-09-24**: se resolvió "App bilingüe ES/EN — infraestructura + interfaz" (`docs/agents/bilingue-es-en-status.md`) — mergeado a `main`. También se resolvió la Ronda 2 (traducción del contenido de ejercicios y rutinas, `docs/agents/bilingue-es-en-status.md`). Otra vez no queda ninguna idea de producto abierta en este backlog. También se hizo el lote de cierre (manifest en inglés, service worker, `npm test` en CI y errata), en la rama `cierre-bilingue` pendiente de merge — ver `docs/agents/bilingue-es-en-status.md`.
 
 ## Deuda técnica / mejoras pendientes (compilado 2026-08-19)
 
@@ -18,13 +18,15 @@ Ninguno de estos es un bug bloqueante — son limitaciones conocidas y aceptadas
 - **Conexiones** (`descubrimiento-conexiones-status.md`, `dividir-connections-status.md`, `routine-shares-unique-constraint-status.md`, `accept-routine-share-atomic-status.md`): resuelto — ver el último status doc. No queda deuda técnica pendiente de Conexiones.
 - **App bilingüe ES/EN** (`bilingue-es-en-status.md`; Rondas 1 y 2 completas, solo queda esto):
   - Diccionario (`src/i18n/`): texto duplicado entre pantallas ("Cargando...", "Guardando...", el patrón `notLoggedIn`), candidato a un namespace `common`.
-  - Manifest de la PWA y service worker sin traducir/precachear para `/en/`; templates de email de Supabase en español (se configuran desde el dashboard).
+  - Templates de email de Supabase en español (se configuran desde el dashboard).
   - `GROUP_LABELS` (`src/lib/activities.ts`) y `MUSCLES[].label` (`src/lib/muscles.ts`) duplican `es.groups`/`es.muscles`: armarlos desde el diccionario.
-  - CI (`.github/workflows/deploy.yml`) no corre `npm test`: agregarlo.
+  - `public/sw.js` cachea respuestas sin chequear `response.ok` (un 404 de `/_astro/` se serviría cache-first hasta el próximo bump de versión; un HTML 404/5xx podría pisar una página buena): guardar con `if (response.ok)`.
+  - Comentario de una línea sobre `VERSION` en `public/sw.js`: subirla cada vez que cambie `SHELL`.
+  - Pulido de `tests/pwa.test.mjs`: generalizar el mapeo URL → fuente de `SHELL` (`rel.endsWith('/') ? src/pages/${rel}index.astro : public/${rel}`), tolerar comillas dobles al parsear `SHELL`, `.trim()` en los `run` del workflow.
   - Exports sin uso `Locale`, `LocalizedActivity`, `LocalizedPlan` en `src/lib/content-i18n.ts`.
   - Helper compartido para cargar y localizar actividades (bloque repetido en 6 páginas ×2 de `src/pages/`).
   - `progreso` usa `a.muscles?.[0] ?? ''`: debería caer en `UNKNOWN_MUSCLE` ('Otros', `src/lib/prs.ts`).
-  - Pulido de `tests/content-coverage.test.mjs` (`fileURLToPath`, juntar todas las fallas, allow-list que falle si deja de ser idéntica) y `.trim()` en los `*_en` de `src/content.config.ts`.
+  - Pulido de `tests/content-coverage.test.mjs` (`fileURLToPath` en vez de `new URL(...).pathname`, que rompe con espacios en la ruta; juntar todas las fallas, allow-list que falle si deja de ser idéntica) y `.trim()` en los `*_en` de `src/content.config.ts`.
   - Comentario sobre `levelLabel` en `PredefinedRoutine` (`RoutineManager`).
-  - Contenido en español sin cambiar: typo "mantendiendo" en `natacion-crol-fingertip-drag`; `remo-al-menton` dice "Barra o mancuernas" pero describe solo barra; `natacion-dorso-patada` se llama "Patada (tabla)" sin mencionar tabla.
+  - Contenido en español sin cambiar: `remo-al-menton` dice "Barra o mancuernas" pero describe solo barra; `natacion-dorso-patada` se llama "Patada (tabla)" sin mencionar tabla.
   - Gustos de inglés a decidir: `Others` vs `Other`, `Cable` vs `Cable machine`, "glove work" en la clase de boxeo.

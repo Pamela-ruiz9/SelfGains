@@ -36,9 +36,9 @@ Persistencia: `localStorage` (clave `selfgains-locale`) + columna `profiles.loca
 
 - El diccionario (`src/i18n/`) tiene texto duplicado entre namespaces (`loading: 'Cargando...'` aparece igual 9 veces, el patrón de 3 claves `notLoggedIn: {prefix, link, suffix}` se repite en 5 namespaces). Se evaluó un namespace `common` compartido en varias tareas y se descartó cada vez por "no repite lo suficiente" — con todos los namespaces ya armados, esa evaluación ya no es cierta. Candidato para un refactor futuro chico, sin apuro.
 - ~~`CreateRoutineForm.tsx` no le pasaba `t`/`disciplines` a `ActivityPicker`~~ — resuelto 2026-09-24: `pickerT`/`disciplinesT` fluyen desde las páginas `rutinas` → `RoutineManager` → `CreateRoutineForm` → `ActivityPicker`.
-- Manifest de la PWA (nombre/descripción al instalar) y el service worker (no precachea `/en/`) quedaron fuera de alcance a propósito — cambios chicos y aislados para cuando se quiera.
+- ~~Manifest de la PWA (nombre/descripción al instalar) y el service worker (no precachea `/en/`) quedaron fuera de alcance a propósito~~ — resuelto 2026-09-24 en el lote de cierre (ver la sección "Cierre: PWA en inglés, CI y errata" al final).
 - Templates de email de Supabase (confirmación de cuenta, recuperar contraseña) siguen en español — se configuran desde el dashboard de Supabase, no desde este repo.
-- Deuda derivada de la Ronda 2 (contenido), con detalle en la sección siguiente: `GROUP_LABELS`/`MUSCLES[].label` duplicados con el diccionario; CI sin `npm test`; exports sin uso en `content-i18n.ts`; bloque de carga+localización repetido en 6 páginas ×2; fallback de `progreso`; pulido del test de cobertura; nits de contenido en español; notas de gusto en inglés.
+- Deuda derivada de la Ronda 2 (contenido), con detalle en la sección siguiente: `GROUP_LABELS`/`MUSCLES[].label` duplicados con el diccionario; exports sin uso en `content-i18n.ts`; bloque de carga+localización repetido en 6 páginas ×2; fallback de `progreso`; pulido del test de cobertura; nits de contenido en español; notas de gusto en inglés.
 
 ## Ronda 2 — contenido (completa)
 
@@ -86,15 +86,43 @@ Se tradujo al inglés el contenido de **86 actividades** (`src/content/activitie
 ### Deuda técnica / backlog derivado de las revisiones
 
 - `GROUP_LABELS` en `src/lib/activities.ts` y `MUSCLES[].label` en `src/lib/muscles.ts` duplican `es.groups`/`es.muscles` (ahora solo fallback / orden): armarlos desde el diccionario para tener una única fuente.
-- CI (`.github/workflows/deploy.yml`) corre solo `npm ci` + `npm run build`, no `npm test`: agregarlo. El schema igual rompe el build ante un campo faltante, pero traducciones idénticas al español o claves faltantes en el diccionario solo se detectan en local.
 - Exports sin uso `Locale`, `LocalizedActivity`, `LocalizedPlan` en `src/lib/content-i18n.ts`.
 - Helper compartido para cargar y localizar actividades: el bloque `getCollection → localizeActivity → recortar → ordenar` se repite en 6 páginas ×2. Se dejó así a propósito porque las páginas ES/EN son copias espejo.
 - `progreso` usa `muscle: a.muscles?.[0] ?? ''`: debería caer en 'Otros' (`UNKNOWN_MUSCLE` en `src/lib/prs.ts`).
 - Pulido del test de cobertura (`tests/content-coverage.test.mjs`): usar `fileURLToPath` para rutas con espacios, juntar todas las fallas en vez de frenar en la primera, que la allow-list falle si una entrada deja de ser idéntica, y `.trim()` en el schema de Zod para los `*_en` (`src/content.config.ts`).
 - Comentario de una línea sobre `levelLabel` en `PredefinedRoutine` de `RoutineManager`.
-- Nits del contenido en español detectados y NO cambiados: typo "mantendiendo" en `natacion-crol-fingertip-drag` (→ "manteniendo"); `remo-al-menton` lista equipamiento "Barra o mancuernas" pero el texto describe solo barra; `natacion-dorso-patada` se llama "Patada (tabla)"/"Kick (board)" pero el texto no menciona tabla.
+- Nits del contenido en español detectados y NO cambiados: `remo-al-menton` lista equipamiento "Barra o mancuernas" pero el texto describe solo barra; `natacion-dorso-patada` se llama "Patada (tabla)"/"Kick (board)" pero el texto no menciona tabla.
 - Gustos de inglés dejados como están (Pam puede ajustar): `Others` vs `Other` para el bucket de músculos, `Cable` vs `Cable machine`, "glove work" en la clase de boxeo (podría ser pad work).
 
 ### Sigue fuera de alcance (sin cambios)
 
-Manifest de la PWA y service worker sin traducir/precachear para `/en/`; templates de email de Supabase en español; refactor del namespace `common` del diccionario.
+Templates de email de Supabase en español; refactor del namespace `common` del diccionario. (El manifest de la PWA, el service worker, `npm test` en CI y el typo "mantendiendo" se cerraron en la sección siguiente.)
+
+## Cierre: PWA en inglés, CI y errata
+
+Lote chico que cerró los pendientes de la Ronda 2. Estado: rama `cierre-bilingue`, pendiente de merge a `main`. Fecha: 2026-09-24.
+
+- Spec: `docs/superpowers/specs/2026-09-24-pwa-en-ci-cierre-design.md`
+- Plan: `docs/superpowers/plans/2026-09-24-pwa-en-ci-cierre.md`
+- Ejecución: `superpowers:subagent-driven-development`.
+
+### Qué cambió
+
+- **Dos manifests.** `public/manifest.webmanifest` (es) + nuevo `public/manifest.en.webmanifest` (`lang` en, descripción en inglés, `start_url` `/SelfGains/en/`). Ambos llevan ahora un `id: "/SelfGains/"` explícito: el id resuelto coincide con el que los navegadores derivaban antes de la `start_url`, así que las instalaciones existentes conservan su identidad; sin el `id`, el manifest en inglés habría sido otra app distinta. `BaseLayout.astro` enlaza el manifest según el locale. El manifest queda fijo al instalar (quien instala desde `/en/` obtiene el inglés): limitación estándar, aceptada.
+- **Service worker (`public/sw.js`).** `SHELL` suma `/SelfGains/en/` y `/SelfGains/manifest.en.webmanifest`; `VERSION` v1 → v2 (el `activate` borra la caché vieja; las páginas/chunks cacheados en runtime bajo v1 se descartan y se re-cachean al revisitar — revisado y aceptado).
+- **CI.** `.github/workflows/deploy.yml` corre `npm test` entre `npm ci` y `npm run build`: desde ahora un test en rojo bloquea el deploy (intencional; p. ej. content-coverage falla si el contenido nuevo no trae `name_en`).
+- **Errata.** `mantendiendo` → `manteniendo` en `natacion-crol-fingertip-drag.md`.
+- **Tests.** `tests/pwa.test.mjs` (8 tests; total de la suite 36): los manifests comparten id y difieren solo en lang/description/start_url; `start_url` dentro del scope; contenido de `SHELL` + versión subida + que cada URL de `SHELL` exista (`cache.addAll` es atómico: un 404 rompe toda la instalación); `BaseLayout` enlaza el manifest correcto; orden de los pasos del workflow.
+
+### Verificación
+
+- `npm test` 36/36; `tsc` solo con el error preexistente de `ProgressList.tsx`; build de 26 páginas.
+- Sobre `dist/`, las 26 páginas HTML enlazan el manifest correcto.
+- En Chromium real vía `astro preview`: la caché vieja `selfgains-shell-v1` se purga, `selfgains-shell-v2` contiene las 5 URLs de `SHELL`, el link al manifest por locale es correcto, y `/en/` recarga offline desde el service worker (200, título y nav en inglés).
+- NO verificado: la primera corrida real de GitHub Actions con `npm test` (verificar con `gh run watch` después del push) y la instalación de la PWA desde un teléfono.
+
+### Hallazgos de las revisiones (al backlog)
+
+- (a) Preexistente: `public/sw.js` cachea respuestas sin chequear `response.ok`: un 404 sobre un asset de `/_astro/` se serviría cache-first hasta el próximo bump de versión, y un HTML 404/5xx podría pisar una página buena cacheada. Guardar con `if (response.ok)`.
+- (b) Agregar un comentario de una línea sobre `VERSION` en `sw.js`: subir `VERSION` cada vez que cambie `SHELL`.
+- (c) Pulido de `tests/pwa.test.mjs`: generalizar el mapeo URL → fuente para otras entradas de `SHELL` (`rel.endsWith('/') ? src/pages/${rel}index.astro : public/${rel}`), tolerar comillas dobles al parsear `SHELL`, `.trim()` en los `run` del workflow.
