@@ -42,7 +42,7 @@ Persistencia: `localStorage` (clave `selfgains-locale`) + columna `profiles.loca
 
 ## Ronda 2 — contenido (completa)
 
-Se tradujo al inglés el contenido de **86 actividades** (`src/content/activities`) y **9 planes** (`src/content/plans`). Estado: rama `bilingue-contenido`, pendiente de merge a `main` (quien haga el merge actualiza esta línea). Fecha: 2026-09-24.
+Se tradujo al inglés el contenido de **86 actividades** (`src/content/activities`) y **9 planes** (`src/content/plans`). Estado: mergeado a `main` (`fc1324e`) y desplegado. Fecha: 2026-09-24.
 
 - Spec: `docs/superpowers/specs/2026-09-24-bilingue-contenido-design.md`
 - Plan: `docs/superpowers/plans/2026-09-24-bilingue-contenido.md` (13 tareas, 0–12)
@@ -100,7 +100,7 @@ Templates de email de Supabase en español; refactor del namespace `common` del 
 
 ## Cierre: PWA en inglés, CI y errata
 
-Lote chico que cerró los pendientes de la Ronda 2. Estado: rama `cierre-bilingue`, pendiente de merge a `main`. Fecha: 2026-09-24.
+Lote chico que cerró los pendientes de la Ronda 2. Estado: mergeado a `main`; el primer despliegue con `npm test` en el CI se comprueba con `gh run watch` tras el push. Fecha: 2026-09-24.
 
 - Spec: `docs/superpowers/specs/2026-09-24-pwa-en-ci-cierre-design.md`
 - Plan: `docs/superpowers/plans/2026-09-24-pwa-en-ci-cierre.md`
