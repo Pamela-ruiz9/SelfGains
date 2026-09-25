@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import yaml from 'js-yaml';
 
 const path = (p) => fileURLToPath(new URL(`../${p}`, import.meta.url));
 const read = (p) => readFileSync(path(p), 'utf8');
@@ -72,4 +73,14 @@ test('BaseLayout enlaza el manifest en inglés para el locale en y el de españo
   assert.match(link[0], /locale === 'en'/);
   assert.match(link[0], /manifest\.en\.webmanifest/);
   assert.match(link[0], /manifest\.webmanifest/);
+});
+
+test('el CI corre npm test después de npm ci y antes del build', () => {
+  const wf = yaml.load(read('.github/workflows/deploy.yml'));
+  const runs = wf.jobs.build.steps.map((s) => s.run).filter(Boolean);
+  const ci = runs.indexOf('npm ci');
+  const test_ = runs.indexOf('npm test');
+  const build = runs.indexOf('npm run build');
+  assert.ok(ci >= 0 && build >= 0, 'faltan npm ci / npm run build');
+  assert.ok(test_ > ci && test_ < build, `npm test debe ir entre npm ci y npm run build (orden: ${runs.join(' → ')})`);
 });
