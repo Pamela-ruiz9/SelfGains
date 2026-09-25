@@ -21,7 +21,7 @@ const t = getDictionary(locale).sync.banner;
     <link rel="icon" type="image/svg+xml" href={`${base}favicon.svg`} />
     <link rel="icon" type="image/png" sizes="32x32" href={`${base}favicon-32.png`} />
     <link rel="apple-touch-icon" href={`${base}apple-touch-icon.png`} />
-    <link rel="manifest" href={`${base}manifest.webmanifest`} />
+    <link rel="manifest" href={`${base}${locale === 'en' ? 'manifest.en.webmanifest' : 'manifest.webmanifest'}`} />
     <meta name="theme-color" content="#0c0c0a" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />

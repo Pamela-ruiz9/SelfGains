@@ -1,9 +1,15 @@
 // SelfGains service worker — caché de app-shell únicamente.
 // No guarda datos de usuario ni intercepta escrituras a Supabase.
 // Ver docs/superpowers/specs/2026-08-16-pwa-instalable-y-fluidez-design.md.
-const VERSION = 'selfgains-shell-v1';
+const VERSION = 'selfgains-shell-v2';
 
-const SHELL = ['/SelfGains/', '/SelfGains/favicon.svg', '/SelfGains/manifest.webmanifest'];
+const SHELL = [
+  '/SelfGains/',
+  '/SelfGains/en/',
+  '/SelfGains/favicon.svg',
+  '/SelfGains/manifest.webmanifest',
+  '/SelfGains/manifest.en.webmanifest',
+];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
