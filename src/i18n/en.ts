@@ -445,6 +445,7 @@ export const en: Dictionary = {
       totalWorkouts: 'Workouts',
       disciplines: 'Disciplines',
       bodyFat: '% body fat',
+      stepsToday: 'Steps today',
     },
     measurementsSummary: {
       title: 'Your measurements',
@@ -519,6 +520,17 @@ export const en: Dictionary = {
         saveError: 'Could not save the change.',
         deleteError: 'Could not delete the session.',
       },
+    },
+    fitbitActivity: {
+      title: 'Daily activity (Google Health)',
+      steps: 'Steps',
+      restingHeartRate: 'Resting HR',
+      calories: 'Calories',
+      activeMinutes: 'Active minutes',
+      sleep: 'Sleep',
+      loadError: "Couldn't fetch Google Health data. Try again later.",
+      disconnectedError: 'The Google Health connection was lost — reconnect it from Profile.',
+      empty: "Google Health doesn't have data for today yet.",
     },
   },
   conexiones: {

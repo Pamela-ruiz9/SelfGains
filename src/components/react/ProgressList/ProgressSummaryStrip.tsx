@@ -11,6 +11,7 @@ interface Props {
   totalWorkouts: number;
   disciplineCount: number;
   bodyFatPercent: number | null;
+  stepsToday: number | null;
   t: Dictionary['progreso']['summary'];
 }
 
@@ -33,6 +34,7 @@ export default function ProgressSummaryStrip({
   totalWorkouts,
   disciplineCount,
   bodyFatPercent,
+  stepsToday,
   t,
 }: Props) {
   return (
@@ -46,6 +48,7 @@ export default function ProgressSummaryStrip({
         {totalWorkouts > 0 && <Tile label={t.totalWorkouts} value={String(totalWorkouts)} />}
         {disciplineCount > 0 && <Tile label={t.disciplines} value={String(disciplineCount)} />}
         {bodyFatPercent !== null && <Tile label={t.bodyFat} value={`${bodyFatPercent} %`} />}
+        {stepsToday !== null && <Tile label={t.stepsToday} value={stepsToday.toLocaleString()} />}
       </div>
     </div>
   );

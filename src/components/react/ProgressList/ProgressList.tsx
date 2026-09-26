@@ -19,10 +19,13 @@ import {
 } from '../../../lib/prs';
 import { weekAdherence } from '../../../lib/adherence';
 import { getWeightUnit, kgToDisplay } from '../../../lib/weightUnit';
+import { getFitbitConnectionStatus, getFitbitDailyData, type FitbitDailyData } from '../../../lib/fitbit';
+import { localDateStr } from '../../../lib/weekdays';
 import type { ActivityOption } from '../ActivityPicker/ActivityPicker';
 import type { Measurement } from '../../../types/db';
 import CollapsibleSection from '../Shared/CollapsibleSection';
 import DisciplineSummary from './DisciplineSummary';
+import FitbitActivitySummary from './FitbitActivitySummary';
 import MeasurementsSummary, { MEASUREMENT_DISPLAY_FIELDS } from './MeasurementsSummary';
 import MeasurementsChart from './MeasurementsChart';
 import PRGrid from './PRGrid';
@@ -72,11 +75,16 @@ export default function ProgressList({
   const [selectedDiscipline, setSelectedDiscipline] = useState<string | null>(null);
   const [selectedMeasurement, setSelectedMeasurement] = useState<string | null>(null);
   const [weightUnit] = useState(() => getWeightUnit());
+  const [fitbitConnected, setFitbitConnected] = useState(false);
+  const [fitbitData, setFitbitData] = useState<FitbitDailyData | null>(null);
+  const [fitbitError, setFitbitError] = useState<string | null>(null);
   // Todas arrancan cerradas al entrar a la pestaña — el usuario elige qué
   // abrir, nada se le impone expandido de entrada.
-  const [openSection, setOpenSection] = useState<'medidas' | 'disciplina' | 'entrenamientos' | null>(null);
+  const [openSection, setOpenSection] = useState<
+    'medidas' | 'disciplina' | 'entrenamientos' | 'actividad' | null
+  >(null);
 
-  function toggleSection(section: 'medidas' | 'disciplina' | 'entrenamientos') {
+  function toggleSection(section: 'medidas' | 'disciplina' | 'entrenamientos' | 'actividad') {
     setOpenSection((prev) => (prev === section ? null : section));
   }
 
@@ -123,6 +131,25 @@ export default function ProgressList({
     window.addEventListener('selfgains:sync-complete', onSyncComplete);
     return () => window.removeEventListener('selfgains:sync-complete', onSyncComplete);
   }, []);
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    getFitbitConnectionStatus()
+      .then(async (status) => {
+        setFitbitConnected(status.connected);
+        if (!status.connected) return;
+        try {
+          const data = await getFitbitDailyData(localDateStr());
+          setFitbitData(data);
+        } catch {
+          setFitbitError(t.fitbitActivity.loadError);
+        }
+      })
+      .catch(() => {
+        // No se pudo ni chequear el estado de conexión — se trata igual
+        // que "no conectado", el resto de Progreso sigue funcionando.
+      });
+  }, [isLoggedIn]);
 
   const prs = calculatePRs(workouts);
   const muscleGroups = groupPRsByMuscle(prs, exercises);
@@ -224,6 +251,7 @@ export default function ProgressList({
         totalWorkouts={workouts.length}
         disciplineCount={disciplineCount}
         bodyFatPercent={bodyFatPercent}
+        stepsToday={fitbitData?.steps ?? null}
         t={t.summary}
       />
       <CollapsibleSection
@@ -344,6 +372,22 @@ export default function ProgressList({
           disciplinesT={disciplinesT}
         />
       </CollapsibleSection>
+
+      {fitbitConnected && (
+        <CollapsibleSection
+          title={t.fitbitActivity.title}
+          open={openSection === 'actividad'}
+          onToggle={() => toggleSection('actividad')}
+        >
+          {fitbitError ? (
+            <p className="border-l border-blood pl-3 font-mono text-sm text-blood">{fitbitError}</p>
+          ) : fitbitData ? (
+            <FitbitActivitySummary data={fitbitData} t={t.fitbitActivity} />
+          ) : (
+            <p className="font-mono text-sm text-paper-dim">{t.list.loading}</p>
+          )}
+        </CollapsibleSection>
+      )}
     </div>
   );
 }

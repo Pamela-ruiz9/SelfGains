@@ -446,6 +446,7 @@ export const es = {
       totalWorkouts: 'Entrenamientos',
       disciplines: 'Disciplinas',
       bodyFat: '% grasa',
+      stepsToday: 'Pasos hoy',
     },
     measurementsSummary: {
       title: 'Tus medidas',
@@ -521,6 +522,17 @@ export const es = {
         saveError: 'No se pudo guardar el cambio.',
         deleteError: 'No se pudo eliminar la sesión.',
       },
+    },
+    fitbitActivity: {
+      title: 'Actividad diaria (Google Health)',
+      steps: 'Pasos',
+      restingHeartRate: 'FC en reposo',
+      calories: 'Calorías',
+      activeMinutes: 'Minutos activos',
+      sleep: 'Sueño',
+      loadError: 'No se pudo traer los datos de Google Health. Probá de nuevo más tarde.',
+      disconnectedError: 'La conexión con Google Health se perdió — reconectala desde Perfil.',
+      empty: 'Google Health todavía no tiene datos para hoy.',
     },
   },
   conexiones: {
