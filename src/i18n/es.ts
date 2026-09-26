@@ -429,6 +429,14 @@ export const es = {
       combateNoRecords:
         'Combate no tiene récords de ritmo — solo se registra el tiempo total (ya lo ves arriba).',
     },
+    summary: {
+      adherenceLabel: 'días',
+      lastWeight: 'Último peso',
+      recentPR: 'PR reciente',
+      totalWorkouts: 'Entrenamientos',
+      disciplines: 'Disciplinas',
+      bodyFat: '% grasa',
+    },
     measurementsSummary: {
       title: 'Tus medidas',
       fields: {

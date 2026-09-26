@@ -13,9 +13,12 @@ import {
   progressForCardioActivity,
   progressForMeasurement,
   summarizeByDiscipline,
+  mostRecentPR,
   type WorkoutWithSets,
   type WorkoutWithSessions,
 } from '../../../lib/prs';
+import { weekAdherence } from '../../../lib/adherence';
+import { getWeightUnit, kgToDisplay } from '../../../lib/weightUnit';
 import type { ActivityOption } from '../ActivityPicker/ActivityPicker';
 import type { Measurement } from '../../../types/db';
 import CollapsibleSection from '../Shared/CollapsibleSection';
@@ -26,6 +29,7 @@ import PRGrid from './PRGrid';
 import ProgressChart from './ProgressChart';
 import CardioPRGrid from './CardioPRGrid';
 import CardioProgressChart from './CardioProgressChart';
+import ProgressSummaryStrip from './ProgressSummaryStrip';
 import WorkoutHistory from './WorkoutHistory';
 import type { Dictionary } from '../../../i18n/es';
 
@@ -67,6 +71,7 @@ export default function ProgressList({
   const [selectedCardioActivityId, setSelectedCardioActivityId] = useState<string | null>(null);
   const [selectedDiscipline, setSelectedDiscipline] = useState<string | null>(null);
   const [selectedMeasurement, setSelectedMeasurement] = useState<string | null>(null);
+  const [weightUnit] = useState(() => getWeightUnit());
   // Todas arrancan cerradas al entrar a la pestaña — el usuario elige qué
   // abrir, nada se le impone expandido de entrada.
   const [openSection, setOpenSection] = useState<'medidas' | 'disciplina' | 'entrenamientos' | null>(null);
@@ -185,8 +190,42 @@ export default function ProgressList({
 
   const selectedMeasurementField = MEASUREMENT_DISPLAY_FIELDS.find((f) => f.key === selectedMeasurement);
 
+  const trainedDates = new Set(workouts.map((w) => w.date));
+  const adherence = weekAdherence(trainedDates);
+
+  const exerciseNameById = new Map(exercises.map((e) => [e.id, e.name]));
+  const activityNameById = new Map(activities.map((a) => [a.id, a.name]));
+  const recentPR = mostRecentPR(
+    prs,
+    cardioPrs,
+    exerciseNameById,
+    activityNameById,
+    weightUnit,
+    kgToDisplay
+  );
+  const disciplineCount = disciplineSummaries.length;
+  const bodyFatPercent = estimateBodyFatPercent({
+    sex,
+    neckCm: latestMeasurement?.neck_cm ?? null,
+    waistCm: latestMeasurement?.waist_cm ?? null,
+    hipCm: latestMeasurement?.hip_cm ?? null,
+    heightCm: latestMeasurement?.height_cm ?? null,
+  });
+
   return (
     <div className="flex flex-col gap-6">
+      <ProgressSummaryStrip
+        daysTrained={adherence.daysTrained}
+        daysElapsed={adherence.daysElapsed}
+        lastWeightKg={latestMeasurement?.weight_kg ?? null}
+        weightUnit={weightUnit}
+        kgToDisplay={kgToDisplay}
+        recentPRLabel={recentPR ? `${recentPR.label} — ${recentPR.display}` : null}
+        totalWorkouts={workouts.length}
+        disciplineCount={disciplineCount}
+        bodyFatPercent={bodyFatPercent}
+        t={t.summary}
+      />
       <CollapsibleSection
         title={t.list.sections.measurements}
         open={openSection === 'medidas'}

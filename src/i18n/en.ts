@@ -428,6 +428,14 @@ export const en: Dictionary = {
       combateNoRecords:
         "Combat doesn't have pace records — only total time is logged (you can see it above).",
     },
+    summary: {
+      adherenceLabel: 'days',
+      lastWeight: 'Last weight',
+      recentPR: 'Recent PR',
+      totalWorkouts: 'Workouts',
+      disciplines: 'Disciplines',
+      bodyFat: '% body fat',
+    },
     measurementsSummary: {
       title: 'Your measurements',
       fields: {
