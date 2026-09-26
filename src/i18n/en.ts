@@ -176,6 +176,7 @@ export const en: Dictionary = {
       height: 'Height (cm)',
       waist: 'Waist (cm)',
       hip: 'Hips (cm)',
+      neck: 'Neck (cm)',
       arm: 'Arm (cm)',
       leg: 'Leg (cm)',
       invalidNumber: 'must be a valid number.',

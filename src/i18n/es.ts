@@ -174,6 +174,7 @@ export const es = {
       height: 'Estatura (cm)',
       waist: 'Cintura (cm)',
       hip: 'Cadera (cm)',
+      neck: 'Cuello (cm)',
       arm: 'Brazo (cm)',
       leg: 'Pierna (cm)',
       invalidNumber: 'debe ser un número válido.',

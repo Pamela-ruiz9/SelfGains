@@ -58,6 +58,7 @@ export interface Measurement {
   height_cm: number | null;
   waist_cm: number | null;
   hip_cm: number | null;
+  neck_cm: number | null;
   arm_cm: number | null;
   leg_cm: number | null;
   created_at: string;
@@ -71,6 +72,7 @@ export interface Profile {
   height_cm: number | null;
   waist_cm: number | null;
   hip_cm: number | null;
+  neck_cm: number | null;
   arm_cm: number | null;
   leg_cm: number | null;
   accent_color: string;

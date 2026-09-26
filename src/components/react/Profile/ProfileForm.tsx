@@ -28,6 +28,7 @@ export default function ProfileForm({
     { key: 'height_cm', label: t.measurements.height },
     { key: 'waist_cm', label: t.measurements.waist },
     { key: 'hip_cm', label: t.measurements.hip },
+    { key: 'neck_cm', label: t.measurements.neck },
     { key: 'arm_cm', label: t.measurements.arm },
     { key: 'leg_cm', label: t.measurements.leg },
   ];
@@ -112,6 +113,7 @@ export default function ProfileForm({
           height_cm: profile.height_cm?.toString() ?? '',
           waist_cm: profile.waist_cm?.toString() ?? '',
           hip_cm: profile.hip_cm?.toString() ?? '',
+          neck_cm: profile.neck_cm?.toString() ?? '',
           arm_cm: profile.arm_cm?.toString() ?? '',
           leg_cm: profile.leg_cm?.toString() ?? '',
         });
