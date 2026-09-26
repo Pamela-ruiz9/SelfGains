@@ -39,7 +39,7 @@ export function buildFitbitAuthorizeUrl(clientId: string, base: string): string 
   return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
 }
 
-// Compara el `state` devuelto por Fitbit contra el que se guardó antes de
+// Compara el `state` devuelto por Google contra el que se guardó antes de
 // redirigir — si no coincide (o no había ninguno guardado), es una
 // respuesta que no vino de un flujo iniciado por esta app.
 export function consumeFitbitOAuthState(returnedState: string | null): boolean {
