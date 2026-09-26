@@ -67,3 +67,47 @@ test('estimateLeanMassKg: peso × (1 − %grasa/100)', () => {
 test('estimateLeanMassKg: %grasa null devuelve null', () => {
   assert.equal(estimateLeanMassKg(80, null), null);
 });
+
+test('estimateBodyFatPercent: falta cintura devuelve null', () => {
+  const pct = estimateBodyFatPercent({
+    sex: 'masculino',
+    neckCm: 38,
+    waistCm: null,
+    hipCm: null,
+    heightCm: 178,
+  });
+  assert.equal(pct, null);
+});
+
+test('estimateBodyFatPercent: falta altura devuelve null', () => {
+  const pct = estimateBodyFatPercent({
+    sex: 'masculino',
+    neckCm: 38,
+    waistCm: 85,
+    hipCm: null,
+    heightCm: null,
+  });
+  assert.equal(pct, null);
+});
+
+test('estimateBodyFatPercent: hombre con cintura <= cuello (no fisiológico) devuelve null', () => {
+  const pct = estimateBodyFatPercent({
+    sex: 'masculino',
+    neckCm: 38,
+    waistCm: 30,
+    hipCm: null,
+    heightCm: 178,
+  });
+  assert.equal(pct, null);
+});
+
+test('estimateBodyFatPercent: mujer con cintura + cadera <= cuello (no fisiológico) devuelve null', () => {
+  const pct = estimateBodyFatPercent({
+    sex: 'femenino',
+    neckCm: 45,
+    waistCm: 20,
+    hipCm: 20,
+    heightCm: 165,
+  });
+  assert.equal(pct, null);
+});
