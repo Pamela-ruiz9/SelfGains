@@ -140,7 +140,11 @@ export default function ProgressList({
         if (!status.connected) return;
         try {
           const data = await getFitbitDailyData(localDateStr());
-          setFitbitData(data);
+          if (data === null) {
+            setFitbitError(t.fitbitActivity.disconnectedError);
+          } else {
+            setFitbitData(data);
+          }
         } catch {
           setFitbitError(t.fitbitActivity.loadError);
         }
