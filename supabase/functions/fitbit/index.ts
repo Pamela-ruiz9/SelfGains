@@ -37,7 +37,7 @@ async function handleConnect(
 
   if (!tokenRes.ok) {
     console.error('fitbit connect exchange failed', await tokenRes.text());
-    return jsonResponse({ error: 'exchange_failed' }, 400);
+    return jsonResponse({ error: 'exchange_failed' });
   }
 
   const tokens = await tokenRes.json();
@@ -52,7 +52,7 @@ async function handleConnect(
   );
   if (error) {
     console.error('fitbit connect upsert failed', error);
-    return jsonResponse({ error: 'save_failed' }, 500);
+    return jsonResponse({ error: 'save_failed' });
   }
 
   return jsonResponse({ success: true });
@@ -76,7 +76,7 @@ async function handleData(
     .maybeSingle();
 
   if (!connection) {
-    return jsonResponse({ error: 'not_connected' }, 404);
+    return jsonResponse({ error: 'not_connected' });
   }
 
   const refreshRes = await fetch('https://api.fitbit.com/oauth2/token', {
@@ -92,7 +92,7 @@ async function handleData(
     // Token revocado desde la app de Fitbit, o vencido más allá de lo
     // recuperable — se interpreta como desconectado (ver spec sección 6.4).
     await supabaseAdmin.from('fitbit_connections').delete().eq('user_id', userId);
-    return jsonResponse({ error: 'disconnected' }, 401);
+    return jsonResponse({ error: 'disconnected' });
   }
 
   const tokens = await refreshRes.json();
@@ -112,7 +112,7 @@ async function handleData(
 
   if (!activityRes.ok || !sleepRes.ok) {
     console.error('fitbit data request failed', activityRes.status, sleepRes.status);
-    return jsonResponse({ error: 'fitbit_request_failed' }, 502);
+    return jsonResponse({ error: 'fitbit_request_failed' });
   }
 
   const activity = await activityRes.json();
