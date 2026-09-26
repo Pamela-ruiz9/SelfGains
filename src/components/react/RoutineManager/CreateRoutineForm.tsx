@@ -92,6 +92,14 @@ function DayActivityPicker({
         }}
         t={{ ...pickerT, disciplines: disciplinesT }}
       />
+      {selected?.image && (
+        <img
+          src={`${import.meta.env.BASE_URL}exercises/${selected.image}`}
+          alt={selected.name}
+          loading="lazy"
+          className="aspect-video w-full rounded-card object-cover"
+        />
+      )}
       {selected?.description && (
         <p className="font-mono text-xs text-paper-dim">{selected.description}</p>
       )}
