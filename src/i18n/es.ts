@@ -174,6 +174,7 @@ export const es = {
       height: 'Estatura (cm)',
       waist: 'Cintura (cm)',
       hip: 'Cadera (cm)',
+      neck: 'Cuello (cm)',
       arm: 'Brazo (cm)',
       leg: 'Pierna (cm)',
       invalidNumber: 'debe ser un número válido.',
@@ -428,12 +429,23 @@ export const es = {
       combateNoRecords:
         'Combate no tiene récords de ritmo — solo se registra el tiempo total (ya lo ves arriba).',
     },
+    summary: {
+      adherenceLabel: 'días',
+      lastWeight: 'Último peso',
+      recentPR: 'PR reciente',
+      totalWorkouts: 'Entrenamientos',
+      disciplines: 'Disciplinas',
+      bodyFat: '% grasa',
+    },
     measurementsSummary: {
       title: 'Tus medidas',
       fields: {
         weight: 'Peso',
         waist: 'Cintura',
         hip: 'Cadera',
+        neck: 'Cuello',
+        bodyFat: '% grasa',
+        leanMass: 'Masa magra',
         arm: 'Brazo',
         leg: 'Pierna',
       },
@@ -453,6 +465,16 @@ export const es = {
       volume: 'Volumen',
       maxWeight: 'Peso máximo',
       estimated1RM: '1RM estimado',
+      info: {
+        maxWeight: 'La serie más pesada que levantaste ese día, tal cual la registraste (sin ninguna fórmula).',
+        estimated1RM:
+          'El peso máximo que probablemente podrías levantar en una repetición, calculado con la fórmula de Epley: peso × (1 + reps/30). Es una estimación, no un peso que hayas levantado literalmente.',
+        volume: 'La suma de peso × repeticiones de todas las series de ese ejercicio en la sesión.',
+      },
+      tooltipPoint: '{metric} — {date}: {value}',
+      prBadge: 'PR',
+      trendUp: '▲ +{percent}% vs. hace 4 semanas',
+      trendDown: '▼ {percent}% vs. hace 4 semanas',
     },
     cardioPrGrid: {
       title: 'Récords de cardio',

@@ -383,3 +383,49 @@ export function formatPace(paceMinPerKm: number): string {
   const seconds = totalSeconds % 60;
   return `${minutes}:${seconds.toString().padStart(2, '0')} /km`;
 }
+
+export interface RecentPR {
+  kind: 'gym' | 'cardio';
+  label: string; // nombre del ejercicio/actividad, ya resuelto por el caller
+  date: string;
+  display: string; // valor ya formateado para mostrar (ej. "92 kg" o "5:30 /km")
+}
+
+// El PR (de cualquier tipo) con la fecha más reciente entre gimnasio y
+// cardio — para el tile "PR reciente" de la franja de resumen del
+// dashboard. `exerciseNameById`/`activityNameById` deben venir ya resueltos
+// por el caller (ProgressList ya tiene ambos mapas armados).
+// Si las fechas son iguales (mismo día), el PR de gimnasio gana.
+export function mostRecentPR(
+  gymPRs: ExercisePR[],
+  cardioPRs: CardioPR[],
+  exerciseNameById: Map<string, string>,
+  activityNameById: Map<string, string>,
+  weightUnit: 'kg' | 'lb',
+  kgToDisplayFn: (kg: number, unit: 'kg' | 'lb') => number
+): RecentPR | null {
+  const gymCandidate = gymPRs.reduce<ExercisePR | null>(
+    (best, pr) => (!best || pr.date > best.date ? pr : best),
+    null
+  );
+  const cardioCandidate = cardioPRs.reduce<CardioPR | null>(
+    (best, pr) => (!best || pr.date > best.date ? pr : best),
+    null
+  );
+
+  if (!gymCandidate && !cardioCandidate) return null;
+  if (gymCandidate && (!cardioCandidate || gymCandidate.date >= cardioCandidate.date)) {
+    return {
+      kind: 'gym',
+      label: exerciseNameById.get(gymCandidate.exerciseId) ?? gymCandidate.exerciseId,
+      date: gymCandidate.date,
+      display: `${kgToDisplayFn(gymCandidate.weight, weightUnit)} ${weightUnit}`,
+    };
+  }
+  return {
+    kind: 'cardio',
+    label: activityNameById.get(cardioCandidate!.activityId) ?? cardioCandidate!.activityId,
+    date: cardioCandidate!.date,
+    display: formatPace(cardioCandidate!.paceMinPerKm),
+  };
+}

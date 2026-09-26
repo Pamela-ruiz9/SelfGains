@@ -1,16 +1,10 @@
 import { useState } from 'react';
-import {
-  entryActivityId,
-  entryTarget,
-  targetSummary,
-  WEEKDAYS,
-  type RoutineDays,
-} from '../../../lib/weekdays';
-import { fullActivityName } from '../../../lib/activities';
+import type { RoutineDays } from '../../../lib/weekdays';
 import { getMyConnections, type ConnectionSummary } from '../../../lib/connections';
 import { proposeRoutineShare } from '../../../lib/routineShares';
 import type { Dictionary } from '../../../i18n/es';
 import type { ActivityOption } from '../ActivityPicker/ActivityPicker';
+import RoutinePreview from './RoutinePreview';
 
 export interface RoutineOption {
   ref: string;
@@ -32,25 +26,6 @@ interface RoutineListProps {
   onEdit?: (ref: string) => void;
   onDelete?: (ref: string) => void;
   t: Dictionary['rutinas'];
-}
-
-function daysSummary(
-  days: RoutineDays,
-  activities: ActivityOption[],
-  t: Dictionary['rutinas']
-): string {
-  return WEEKDAYS.filter((day) => days[day].length > 0)
-    .map((day) => {
-      const names = days[day].map((entry) => {
-        const id = entryActivityId(entry);
-        const activity = activities.find((a) => a.id === id);
-        const label = activity ? fullActivityName(activity) : id;
-        const summary = activity ? targetSummary(activity.metricType, entryTarget(entry)) : null;
-        return summary ? `${label} (${summary})` : label;
-      });
-      return `${t.days[day]}: ${names.join(', ')}`;
-    })
-    .join(' · ');
 }
 
 function ShareRoutinePicker({
@@ -199,7 +174,7 @@ function RoutineCard({
           </div>
         )}
       </div>
-      <p className="font-mono text-sm text-paper-dim">{daysSummary(routine.days, activities, t)}</p>
+      <RoutinePreview days={routine.days} activities={activities} t={t} />
       <div className="flex items-center gap-2">
         <input
           type="number"

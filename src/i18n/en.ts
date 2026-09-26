@@ -176,6 +176,7 @@ export const en: Dictionary = {
       height: 'Height (cm)',
       waist: 'Waist (cm)',
       hip: 'Hips (cm)',
+      neck: 'Neck (cm)',
       arm: 'Arm (cm)',
       leg: 'Leg (cm)',
       invalidNumber: 'must be a valid number.',
@@ -427,12 +428,23 @@ export const en: Dictionary = {
       combateNoRecords:
         "Combat doesn't have pace records — only total time is logged (you can see it above).",
     },
+    summary: {
+      adherenceLabel: 'days',
+      lastWeight: 'Last weight',
+      recentPR: 'Recent PR',
+      totalWorkouts: 'Workouts',
+      disciplines: 'Disciplines',
+      bodyFat: '% body fat',
+    },
     measurementsSummary: {
       title: 'Your measurements',
       fields: {
         weight: 'Weight',
         waist: 'Waist',
         hip: 'Hips',
+        neck: 'Neck',
+        bodyFat: '% body fat',
+        leanMass: 'Lean mass',
         arm: 'Arm',
         leg: 'Leg',
       },
@@ -452,6 +464,16 @@ export const en: Dictionary = {
       volume: 'Volume',
       maxWeight: 'Max weight',
       estimated1RM: 'Estimated 1RM',
+      info: {
+        maxWeight: "The heaviest set you lifted that day, exactly as you logged it (no formula involved).",
+        estimated1RM:
+          'The max weight you could probably lift for one rep, estimated with the Epley formula: weight × (1 + reps/30). It’s an estimate, not a weight you actually lifted.',
+        volume: 'The sum of weight × reps across every set of that exercise in the session.',
+      },
+      tooltipPoint: '{metric} — {date}: {value}',
+      prBadge: 'PR',
+      trendUp: '▲ +{percent}% vs. 4 weeks ago',
+      trendDown: '▼ {percent}% vs. 4 weeks ago',
     },
     cardioPrGrid: {
       title: 'Cardio records',

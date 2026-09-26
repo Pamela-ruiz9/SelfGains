@@ -1,5 +1,6 @@
 import type { Measurement } from '../../../types/db';
 import type { Dictionary } from '../../../i18n/es';
+import { estimateBodyFatPercent, estimateLeanMassKg } from '../../../lib/bodyComposition';
 
 type MeasurementFieldLabelKey = keyof Dictionary['progreso']['measurementsSummary']['fields'];
 
@@ -18,21 +19,34 @@ export const MEASUREMENT_DISPLAY_FIELDS: {
   { key: 'weight_kg', labelKey: 'weight', unit: 'kg' },
   { key: 'waist_cm', labelKey: 'waist', unit: 'cm' },
   { key: 'hip_cm', labelKey: 'hip', unit: 'cm' },
+  { key: 'neck_cm', labelKey: 'neck', unit: 'cm' },
   { key: 'arm_cm', labelKey: 'arm', unit: 'cm' },
   { key: 'leg_cm', labelKey: 'leg', unit: 'cm' },
 ];
 
 interface Props {
   latest: Measurement | null;
+  sex: 'femenino' | 'masculino' | null;
   selected: string | null;
   onSelect: (key: string | null) => void;
   t: Dictionary['progreso']['measurementsSummary'];
 }
 
-export default function MeasurementsSummary({ latest, selected, onSelect, t }: Props) {
+export default function MeasurementsSummary({ latest, sex, selected, onSelect, t }: Props) {
   if (!latest) return null;
   const available = MEASUREMENT_DISPLAY_FIELDS.filter(({ key }) => latest[key] !== null);
-  if (available.length === 0) return null;
+
+  const bodyFatPercent = estimateBodyFatPercent({
+    sex,
+    neckCm: latest.neck_cm,
+    waistCm: latest.waist_cm,
+    hipCm: latest.hip_cm,
+    heightCm: latest.height_cm,
+  });
+  const leanMassKg =
+    latest.weight_kg !== null ? estimateLeanMassKg(latest.weight_kg, bodyFatPercent) : null;
+
+  if (available.length === 0 && bodyFatPercent === null) return null;
 
   return (
     <div className="flex flex-col gap-3">
@@ -53,6 +67,28 @@ export default function MeasurementsSummary({ latest, selected, onSelect, t }: P
             </span>
           </button>
         ))}
+        {bodyFatPercent !== null && (
+          <button
+            type="button"
+            onClick={() => onSelect(selected === 'body_fat_percent' ? null : 'body_fat_percent')}
+            className={`card-brutal card-brutal-tap flex flex-col gap-1 text-left transition-colors hover:border-acid ${
+              selected === 'body_fat_percent' ? 'border-acid' : ''
+            }`}
+          >
+            <span className="label-brutal">{t.fields.bodyFat}</span>
+            <span className="font-display text-2xl text-paper">
+              {bodyFatPercent} <span className="text-sm text-paper-dim">%</span>
+            </span>
+          </button>
+        )}
+        {leanMassKg !== null && (
+          <div className="card-brutal flex flex-col gap-1">
+            <span className="label-brutal">{t.fields.leanMass}</span>
+            <span className="font-display text-2xl text-paper">
+              {leanMassKg} <span className="text-sm text-paper-dim">kg</span>
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );
