@@ -395,6 +395,7 @@ export interface RecentPR {
 // cardio — para el tile "PR reciente" de la franja de resumen del
 // dashboard. `exerciseNameById`/`activityNameById` deben venir ya resueltos
 // por el caller (ProgressList ya tiene ambos mapas armados).
+// Si las fechas son iguales (mismo día), el PR de gimnasio gana.
 export function mostRecentPR(
   gymPRs: ExercisePR[],
   cardioPRs: CardioPR[],
