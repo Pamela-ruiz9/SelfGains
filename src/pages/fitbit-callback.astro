@@ -1,0 +1,69 @@
+---
+---
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Conectando con Google Health… · SelfGains</title>
+  </head>
+  <body style="background:#0c0c0a; color:#f4f1e4; font-family: sans-serif; display:flex; align-items:center; justify-content:center; min-height:100vh; margin:0;">
+    <p id="status">Conectando con Google Health…</p>
+    <script>
+      import { consumeFitbitOAuthState, connectFitbit } from '../lib/fitbit';
+
+      const base = import.meta.env.BASE_URL;
+      const statusEl = document.getElementById('status')!;
+
+      function fail(message: string) {
+        statusEl.textContent = message;
+      }
+
+      function goToPerfil(delayMs: number) {
+        let localePreference = 'es';
+        try {
+          localePreference = localStorage.getItem('selfgains-locale') || 'es';
+        } catch {
+          // localStorage puede fallar en navegación privada — se queda en 'es'.
+        }
+        const perfilPath = localePreference === 'en' ? base + 'en/perfil/' : base + 'perfil/';
+        setTimeout(() => window.location.replace(perfilPath), delayMs);
+      }
+
+      async function run() {
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get('code');
+        const returnedState = params.get('state');
+        const errorParam = params.get('error');
+
+        if (errorParam) {
+          fail('Google no autorizó la conexión. Volviendo a tu perfil…');
+          goToPerfil(2000);
+          return;
+        }
+        if (!code) {
+          fail('Falta el código de autorización. Volviendo a tu perfil…');
+          goToPerfil(2000);
+          return;
+        }
+        if (!consumeFitbitOAuthState(returnedState)) {
+          fail('No se pudo validar la respuesta de Google (state inválido). Volviendo a tu perfil…');
+          goToPerfil(2000);
+          return;
+        }
+
+        try {
+          await connectFitbit(code, base);
+          statusEl.textContent = '¡Listo! Volviendo a tu perfil…';
+        } catch (err) {
+          console.error(err);
+          fail('No se pudo completar la conexión con Google Health. Volviendo a tu perfil…');
+        } finally {
+          goToPerfil(1200);
+        }
+      }
+
+      run();
+    </script>
+  </body>
+</html>
