@@ -465,6 +465,16 @@ export const es = {
       volume: 'Volumen',
       maxWeight: 'Peso máximo',
       estimated1RM: '1RM estimado',
+      info: {
+        maxWeight: 'La serie más pesada que levantaste ese día, tal cual la registraste (sin ninguna fórmula).',
+        estimated1RM:
+          'El peso máximo que probablemente podrías levantar en una repetición, calculado con la fórmula de Epley: peso × (1 + reps/30). Es una estimación, no un peso que hayas levantado literalmente.',
+        volume: 'La suma de peso × repeticiones de todas las series de ese ejercicio en la sesión.',
+      },
+      tooltipPoint: '{metric} — {date}: {value}',
+      prBadge: 'PR',
+      trendUp: '▲ +{percent}% vs. hace 4 semanas',
+      trendDown: '▼ {percent}% vs. hace 4 semanas',
     },
     cardioPrGrid: {
       title: 'Récords de cardio',
