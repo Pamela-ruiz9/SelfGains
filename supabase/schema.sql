@@ -544,3 +544,9 @@ grant execute on function delete_own_account() to authenticated;
 -- una vez que hay sesión. Default 'es' porque toda la app ya es en
 -- español hoy — ningún perfil existente cambia de idioma con este ALTER.
 alter table profiles add column locale text not null default 'es' check (locale in ('es', 'en'));
+
+-- Circunferencia de cuello — habilita el cálculo de %grasa corporal
+-- (método Navy) en docs/superpowers/specs/2026-09-26-progreso-dashboard-y-fitbit-design.md
+-- sección 2.1. Opcional, como el resto de las circunferencias.
+alter table measurements add column neck_cm numeric;
+alter table profiles add column neck_cm numeric;
