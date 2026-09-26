@@ -173,6 +173,7 @@ Si la llamada a la Edge Function falla (Fitbit caído, token revocado desde la a
 - Sincronización en segundo plano de Fitbit (cron/Edge Function programada) — se decidió explícitamente en contra, ver sección 6.
 - Importar peso desde la báscula de Fitbit a Medidas — se decidió explícitamente en contra, para no pisar los datos manuales existentes.
 - Apple Health / Google Fit — no viable sin app nativa (Apple) o en proceso de discontinuación (Google), ver sección 6.
+- **Health Connect (Android)** — evaluado explícitamente durante el brainstorm y descartado para esta ronda. A diferencia de Fitbit, no tiene ninguna API web: solo se accede desde una app Android nativa (SDK `androidx.health.connect`), lo que implica crear un codebase nuevo (Kotlin, aunque sea un wrapper TWA liviano sobre la PWA actual), cuenta de Google Play Console (US$25 único), declaración de permisos de datos de salud sensibles ante Google (con posible revisión manual), y una política de privacidad publicada que hoy no existe. Cubre solo Android, dejando iOS afuera (a diferencia de Fitbit, que es multiplataforma por ser una API en la nube). Queda anotado como un proyecto propio a futuro — un paso deliberado hacia tener una app nativa, no una extensión chica de este spec.
 - "% músculo" real — no existe fórmula confiable por circunferencias; se sustituye por masa magra estimada (sección 2.1).
 - Cualquier cambio a `CardioProgressChart`/`MeasurementsChart` — ya son de una sola métrica/eje, no tienen el problema de la sección 3.
 
