@@ -28,6 +28,7 @@ jobs:
         env:
           PUBLIC_SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
           PUBLIC_SUPABASE_ANON_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }}
+          PUBLIC_FITBIT_CLIENT_ID: ${{ vars.PUBLIC_FITBIT_CLIENT_ID }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: ./dist
