@@ -53,7 +53,18 @@ const t = getDictionary(locale).sync.banner;
           if (!raw) return;
           var session = JSON.parse(raw);
           if (!session || !session.access_token) return;
-          window.location.replace(isEnglishHome ? base + 'en/progreso/' : base + 'progreso/');
+          // Redirige directo al idioma correcto según la preferencia guardada
+          // (no según el segmento de idioma de la URL actual) — la PWA
+          // instalada siempre reabre en su start_url fijo, que puede no
+          // coincidir con la preferencia actual del usuario. Si todavía no
+          // hay preferencia guardada, se usa el idioma de la URL actual
+          // como respaldo razonable.
+          var storedLocale = null;
+          try {
+            storedLocale = localStorage.getItem('selfgains-locale');
+          } catch (e2) {}
+          var wantsEnglish = storedLocale !== null ? storedLocale === 'en' : isEnglishHome;
+          window.location.replace(wantsEnglish ? base + 'en/progreso/' : base + 'progreso/');
         } catch (e) {}
       })();
     </script>

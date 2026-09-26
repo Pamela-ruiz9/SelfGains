@@ -12,7 +12,7 @@ export default function AdherenceRing({ daysTrained, daysElapsed, label }: Props
 
   return (
     <div className="flex flex-col items-center gap-2">
-      <svg width="96" height="96" viewBox="0 0 96 96" className="shrink-0" role="img" aria-label={`${daysTrained} de ${daysElapsed} — ${label}`}>
+      <svg width="96" height="96" viewBox="0 0 96 96" className="shrink-0" role="img" aria-label={`${daysTrained}/${daysElapsed} ${label}`}>
         <circle cx="48" cy="48" r={radius} fill="none" stroke="var(--color-paper-dim)" strokeOpacity="0.2" strokeWidth="8" />
         <circle
           cx="48"
