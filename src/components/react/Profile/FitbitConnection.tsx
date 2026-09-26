@@ -36,17 +36,21 @@ export default function FitbitConnection({ t }: Props) {
 
   function handleConnect() {
     const clientId = import.meta.env.PUBLIC_FITBIT_CLIENT_ID;
+    if (!clientId) {
+      setError(t.configError);
+      return;
+    }
     const base = import.meta.env.BASE_URL;
     window.location.href = buildFitbitAuthorizeUrl(clientId, base);
   }
 
-  if (connected === null) return null;
+  if (connected === null && !error) return null;
 
   return (
     <div className="flex flex-col gap-3">
       <p className="label-brutal text-acid">{t.label}</p>
       {error && <p className="font-mono text-xs text-blood">{error}</p>}
-      {connected ? (
+      {connected === true ? (
         <div className="flex items-center gap-3">
           <span className="font-mono text-sm text-paper-dim">{t.connected}</span>
           <button
@@ -58,11 +62,11 @@ export default function FitbitConnection({ t }: Props) {
             {disconnecting ? t.disconnecting : t.disconnect}
           </button>
         </div>
-      ) : (
+      ) : connected === false ? (
         <button type="button" onClick={handleConnect} className="btn-brutal-sm">
           {t.connect}
         </button>
-      )}
+      ) : null}
     </div>
   );
 }

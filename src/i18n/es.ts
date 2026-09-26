@@ -122,6 +122,7 @@ export const es = {
       disconnecting: 'Desconectando...',
       loadError: 'No se pudo consultar el estado de la conexión con Google Health.',
       disconnectError: 'No se pudo desconectar Google Health.',
+      configError: 'La conexión con Google Health todavía no está configurada.',
     },
     appearance: {
       label: 'Apariencia',

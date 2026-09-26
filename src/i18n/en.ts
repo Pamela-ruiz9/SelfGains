@@ -124,6 +124,7 @@ export const en: Dictionary = {
       disconnecting: 'Disconnecting...',
       loadError: 'Could not check the Google Health connection status.',
       disconnectError: 'Could not disconnect Google Health.',
+      configError: 'The Google Health connection is not configured yet.',
     },
     appearance: {
       label: 'Appearance',
