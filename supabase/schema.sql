@@ -550,3 +550,29 @@ alter table profiles add column locale text not null default 'es' check (locale 
 -- sección 2.1. Opcional, como el resto de las circunferencias.
 alter table measurements add column neck_cm numeric;
 alter table profiles add column neck_cm numeric;
+
+-- Integración Fitbit (docs/superpowers/specs/2026-09-26-progreso-dashboard-y-fitbit-design.md
+-- sección 6). refresh_token nunca debe poder leerse desde el cliente — ni
+-- siquiera de la fila propia. Solo la Edge Function (service_role, bypassea
+-- RLS/grants) inserta/actualiza/lee esa columna.
+create table fitbit_connections (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  fitbit_user_id text not null,
+  refresh_token text not null,
+  scope text not null,
+  connected_at timestamptz not null default now()
+);
+
+alter table fitbit_connections enable row level security;
+
+create policy "Users can see their own connection" on fitbit_connections
+  for select using (auth.uid() = user_id);
+create policy "Users can disconnect their own account" on fitbit_connections
+  for delete using (auth.uid() = user_id);
+
+-- Mismo patrón que connection_requests/routine_shares: un revoke de tabla
+-- completa + grant de columnas puntuales, porque un revoke de una sola
+-- columna no alcanza contra el grant de tabla completa que Supabase ya le
+-- da a `authenticated` por defecto.
+revoke select, insert, update on fitbit_connections from authenticated;
+grant select (user_id, fitbit_user_id, scope, connected_at) on fitbit_connections to authenticated;
