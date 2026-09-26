@@ -11,6 +11,7 @@ interface Props {
 
 const { title } = Astro.props;
 const base = import.meta.env.BASE_URL;
+const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
 const locale = Astro.currentLocale === 'en' ? 'en' : 'es';
 const t = getDictionary(locale).sync.banner;
 ---
@@ -33,6 +34,29 @@ const t = getDictionary(locale).sync.banner;
       rel="stylesheet"
     />
     <title>{title} · SelfGains</title>
+    <script is:inline define:vars={{ base, supabaseUrl }}>
+      (function () {
+        // Solo actúa en la home ("/" o "/en/") — cualquier otra pantalla no
+        // se toca. Heurística rápida sobre localStorage, no la verificación
+        // real de sesión (esa la sigue haciendo ProgressList con
+        // supabase.auth.getSession() al cargar Progreso) — si el token está
+        // vencido y no se puede refrescar, el usuario simplemente ve el
+        // estado "no has iniciado sesión" que Progreso ya maneja.
+        // Ver docs/superpowers/specs/2026-09-26-progreso-dashboard-y-fitbit-design.md sección 1.
+        var path = window.location.pathname;
+        var isSpanishHome = path === base;
+        var isEnglishHome = path === base + 'en/';
+        if (!isSpanishHome && !isEnglishHome) return;
+        try {
+          var ref = supabaseUrl.replace('https://', '').split('.')[0];
+          var raw = localStorage.getItem('sb-' + ref + '-auth-token');
+          if (!raw) return;
+          var session = JSON.parse(raw);
+          if (!session || !session.access_token) return;
+          window.location.replace(isEnglishHome ? base + 'en/progreso/' : base + 'progreso/');
+        } catch (e) {}
+      })();
+    </script>
     <script is:inline define:vars={{ base }}>
       (function () {
         // Corre en cada carga de página completa (no en navegación interna
