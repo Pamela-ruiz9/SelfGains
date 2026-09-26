@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../../../lib/supabase';
 import { getWorkoutsForCurrentUser, getSetsForWorkout, getSessionsForWorkout } from '../../../lib/workouts';
 import { getMyMeasurements } from '../../../lib/measurements';
+import { getMyProfile } from '../../../lib/profile';
+import { estimateBodyFatPercent } from '../../../lib/bodyComposition';
 import {
   calculatePRs,
   groupPRsByMuscle,
@@ -58,6 +60,7 @@ export default function ProgressList({
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [workouts, setWorkouts] = useState<WorkoutWithLogs[]>([]);
   const [measurements, setMeasurements] = useState<Measurement[]>([]);
+  const [sex, setSex] = useState<'femenino' | 'masculino' | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedExerciseId, setSelectedExerciseId] = useState<string | null>(null);
@@ -99,7 +102,12 @@ export default function ProgressList({
         setLoading(false);
         return;
       }
-      await Promise.all([loadWorkouts(), getMyMeasurements().then(setMeasurements)]);
+      const [, , profile] = await Promise.all([
+        loadWorkouts(),
+        getMyMeasurements().then(setMeasurements),
+        getMyProfile(),
+      ]);
+      setSex(profile?.sex ?? null);
     });
   }, []);
 
@@ -186,16 +194,36 @@ export default function ProgressList({
       >
         <MeasurementsSummary
           latest={latestMeasurement}
+          sex={sex}
           selected={selectedMeasurement}
           onSelect={setSelectedMeasurement}
           t={t.measurementsSummary}
         />
-        {selectedMeasurementField && (
+        {selectedMeasurement === 'body_fat_percent' ? (
           <MeasurementsChart
-            label={t.measurementsSummary.fields[selectedMeasurementField.labelKey]}
-            unit={selectedMeasurementField.unit}
-            points={progressForMeasurement(measurements, selectedMeasurementField.key)}
+            label={t.measurementsSummary.fields.bodyFat}
+            unit="%"
+            points={measurements
+              .map((m) => ({
+                date: m.date,
+                value: estimateBodyFatPercent({
+                  sex,
+                  neckCm: m.neck_cm,
+                  waistCm: m.waist_cm,
+                  hipCm: m.hip_cm,
+                  heightCm: m.height_cm,
+                }),
+              }))
+              .filter((p): p is { date: string; value: number } => p.value !== null)}
           />
+        ) : (
+          selectedMeasurementField && (
+            <MeasurementsChart
+              label={t.measurementsSummary.fields[selectedMeasurementField.labelKey]}
+              unit={selectedMeasurementField.unit}
+              points={progressForMeasurement(measurements, selectedMeasurementField.key)}
+            />
+          )
         )}
       </CollapsibleSection>
 
