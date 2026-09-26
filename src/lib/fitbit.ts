@@ -13,7 +13,8 @@ export interface FitbitDailyData {
   sleepMinutes: number | null;
 }
 
-const FITBIT_SCOPE = 'activity sleep heartrate';
+const GOOGLE_HEALTH_SCOPE =
+  'https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly https://www.googleapis.com/auth/googlehealth.sleep.readonly https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly';
 const OAUTH_STATE_KEY = 'selfgains-fitbit-oauth-state';
 
 export function fitbitRedirectUri(base: string): string {
@@ -21,7 +22,8 @@ export function fitbitRedirectUri(base: string): string {
 }
 
 // Guarda un `state` random en sessionStorage (protección CSRF estándar de
-// OAuth) y devuelve la URL de autorización de Fitbit lista para redirigir.
+// OAuth) y devuelve la URL de autorización de Google (Google Health API)
+// lista para redirigir.
 export function buildFitbitAuthorizeUrl(clientId: string, base: string): string {
   const state = crypto.randomUUID();
   sessionStorage.setItem(OAUTH_STATE_KEY, state);
@@ -29,10 +31,12 @@ export function buildFitbitAuthorizeUrl(clientId: string, base: string): string 
     response_type: 'code',
     client_id: clientId,
     redirect_uri: fitbitRedirectUri(base),
-    scope: FITBIT_SCOPE,
+    scope: GOOGLE_HEALTH_SCOPE,
     state,
+    access_type: 'offline',
+    prompt: 'consent',
   });
-  return `https://www.fitbit.com/oauth2/authorize?${params.toString()}`;
+  return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
 }
 
 // Compara el `state` devuelto por Fitbit contra el que se guardó antes de
