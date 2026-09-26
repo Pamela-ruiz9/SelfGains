@@ -96,10 +96,13 @@ async function handleData(
   }
 
   const tokens = await refreshRes.json();
-  await supabaseAdmin
+  const { error: updateError } = await supabaseAdmin
     .from('fitbit_connections')
     .update({ refresh_token: tokens.refresh_token })
     .eq('user_id', userId);
+  if (updateError) {
+    console.error('fitbit refresh_token update failed', updateError);
+  }
 
   const fitbitHeaders = { Authorization: `Bearer ${tokens.access_token}` };
   const [activityRes, sleepRes] = await Promise.all([
