@@ -30,10 +30,9 @@ interface Props {
 
 type Metric = 'maxWeight' | 'estimated1RM' | 'volume';
 
-const METRIC_COLOR: Record<Metric, string> = {
+const METRIC_COLOR: Record<'maxWeight' | 'estimated1RM', string> = {
   maxWeight: 'var(--color-acid)',
   estimated1RM: 'var(--color-blood)',
-  volume: 'var(--color-acid)',
 };
 
 function ChartTooltip({
