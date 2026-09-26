@@ -105,7 +105,7 @@ export default function ProgressList({
       const [, , profile] = await Promise.all([
         loadWorkouts(),
         getMyMeasurements().then(setMeasurements),
-        getMyProfile(),
+        getMyProfile().catch(() => null),
       ]);
       setSex(profile?.sex ?? null);
     });
