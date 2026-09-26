@@ -20,19 +20,23 @@ Ejecutar en un worktree aislado (`superpowers:using-git-worktrees`) creado **des
 
 ---
 
-### Task 1 (manual, hacerla primero — no bloquea el resto del código): Registrar la app en dev.fitbit.com
+### Task 1 (manual, hacerla primero — no bloquea el resto del código): Registrar la app en Google Cloud (Google Health API)
 
-Este task lo hace Pam directamente, en paralelo mientras el resto de los tasks de código avanzan — ningún otro task depende de tener las credenciales reales para *escribir* el código, solo para *probarlo* de punta a punta (Task 9).
+**Actualizado 2026-09-26** — Fitbit discontinuó su Web API clásica el mismo día que se escribió este plan; el registro en dev.fitbit.com ya está cerrado. Se reemplaza por la nueva Google Health API (ver spec sección 6.5). Este task lo hace Pam directamente, en paralelo mientras el resto de los tasks de código avanzan — ningún otro task depende de tener las credenciales reales para *escribir* el código, solo para *probarlo* de punta a punta (Task 9).
 
-- [ ] **Step 1:** Ir a https://dev.fitbit.com/apps/new, loguearse con una cuenta de Fitbit.
-- [ ] **Step 2:** Completar el formulario:
-  - **Application Name:** SelfGains (o el nombre que prefieras — es solo lo que Fitbit le muestra al usuario en la pantalla de autorización).
-  - **OAuth 2.0 Application Type:** Server (necesitamos client secret; "Personal" también funciona si Fitbit lo ofrece con secret, pero "Server" es la categoría pensada para esto).
-  - **Redirect URL:** agregar **dos** líneas —
+- [ ] **Step 1:** Ir a https://console.cloud.google.com/, crear un proyecto nuevo (o usar uno existente) para SelfGains.
+- [ ] **Step 2:** Habilitar la Google Health API para ese proyecto (buscar "Google Health API" en la biblioteca de APIs de la consola y habilitarla), y crear un OAuth 2.0 Client ID:
+  - Tipo de aplicación: **Web application** (server).
+  - **Authorized redirect URIs**, agregar **dos** líneas:
     - `https://Pamela-ruiz9.github.io/SelfGains/fitbit-callback/` (producción)
-    - `http://localhost:4321/SelfGains/fitbit-callback/` (para probar local con `astro preview`, que corre en el puerto 4321 por defecto — confirmar el puerto real que muestra la consola al correr `npm run preview` y ajustar si es distinto)
-  - **Default Access Type:** Read Only.
-- [ ] **Step 3:** Guardar. Copiar el **OAuth 2.0 Client ID** y el **Client Secret** que Fitbit muestra — van a hacer falta en el Task 3 (secret de la Edge Function) y en el Task 8 (variable de entorno del build).
+    - `http://localhost:4321/SelfGains/fitbit-callback/` (para probar local con `astro preview`, puerto 4321 por defecto — confirmar el puerto real que muestra la consola y ajustar si es distinto)
+  - Guardar. Copiar el **Client ID** y el **Client Secret**.
+- [ ] **Step 3:** En la pantalla de consentimiento OAuth ("OAuth consent screen" / "Audience"), agregar los scopes de Google Health que hacen falta (buscarlos por nombre en el picker de scopes):
+  - `https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly`
+  - `https://www.googleapis.com/auth/googlehealth.sleep.readonly`
+  - `https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly`
+- [ ] **Step 4 (importante, sin esto no funciona):** en la misma pantalla de consentimiento, agregar como **"Test users"** la cuenta de Google real que se va a usar para probar (la tuya, y la de cualquier beta tester como Art). Estos scopes son "Restricted" — sin esto, Google rechaza la autorización. Mientras la app tenga menos de 100 test users no hace falta ningún trámite adicional (no hay que pasar por la revisión de seguridad de terceros que Google exige para apps grandes) — cada usuario nuevo que quiera conectar su salud simplemente se agrega a mano acá.
+- [ ] **Step 5:** Pasar el Client ID y el Client Secret al agente — van a hacer falta en el Task 3 (secret de la Edge Function) y en el Task 6 (variable de entorno del build).
 
 ---
 
@@ -123,6 +127,13 @@ git commit -m "feat(db): tabla fitbit_connections con refresh_token bloqueado pa
 ---
 
 ### Task 3: Edge Function `fitbit` — intercambio y refresh de tokens
+
+**Actualizado 2026-09-26 (ver spec sección 6.5):** el código de esta task ya se implementó y deployó una vez contra la Fitbit Web API clásica (`api.fitbit.com`), pero esa API se discontinuó el mismo día — hay que reescribir el intercambio/refresh de tokens y las llamadas de datos contra la **Google Health API** en su lugar. Los pasos de abajo (scaffold, secrets, deploy, commit) siguen siendo los mismos; lo que cambia es el contenido real de `index.ts`:
+
+- **Token exchange/refresh:** endpoints estándar de Google OAuth 2.0 — `https://accounts.google.com/o/oauth2/v2/auth` (autorización, usado del lado del cliente en el Task 4) y `https://oauth2.googleapis.com/token` (intercambio y refresh, usado acá). El intercambio inicial necesita `grant_type=authorization_code`; el refresh, `grant_type=refresh_token`. A diferencia de Fitbit, Google **no garantiza devolver un `refresh_token` en cada refresh** (solo Fitbit rotaba en cada llamada) — conservar el `refresh_token` ya guardado si la respuesta del refresh no trae uno nuevo, actualizar solo si viene.
+- **Datos:** base `https://health.googleapis.com`, patrón `POST /v4/users/{userId}/dataTypes/{dataType}/dataPoints:dailyRollUp` con un `windowSize` de 1 día, una llamada por `dataType` (`steps`, `sleep`, `daily-resting-heart-rate`, `active-energy-burned`, `active-zone-minutes`) en vez de las 2 llamadas de Fitbit (`activities`/`sleep`). El **formato exacto de la respuesta JSON no está confirmado** (documentación de Google todavía incompleta el día de la migración) — implementar el parseo de forma defensiva (nunca asumir una key sin chequear su tipo, igual que ya hace el código actual con `typeof summary.steps === 'number'`) y esperar tener que ajustar el mapeo exacto una vez que el Task 9 (verificación con una cuenta real) revele la forma real de la respuesta.
+- **Scopes:** `https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly`, `https://www.googleapis.com/auth/googlehealth.sleep.readonly`, `https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly` (usados del lado del cliente en el Task 4, no acá).
+- Los nombres `FITBIT_CLIENT_ID`/`FITBIT_CLIENT_SECRET` (secrets) y `fitbit_connections` (tabla) se mantienen tal cual por ahora, aunque técnicamente ya no son de Fitbit — evita otra migración/rename innecesario; es un detalle interno, no visible para el usuario.
 
 **Files:**
 - Create: `supabase/functions/fitbit/index.ts`
@@ -348,6 +359,13 @@ git commit -m "feat(fitbit): Edge Function para intercambio/refresh de tokens y 
 ---
 
 ### Task 4: `src/lib/fitbit.ts` — cliente delgado
+
+**Actualizado 2026-09-26 (ver spec sección 6.5):** esta task ya se implementó contra Fitbit; casi todo se mantiene igual (`consumeFitbitOAuthState`, `connectFitbit`, `getFitbitConnectionStatus`, `disconnectFitbit`, `getFitbitDailyData` no cambian — siguen llamando a la misma Edge Function/tabla). Lo único que cambia es **`buildFitbitAuthorizeUrl`**, que ahora arma la URL de autorización de Google en vez de la de Fitbit:
+
+- Base: `https://accounts.google.com/o/oauth2/v2/auth` (en vez de `https://www.fitbit.com/oauth2/authorize`).
+- `scope` pasa a ser los 3 scopes de Google separados por espacio: `https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly https://www.googleapis.com/auth/googlehealth.sleep.readonly https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly` (reemplaza la constante `FITBIT_SCOPE`).
+- Agregar dos parámetros nuevos, obligatorios para que Google devuelva un `refresh_token` utilizable: `access_type=offline` y `prompt=consent`.
+- El resto de la función (generar y guardar el `state` en `sessionStorage`, devolver la URL armada) no cambia.
 
 **Files:**
 - Create: `src/lib/fitbit.ts`
