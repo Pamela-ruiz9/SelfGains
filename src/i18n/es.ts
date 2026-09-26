@@ -114,6 +114,15 @@ export const es = {
       es: 'Español',
       en: 'English',
     },
+    fitbit: {
+      label: 'Google Health',
+      connect: 'Conectar con Google Health',
+      connected: 'Conectado a Google Health',
+      disconnect: 'Desconectar',
+      disconnecting: 'Desconectando...',
+      loadError: 'No se pudo consultar el estado de la conexión con Google Health.',
+      disconnectError: 'No se pudo desconectar Google Health.',
+    },
     appearance: {
       label: 'Apariencia',
       dark: 'Oscuro',

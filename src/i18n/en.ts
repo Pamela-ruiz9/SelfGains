@@ -116,6 +116,15 @@ export const en: Dictionary = {
       es: 'Español',
       en: 'English',
     },
+    fitbit: {
+      label: 'Google Health',
+      connect: 'Connect with Google Health',
+      connected: 'Connected to Google Health',
+      disconnect: 'Disconnect',
+      disconnecting: 'Disconnecting...',
+      loadError: 'Could not check the Google Health connection status.',
+      disconnectError: 'Could not disconnect Google Health.',
+    },
     appearance: {
       label: 'Appearance',
       dark: 'Dark',

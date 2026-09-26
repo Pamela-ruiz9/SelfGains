@@ -9,6 +9,7 @@ import { DEFAULT_MAP_CENTER, getMyTrainerProfile, upsertTrainerProfile } from '.
 import { DISCIPLINES } from '../ActivityPicker/ActivityPicker';
 import MapPicker from '../Shared/MapPicker';
 import Avatar from '../Shared/Avatar';
+import FitbitConnection from './FitbitConnection';
 import type { Profile } from '../../../types/db';
 import type { Dictionary } from '../../../i18n';
 
@@ -364,6 +365,8 @@ export default function ProfileForm({
           </button>
         </div>
       </div>
+
+      <FitbitConnection t={t.fitbit} />
 
       <div className="flex flex-col gap-3">
         <p className="label-brutal text-acid">{t.appearance.label}</p>
