@@ -271,6 +271,7 @@ export default function ProgressList({
           : fitbitData.restingHeartRate !== null
             ? { value: `${fitbitData.restingHeartRate} bpm`, sub: t.sectionGrid.heartRateSub }
             : null;
+  const showActivityCard = fitbitConnected;
 
   const panels: Record<SectionKey, ReactNode> = {
     medidas: (
@@ -413,6 +414,7 @@ export default function ProgressList({
         leadingDiscipline={leadingDisciplineInfo}
         mostRecentWorkoutDate={mostRecentWorkoutDate}
         activityPreview={activityPreview}
+        showActivityCard={showActivityCard}
         panels={panels}
         disciplinesT={disciplinesT}
         disciplineSummaryT={t.disciplineSummary}

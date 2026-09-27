@@ -458,6 +458,7 @@ export const en: Dictionary = {
       caloriesSub: 'burned today',
       activeMinutesSub: 'active today',
       heartRateSub: 'resting HR today',
+      viewDetails: 'View details',
     },
     measurementsSummary: {
       title: 'Your measurements',

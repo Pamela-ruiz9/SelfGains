@@ -25,6 +25,7 @@ interface Props {
   leadingDiscipline: LeadingDisciplineInfo | null;
   mostRecentWorkoutDate: string | null;
   activityPreview: ActivityPreview | null;
+  showActivityCard: boolean;
   panels: Record<SectionKey, ReactNode>;
   disciplinesT: Dictionary['disciplines'];
   disciplineSummaryT: Dictionary['progreso']['disciplineSummary'];
@@ -41,6 +42,7 @@ export default function ProgressSectionGrid({
   leadingDiscipline,
   mostRecentWorkoutDate,
   activityPreview,
+  showActivityCard,
   panels,
   disciplinesT,
   disciplineSummaryT,
@@ -115,14 +117,14 @@ export default function ProgressSectionGrid({
     },
   ];
 
-  if (activityPreview) {
+  if (showActivityCard) {
     cards.push({
       key: 'actividad',
       icon: <PulseIcon className="h-5 w-5" />,
       color: GLOW_PALETTE[3],
       label: activityTitle,
-      value: activityPreview.value,
-      sub: activityPreview.sub,
+      value: activityPreview?.value ?? '—',
+      sub: activityPreview?.sub ?? t.viewDetails,
     });
   }
 

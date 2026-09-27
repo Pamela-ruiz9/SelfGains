@@ -459,6 +459,7 @@ export const es = {
       caloriesSub: 'quemadas hoy',
       activeMinutesSub: 'activos hoy',
       heartRateSub: 'FC en reposo hoy',
+      viewDetails: 'Ver detalles',
     },
     measurementsSummary: {
       title: 'Tus medidas',
