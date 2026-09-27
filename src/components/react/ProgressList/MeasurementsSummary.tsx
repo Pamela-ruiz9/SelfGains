@@ -29,7 +29,13 @@ export const MEASUREMENT_DISPLAY_FIELDS: {
 
 // El peso usa ScaleIcon; el resto de los campos de cinta métrica comparten
 // TapeMeasureIcon — solo el color (GLOW_PALETTE, cíclico) los distingue.
-const FIELD_ICON: Record<string, ComponentType<{ className?: string }>> = {
+// Tipado por las keys reales de MEASUREMENT_DISPLAY_FIELDS (no `string`
+// suelto) para que TypeScript obligue a cubrir cualquier campo nuevo que se
+// agregue ahí — de lo contrario un campo sin ícono compilaría igual y
+// rompería el render en tiempo de ejecución.
+type CircumferenceOrWeightKey = 'weight_kg' | 'waist_cm' | 'hip_cm' | 'neck_cm' | 'arm_cm' | 'leg_cm';
+
+const FIELD_ICON: Record<CircumferenceOrWeightKey, ComponentType<{ className?: string }>> = {
   weight_kg: ScaleIcon,
   waist_cm: TapeMeasureIcon,
   hip_cm: TapeMeasureIcon,
@@ -67,7 +73,11 @@ export default function MeasurementsSummary({ latest, sex, selected, onSelect, t
       <p className="label-brutal text-acid">{t.title}</p>
       <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {available.map(({ key, labelKey, unit }, index) => {
-          const Icon = FIELD_ICON[key];
+          // `key` viene tipado como `keyof Measurement` (MEASUREMENT_DISPLAY_FIELDS
+          // no lo estrecha), pero en runtime siempre es uno de los 6 campos de
+          // esa lista — el cast documenta esa garantía sin volver a ensanchar
+          // el tipo de FIELD_ICON.
+          const Icon = FIELD_ICON[key as CircumferenceOrWeightKey];
           return (
             <GlowTile
               key={key}
