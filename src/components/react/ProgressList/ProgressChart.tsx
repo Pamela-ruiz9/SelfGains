@@ -65,6 +65,7 @@ function ChartTooltip({
 export default function ProgressChart({ exerciseId, points, exercises, onSelectExercise, t }: Props) {
   const [weightUnit] = useState(() => getWeightUnit());
   const [metric, setMetric] = useState<Metric>('maxWeight');
+  const [showInfo, setShowInfo] = useState(false);
   const exerciseName = exercises.find((e) => e.id === exerciseId)?.name ?? exerciseId;
 
   const displayPoints = useMemo(
@@ -117,9 +118,24 @@ export default function ProgressChart({ exerciseId, points, exercises, onSelectE
       <div className="card-brutal">
         <div className="mb-1 flex items-center gap-2">
           <p className="font-display text-2xl text-paper">{exerciseName}</p>
-          <div className="group relative flex h-5 w-5 items-center justify-center rounded-full border border-paper-dim/60 text-xs text-paper-dim">
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={() => setShowInfo((v) => !v)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                setShowInfo((v) => !v);
+              }
+            }}
+            className="group relative flex h-5 w-5 cursor-pointer items-center justify-center rounded-full border border-paper-dim/60 text-xs text-paper-dim"
+          >
             i
-            <div className="pointer-events-none absolute left-0 top-6 z-10 w-60 rounded-control border border-paper-dim/40 bg-surface p-3 text-xs text-paper-dim opacity-0 shadow-lg transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+            <div
+              className={`pointer-events-none absolute left-0 top-6 z-10 w-60 rounded-control border border-paper-dim/40 bg-surface p-3 text-xs text-paper-dim shadow-lg transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 ${
+                showInfo ? 'opacity-100' : 'opacity-0'
+              }`}
+            >
               {infoText}
             </div>
           </div>
