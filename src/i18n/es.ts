@@ -452,7 +452,7 @@ export const es = {
       weightTrendSub: 'vs. hace 4 semanas',
       measurementsCountSub: 'mediciones registradas',
       noDataYet: 'Sin entrenamientos aún',
-      disciplineSubAllTime: 'tu foco en total',
+      disciplineAllTimeSub: 'tu foco general',
       today: 'Hoy',
       yesterday: 'Ayer',
       lastWorkoutSub: 'último registrado',

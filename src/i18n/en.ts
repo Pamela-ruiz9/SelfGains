@@ -451,7 +451,7 @@ export const en: Dictionary = {
       weightTrendSub: 'vs. 4 weeks ago',
       measurementsCountSub: 'measurements logged',
       noDataYet: 'No workouts yet',
-      disciplineSubAllTime: 'your overall focus',
+      disciplineAllTimeSub: 'your overall focus',
       today: 'Today',
       yesterday: 'Yesterday',
       lastWorkoutSub: 'last logged',
