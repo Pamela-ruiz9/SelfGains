@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Area,
   Bar,
@@ -68,6 +68,10 @@ export default function ProgressChart({ exerciseId, points, exercises, onSelectE
   const [showInfo, setShowInfo] = useState(false);
   const exerciseName = exercises.find((e) => e.id === exerciseId)?.name ?? exerciseId;
 
+  useEffect(() => {
+    setShowInfo(false);
+  }, [exerciseId]);
+
   const displayPoints = useMemo(
     () =>
       points.map((p) => ({
@@ -118,19 +122,16 @@ export default function ProgressChart({ exerciseId, points, exercises, onSelectE
       <div className="card-brutal">
         <div className="mb-1 flex items-center gap-2">
           <p className="font-display text-2xl text-paper">{exerciseName}</p>
-          <div
-            role="button"
-            tabIndex={0}
+          <button
+            type="button"
             onClick={() => setShowInfo((v) => !v)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                setShowInfo((v) => !v);
-              }
-            }}
-            className="group relative flex h-5 w-5 cursor-pointer items-center justify-center rounded-full border border-paper-dim/60 text-xs text-paper-dim"
+            aria-label="Más información"
+            aria-expanded={showInfo}
+            className="group relative flex h-5 w-5 items-center justify-center rounded-full border border-paper-dim/60 text-xs text-paper-dim"
           >
             i
+            {/* Tap toggles showInfo; hover/focus keep working via the CSS-only
+                group-hover/group-focus-within variants layered alongside it. */}
             <div
               className={`pointer-events-none absolute left-0 top-6 z-10 w-60 rounded-control border border-paper-dim/40 bg-surface p-3 text-xs text-paper-dim shadow-lg transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 ${
                 showInfo ? 'opacity-100' : 'opacity-0'
@@ -138,7 +139,7 @@ export default function ProgressChart({ exerciseId, points, exercises, onSelectE
             >
               {infoText}
             </div>
-          </div>
+          </button>
           {trend !== null && (
             <span className="ml-auto rounded-control border border-acid px-2 py-0.5 font-mono text-xs text-acid">
               {(trend >= 0 ? t.trendUp : t.trendDown).replace('{percent}', String(Math.abs(trend)))}
