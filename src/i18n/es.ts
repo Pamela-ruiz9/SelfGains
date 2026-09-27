@@ -448,6 +448,18 @@ export const es = {
       bodyFat: '% grasa',
       stepsToday: 'Pasos hoy',
     },
+    sectionGrid: {
+      weightTrendSub: 'vs. hace 4 semanas',
+      measurementsCountSub: 'mediciones registradas',
+      noDataYet: 'Sin entrenamientos aún',
+      disciplineSubAllTime: 'tu foco en total',
+      today: 'Hoy',
+      yesterday: 'Ayer',
+      lastWorkoutSub: 'último registrado',
+      caloriesSub: 'quemadas hoy',
+      activeMinutesSub: 'activos hoy',
+      heartRateSub: 'FC en reposo hoy',
+    },
     measurementsSummary: {
       title: 'Tus medidas',
       fields: {

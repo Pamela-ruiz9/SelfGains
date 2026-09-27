@@ -447,6 +447,18 @@ export const en: Dictionary = {
       bodyFat: '% body fat',
       stepsToday: 'Steps today',
     },
+    sectionGrid: {
+      weightTrendSub: 'vs. 4 weeks ago',
+      measurementsCountSub: 'measurements logged',
+      noDataYet: 'No workouts yet',
+      disciplineSubAllTime: 'your overall focus',
+      today: 'Today',
+      yesterday: 'Yesterday',
+      lastWorkoutSub: 'last logged',
+      caloriesSub: 'burned today',
+      activeMinutesSub: 'active today',
+      heartRateSub: 'resting HR today',
+    },
     measurementsSummary: {
       title: 'Your measurements',
       fields: {
