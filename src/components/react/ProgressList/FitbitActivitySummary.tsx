@@ -39,9 +39,11 @@ export default function FitbitActivitySummary({ data, t }: Props) {
       {data.restingHeartRate !== null && (
         <Tile label={t.restingHeartRate} value={`${data.restingHeartRate} bpm`} />
       )}
-      {data.caloriesOut !== null && <Tile label={t.calories} value={`${data.caloriesOut} kcal`} />}
+      {data.caloriesOut !== null && (
+        <Tile label={t.calories} value={`${Math.round(data.caloriesOut)} kcal`} />
+      )}
       {data.activeMinutes !== null && (
-        <Tile label={t.activeMinutes} value={formatMinutes(data.activeMinutes)} />
+        <Tile label={t.activeMinutes} value={formatMinutes(Math.round(data.activeMinutes))} />
       )}
       {data.sleepMinutes !== null && <Tile label={t.sleep} value={formatMinutes(data.sleepMinutes)} />}
     </div>

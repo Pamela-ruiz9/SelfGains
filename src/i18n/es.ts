@@ -526,7 +526,7 @@ export const es = {
     fitbitActivity: {
       title: 'Actividad diaria (Google Health)',
       steps: 'Pasos',
-      restingHeartRate: 'FC en reposo',
+      restingHeartRate: 'Frecuencia cardíaca en reposo',
       calories: 'Calorías',
       activeMinutes: 'Minutos activos',
       sleep: 'Sueño',

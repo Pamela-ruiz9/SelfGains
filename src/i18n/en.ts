@@ -524,7 +524,7 @@ export const en: Dictionary = {
     fitbitActivity: {
       title: 'Daily activity (Google Health)',
       steps: 'Steps',
-      restingHeartRate: 'Resting HR',
+      restingHeartRate: 'Resting heart rate',
       calories: 'Calories',
       activeMinutes: 'Active minutes',
       sleep: 'Sleep',
