@@ -439,12 +439,18 @@ export interface WeightTrend {
 // aplicado a `measurements` en vez de a un ejercicio. Null si no hay
 // suficiente historial de peso (0 o 1 medición con peso, o todas caen
 // dentro de la ventana de 4 semanas).
+//
+// No asume que `measurements` venga ordenado — lo ordena por fecha
+// ascendente acá mismo, así "el último" y "el primero dentro de la
+// ventana" son siempre correctos sin importar el orden del caller (hoy
+// `getMyMeasurements()` ya devuelve orden ascendente, pero esta función no
+// debe depender de eso).
 export function weightTrend(
   measurements: { date: string; weight_kg: number | null }[]
 ): WeightTrend | null {
-  const withWeight = measurements.filter(
-    (m): m is { date: string; weight_kg: number } => m.weight_kg !== null
-  );
+  const withWeight = measurements
+    .filter((m): m is { date: string; weight_kg: number } => m.weight_kg !== null)
+    .sort((a, b) => a.date.localeCompare(b.date));
   if (withWeight.length === 0) return null;
   const latest = withWeight[withWeight.length - 1];
   const latestDate = new Date(latest.date);
@@ -457,7 +463,11 @@ export function weightTrend(
 
 // La disciplina con más sesiones dentro de la lista de resúmenes recibida
 // (el caller decide el alcance: todo el historial, o solo una ventana de
-// fechas ya filtrada). Null si la lista está vacía.
+// fechas ya filtrada). Null si la lista está vacía. Empate en sessionCount:
+// gana la primera entrada de `summaries` — en la práctica, dado el orden
+// fijo en que summarizeByDiscipline empuja sus resultados (gym, luego
+// running/natacion/combate/otros), esto significa "gym gana empates",
+// mismo espíritu que el desempate documentado en mostRecentPR.
 export function topDiscipline(summaries: DisciplineSummary[]): DisciplineSummary | null {
   if (summaries.length === 0) return null;
   return summaries.reduce((best, s) => (s.sessionCount > best.sessionCount ? s : best), summaries[0]);

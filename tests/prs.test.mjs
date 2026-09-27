@@ -54,6 +54,26 @@ test('weightTrend: ignora una línea base a menos de 4 semanas (usa la más anti
   assert.equal(result.deltaKg, 1);
 });
 
+test('weightTrend: línea base a exactamente 28 días cuenta como dentro de la ventana', () => {
+  // 2026-08-04 -> 2026-09-01 son exactamente 28 días (límite inclusivo:
+  // `>=`, no `>`).
+  const result = weightTrend([
+    { date: '2026-08-04', weight_kg: 80 },
+    { date: '2026-09-01', weight_kg: 78.5 },
+  ]);
+  assert.ok(result !== null);
+  assert.equal(result.deltaKg, -1.5);
+});
+
+test('weightTrend: funciona igual si las mediciones llegan desordenadas', () => {
+  const result = weightTrend([
+    { date: '2026-09-01', weight_kg: 80 },
+    { date: '2026-08-05', weight_kg: 78.5 },
+  ]);
+  assert.ok(result !== null);
+  assert.equal(result.deltaKg, 1.5);
+});
+
 test('topDiscipline: lista vacía devuelve null', () => {
   assert.equal(topDiscipline([]), null);
 });
@@ -64,4 +84,12 @@ test('topDiscipline: devuelve la disciplina con más sesiones', () => {
     { discipline: 'running', sessionCount: 5, totalMinutes: 120, setCount: null },
   ]);
   assert.equal(result?.discipline, 'running');
+});
+
+test('topDiscipline: en un empate gana la primera entrada de la lista', () => {
+  const result = topDiscipline([
+    { discipline: 'gym', sessionCount: 3, totalMinutes: null, setCount: 10 },
+    { discipline: 'running', sessionCount: 3, totalMinutes: 90, setCount: null },
+  ]);
+  assert.equal(result?.discipline, 'gym');
 });
