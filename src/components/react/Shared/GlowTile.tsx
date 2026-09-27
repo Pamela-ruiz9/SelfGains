@@ -26,7 +26,7 @@ export default function GlowTile({ icon, color, label, value, sub, selected, onC
       />
       <div className="relative z-10 flex items-center justify-between gap-2">
         <span className="label-brutal">{label}</span>
-        <span className="h-5 w-5 shrink-0" style={{ color }}>
+        <span aria-hidden="true" className="h-5 w-5 shrink-0" style={{ color }}>
           {icon}
         </span>
       </div>
