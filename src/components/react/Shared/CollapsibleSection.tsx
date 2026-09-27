@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 
 interface CollapsibleSectionProps {
   title: string;
@@ -15,9 +15,21 @@ interface CollapsibleSectionProps {
 // texto plano de siempre, ya que ahí el contexto de "esto es una sección"
 // es obvio por el contenido debajo.
 export default function CollapsibleSection({ title, open, onToggle, badge, children }: CollapsibleSectionProps) {
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  // Solo dispara cuando `open` pasa a true (no en cada render, no al
+  // cerrar) — así el usuario no tiene que bajar manualmente a ver lo que
+  // acaba de desplegar.
+  useEffect(() => {
+    if (open) {
+      buttonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [open]);
+
   return (
     <div className="flex flex-col gap-3">
       <button
+        ref={buttonRef}
         type="button"
         onClick={onToggle}
         aria-expanded={open}
