@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import GlowTile from '../Shared/GlowTile';
 import { ScaleIcon, LayersIcon, CalendarIcon, PulseIcon, GLOW_PALETTE } from '../../../lib/progressIcons';
-import { localDateStr } from '../../../lib/weekdays';
+import { localDateStr, localYesterdayStr } from '../../../lib/weekdays';
 import type { Dictionary } from '../../../i18n/es';
 
 export type SectionKey = 'medidas' | 'disciplina' | 'entrenamientos' | 'actividad';
@@ -70,7 +70,7 @@ export default function ProgressSectionGrid({
     : t.noDataYet;
 
   const today = localDateStr();
-  const yesterday = localDateStr(new Date(Date.now() - 24 * 60 * 60 * 1000));
+  const yesterday = localYesterdayStr();
   const workoutsValue =
     mostRecentWorkoutDate === null
       ? '—'
@@ -129,17 +129,21 @@ export default function ProgressSectionGrid({
   return (
     <div className="flex flex-col gap-4">
       <div className="grid grid-cols-2 gap-3">
-        {cards.map((card) => (
-          <GlowTile
+        {cards.map((card, index) => (
+          <div
             key={card.key}
-            icon={card.icon}
-            color={card.color}
-            label={card.label}
-            value={card.value}
-            sub={card.sub}
-            selected={active === card.key}
-            onClick={() => onSelect(card.key)}
-          />
+            className={cards.length % 2 === 1 && index === cards.length - 1 ? 'col-span-2' : undefined}
+          >
+            <GlowTile
+              icon={card.icon}
+              color={card.color}
+              label={card.label}
+              value={card.value}
+              sub={card.sub}
+              selected={active === card.key}
+              onClick={() => onSelect(card.key)}
+            />
+          </div>
         ))}
       </div>
       {active !== null && <div className="flex flex-col gap-6">{panels[active]}</div>}
