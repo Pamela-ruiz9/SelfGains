@@ -489,6 +489,7 @@ export const es = {
       volume: 'Volumen',
       maxWeight: 'Peso máximo',
       estimated1RM: '1RM estimado',
+      infoButtonLabel: 'Más información',
       info: {
         maxWeight: 'La serie más pesada que levantaste ese día, tal cual la registraste (sin ninguna fórmula).',
         estimated1RM:

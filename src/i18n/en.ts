@@ -488,6 +488,7 @@ export const en: Dictionary = {
       volume: 'Volume',
       maxWeight: 'Max weight',
       estimated1RM: 'Estimated 1RM',
+      infoButtonLabel: 'More information',
       info: {
         maxWeight: "The heaviest set you lifted that day, exactly as you logged it (no formula involved).",
         estimated1RM:

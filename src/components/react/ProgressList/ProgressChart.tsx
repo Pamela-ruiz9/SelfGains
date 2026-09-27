@@ -125,7 +125,7 @@ export default function ProgressChart({ exerciseId, points, exercises, onSelectE
           <button
             type="button"
             onClick={() => setShowInfo((v) => !v)}
-            aria-label="Más información"
+            aria-label={t.infoButtonLabel}
             aria-expanded={showInfo}
             className="group relative flex h-5 w-5 items-center justify-center rounded-full border border-paper-dim/60 text-xs text-paper-dim"
           >
