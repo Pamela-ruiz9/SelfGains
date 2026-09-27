@@ -49,7 +49,16 @@ async function fetchDailyRollup(
           Authorization: `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ range: { start, end }, windowSizeDays: 1 }),
+        // El `range` de Google Health espera cada extremo como un
+        // `CivilDateTime` — un objeto con un campo `date` anidado, no un
+        // {year,month,day} plano — confirmado contra el discovery doc real
+        // de la API (health.googleapis.com/$discovery/rest?version=v4) tras
+        // que la forma plana devolviera 400 "Unknown name year at
+        // 'range.start'" en producción.
+        body: JSON.stringify({
+          range: { start: { date: start }, end: { date: end } },
+          windowSizeDays: 1,
+        }),
       }
     );
     if (!res.ok) {
@@ -78,13 +87,64 @@ function firstRollupPoint(response: unknown): Record<string, unknown> | null {
 }
 
 // Nunca asume que una clave existe — cada campo se valida con typeof antes
-// de usarse, igual que hacía el parseo de la respuesta de Fitbit.
+// de usarse, igual que hacía el parseo de la respuesta de Fitbit. Los
+// campos int64 de Google Health (ej. countSum, sumInPeakHeartZone) vienen
+// serializados como STRING, no number, por convención de la API — hay que
+// aceptar ambos.
 function numberField(point: Record<string, unknown> | null, outerKey: string, innerKey: string): number | null {
   if (!point) return null;
   const outer = point[outerKey];
   if (!outer || typeof outer !== 'object') return null;
   const value = (outer as Record<string, unknown>)[innerKey];
-  return typeof value === 'number' ? value : null;
+  if (typeof value === 'number') return value;
+  if (typeof value === 'string' && value.trim() !== '' && !Number.isNaN(Number(value))) {
+    return Number(value);
+  }
+  return null;
+}
+
+// Suma un conjunto de campos int64-como-string dentro del mismo objeto
+// externo — usado para activeZoneMinutes, que viene partido en 3 zonas de
+// FC en vez de un solo total.
+function sumIntStringFields(
+  point: Record<string, unknown> | null,
+  outerKey: string,
+  innerKeys: string[]
+): number | null {
+  if (!point) return null;
+  const outer = point[outerKey];
+  if (!outer || typeof outer !== 'object') return null;
+  const record = outer as Record<string, unknown>;
+  let sum = 0;
+  let sawAny = false;
+  for (const key of innerKeys) {
+    const value = record[key];
+    if (typeof value === 'string' && value.trim() !== '' && !Number.isNaN(Number(value))) {
+      sum += Number(value);
+      sawAny = true;
+    } else if (typeof value === 'number') {
+      sum += value;
+      sawAny = true;
+    }
+  }
+  return sawAny ? sum : null;
+}
+
+// FC en reposo: Google Health la modela como un rango personal
+// (beatsPerMinuteMin/Max), no un promedio único — se muestra el punto medio
+// de ese rango como el número más representativo para un tile de una sola
+// cifra.
+function restingHeartRateField(point: Record<string, unknown> | null): number | null {
+  if (!point) return null;
+  const outer = point['restingHeartRatePersonalRange'];
+  if (!outer || typeof outer !== 'object') return null;
+  const record = outer as Record<string, unknown>;
+  const min = record['beatsPerMinuteMin'];
+  const max = record['beatsPerMinuteMax'];
+  if (typeof min === 'number' && typeof max === 'number') {
+    return Math.round((min + max) / 2);
+  }
+  return null;
 }
 
 // Intercambia el `code` de la redirección de Google por tokens y guarda el
@@ -206,20 +266,29 @@ async function handleData(
   ]);
 
   return jsonResponse({
-    // steps: forma de respuesta CONFIRMADA en la documentación de Google
-    // ({ rollupDataPoints: [{ steps: { count_sum } }] }).
-    steps: numberField(firstRollupPoint(stepsRes), 'steps', 'count_sum'),
-    // Los 4 campos siguientes son un best-effort SIN CONFIRMAR: la
-    // documentación de Google Health no tenía ejemplos concretos de
-    // respuesta para estos dataTypes al momento de escribir esto (la
-    // migración forzada de Fitbit fue el mismo día). Siguen el mismo patrón
-    // de nombres que el dataType/steps, pero es esperable que haya que
-    // ajustarlos tras la verificación E2E con una cuenta real conectada
-    // (ver spec sección 6.5 y Task 9 del plan).
-    restingHeartRate: numberField(firstRollupPoint(restingHrRes), 'restingHeartRate', 'beats_per_minute_average'),
-    caloriesOut: numberField(firstRollupPoint(activeEnergyRes), 'activeEnergyBurned', 'kcal_sum'),
-    activeMinutes: numberField(firstRollupPoint(activeZoneRes), 'activeZoneMinutes', 'minutes_sum'),
-    sleepMinutes: numberField(firstRollupPoint(sleepRes), 'sleep', 'duration_minutes_sum'),
+    // Todos los campos de abajo (salvo sleep) están confirmados contra el
+    // discovery doc real de la API (health.googleapis.com/$discovery/rest?
+    // version=v4) — no contra documentación HTML resumida, que resultó
+    // imprecisa (nombres en camelCase, algunos como string-int64, FC en
+    // reposo es un rango min/max sin promedio, minutos activos viene
+    // partido en 3 zonas de FC). `steps.countSum` es int64-como-string, por
+    // eso `numberField` acepta string además de number.
+    steps: numberField(firstRollupPoint(stepsRes), 'steps', 'countSum'),
+    restingHeartRate: restingHeartRateField(firstRollupPoint(restingHrRes)),
+    caloriesOut: numberField(firstRollupPoint(activeEnergyRes), 'activeEnergyBurned', 'kcalSum'),
+    activeMinutes: sumIntStringFields(firstRollupPoint(activeZoneRes), 'activeZoneMinutes', [
+      'sumInPeakHeartZone',
+      'sumInFatBurnHeartZone',
+      'sumInCardioHeartZone',
+    ]),
+    // Sleep NO aparece como campo del DailyRollupDataPoint en el discovery
+    // doc — a diferencia de los otros 4, no es un dataType que se pueda
+    // pedir vía dataPoints:dailyRollUp (sleep se modela como sesiones con
+    // inicio/fin, no como un total diario acumulable). Esta llamada sigue
+    // ahí y falla de forma resiliente (null, sin romper el resto) mientras
+    // se investiga el endpoint correcto para sesiones de sueño — pendiente,
+    // no es un bug de mapeo como los otros 4 eran.
+    sleepMinutes: numberField(firstRollupPoint(sleepRes), 'sleep', 'durationMinutesSum'),
   });
 }
 
