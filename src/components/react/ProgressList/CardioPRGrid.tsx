@@ -47,7 +47,13 @@ export default function CardioPRGrid({
                   selected={pr.activityId === selectedActivityId}
                   label={nameById.get(pr.activityId) ?? pr.activityId}
                   value={formatPace(pr.paceMinPerKm)}
-                  sub={`${kmToMeters(pr.distanceKm)} m · ${pr.durationMin} min · ${pr.date}`}
+                  sub={
+                    <>
+                      {kmToMeters(pr.distanceKm)} m · {pr.durationMin} min
+                      <br />
+                      {pr.date}
+                    </>
+                  }
                 />
                 {pr.activityId === selectedActivityId && (
                   <div className="sm:col-span-2 lg:col-span-3">{chart}</div>
