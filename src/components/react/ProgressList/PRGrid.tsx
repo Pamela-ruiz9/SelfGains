@@ -3,6 +3,8 @@ import { muscleLabel } from '../../../lib/muscles';
 import { groupPRsByMuscle, type ExercisePR } from '../../../lib/prs';
 import { getWeightUnit, kgToDisplay } from '../../../lib/weightUnit';
 import type { Dictionary } from '../../../i18n/es';
+import GlowTile from '../Shared/GlowTile';
+import { TrophyIcon } from '../../../lib/progressIcons';
 
 interface ExerciseInfo {
   id: string;
@@ -44,19 +46,15 @@ export default function PRGrid({
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {group.entries.map((pr) => (
               <Fragment key={pr.exerciseId}>
-                <button
-                  type="button"
+                <GlowTile
+                  icon={<TrophyIcon className="h-5 w-5" />}
+                  color="var(--color-acid)"
                   onClick={() => onSelectExercise(pr.exerciseId)}
-                  className="card-brutal card-brutal-tap flex flex-col gap-1 text-left transition-colors hover:border-acid"
-                >
-                  <span className="font-display text-xl text-paper">
-                    {exerciseNameById.get(pr.exerciseId) ?? pr.exerciseId}
-                  </span>
-                  <span className="font-mono text-sm text-acid">
-                    {kgToDisplay(pr.weight, weightUnit)} {weightUnit}
-                  </span>
-                  <span className="font-mono text-xs text-paper-dim">{pr.date}</span>
-                </button>
+                  selected={pr.exerciseId === selectedExerciseId}
+                  label={exerciseNameById.get(pr.exerciseId) ?? pr.exerciseId}
+                  value={`${kgToDisplay(pr.weight, weightUnit)} ${weightUnit}`}
+                  sub={pr.date}
+                />
                 {pr.exerciseId === selectedExerciseId && (
                   <div className="sm:col-span-2 lg:col-span-3">{chart}</div>
                 )}

@@ -1251,7 +1251,7 @@ Insertar justo después del bloque `summary: { ... },` (después de la línea `s
       weightTrendSub: 'vs. hace 4 semanas',
       measurementsCountSub: 'mediciones registradas',
       noDataYet: 'Sin entrenamientos aún',
-      disciplineSubAllTime: 'tu foco en total',
+      disciplineAllTimeSub: 'tu foco general',
       today: 'Hoy',
       yesterday: 'Ayer',
       lastWorkoutSub: 'último registrado',
@@ -1270,7 +1270,7 @@ Mismo punto de inserción (después de `summary: { ... },`, antes de `measuremen
       weightTrendSub: 'vs. 4 weeks ago',
       measurementsCountSub: 'measurements logged',
       noDataYet: 'No workouts yet',
-      disciplineSubAllTime: 'your overall focus',
+      disciplineAllTimeSub: 'your overall focus',
       today: 'Today',
       yesterday: 'Yesterday',
       lastWorkoutSub: 'last logged',
@@ -1376,7 +1376,7 @@ export default function ProgressSectionGrid({
             ? disciplineSummaryT.sessionCountSingular
             : disciplineSummaryT.sessionCountPlural
         }`
-      : t.disciplineSubAllTime
+      : t.disciplineAllTimeSub
     : t.noDataYet;
 
   const today = localDateStr();

@@ -27,11 +27,11 @@ export default function RoutinePreview({ days, activities, t = es.rutinas }: Rou
   }
 
   return (
-    <div className="flex flex-col gap-2 border-l border-paper-dim/40 pl-3">
+    <div className="flex flex-col gap-2 border-l border-acid pl-3">
       {scheduledDays.map((day) => (
         <div key={day}>
-          <p className="label-brutal">{t.days[day]}</p>
-          <ul className="font-mono text-xs text-paper-dim">
+          <p className="label-brutal text-acid">{t.days[day]}</p>
+          <ul className="list-disc space-y-0.5 pl-5 font-mono text-xs text-paper-dim marker:text-acid">
             {days[day].map((entry, i) => {
               const id = entryActivityId(entry);
               const activity = activities.find((a) => a.id === id);

@@ -1,4 +1,4 @@
-import { MUSCLES } from './muscles';
+import { MUSCLES } from './muscles.ts';
 import type { Workout, WorkoutSet, WorkoutSession } from '../types/db';
 
 export interface WorkoutWithSets extends Workout {
@@ -428,4 +428,47 @@ export function mostRecentPR(
     date: cardioCandidate!.date,
     display: formatPace(cardioCandidate!.paceMinPerKm),
   };
+}
+
+export interface WeightTrend {
+  deltaKg: number; // positivo = subió, negativo = bajó
+}
+
+// Compara el último peso registrado contra el primero con fecha >= 28 días
+// antes — mismo criterio que el badge de tendencia de ProgressChart.tsx,
+// aplicado a `measurements` en vez de a un ejercicio. Null si no hay
+// suficiente historial de peso (0 o 1 medición con peso, o todas caen
+// dentro de la ventana de 4 semanas).
+//
+// No asume que `measurements` venga ordenado — lo ordena por fecha
+// ascendente acá mismo, así "el último" y "el primero dentro de la
+// ventana" son siempre correctos sin importar el orden del caller (hoy
+// `getMyMeasurements()` ya devuelve orden ascendente, pero esta función no
+// debe depender de eso).
+export function weightTrend(
+  measurements: { date: string; weight_kg: number | null }[]
+): WeightTrend | null {
+  const withWeight = measurements
+    .filter((m): m is { date: string; weight_kg: number } => m.weight_kg !== null)
+    .sort((a, b) => a.date.localeCompare(b.date));
+  if (withWeight.length === 0) return null;
+  const latest = withWeight[withWeight.length - 1];
+  const latestDate = new Date(latest.date);
+  const fourWeeksAgo = new Date(latestDate);
+  fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 28);
+  const baseline = withWeight.find((m) => new Date(m.date) >= fourWeeksAgo);
+  if (!baseline || baseline.date === latest.date) return null;
+  return { deltaKg: Math.round((latest.weight_kg - baseline.weight_kg) * 10) / 10 };
+}
+
+// La disciplina con más sesiones dentro de la lista de resúmenes recibida
+// (el caller decide el alcance: todo el historial, o solo una ventana de
+// fechas ya filtrada). Null si la lista está vacía. Empate en sessionCount:
+// gana la primera entrada de `summaries` — en la práctica, dado el orden
+// fijo en que summarizeByDiscipline empuja sus resultados (gym, luego
+// running/natacion/combate/otros), esto significa "gym gana empates",
+// mismo espíritu que el desempate documentado en mostRecentPR.
+export function topDiscipline(summaries: DisciplineSummary[]): DisciplineSummary | null {
+  if (summaries.length === 0) return null;
+  return summaries.reduce((best, s) => (s.sessionCount > best.sessionCount ? s : best), summaries[0]);
 }

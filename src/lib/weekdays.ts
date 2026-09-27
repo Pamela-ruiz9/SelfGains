@@ -83,3 +83,14 @@ export function localDateStr(date: Date = new Date()): string {
   const d = String(date.getDate()).padStart(2, '0');
   return `${y}-${m}-${d}`;
 }
+
+// "Ayer" en fecha local — resta un día de calendario (setDate/getDate,
+// campos de hora local), no 24h de milisegundos, que puede caer del lado
+// equivocado de la medianoche local durante un cambio de horario de
+// verano (día de 23h). Mismo criterio que localDateStr sobre evitar
+// toISOString().
+export function localYesterdayStr(date: Date = new Date()): string {
+  const d = new Date(date);
+  d.setDate(d.getDate() - 1);
+  return localDateStr(d);
+}

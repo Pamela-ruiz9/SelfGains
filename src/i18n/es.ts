@@ -448,6 +448,19 @@ export const es = {
       bodyFat: '% grasa',
       stepsToday: 'Pasos hoy',
     },
+    sectionGrid: {
+      weightTrendSub: 'vs. hace 4 semanas',
+      measurementsCountSub: 'mediciones registradas',
+      noDataYet: 'Sin entrenamientos aún',
+      disciplineAllTimeSub: 'tu foco general',
+      today: 'Hoy',
+      yesterday: 'Ayer',
+      lastWorkoutSub: 'último registrado',
+      caloriesSub: 'quemadas hoy',
+      activeMinutesSub: 'activos hoy',
+      heartRateSub: 'FC en reposo hoy',
+      viewDetails: 'Ver detalles',
+    },
     measurementsSummary: {
       title: 'Tus medidas',
       fields: {
@@ -476,6 +489,7 @@ export const es = {
       volume: 'Volumen',
       maxWeight: 'Peso máximo',
       estimated1RM: '1RM estimado',
+      infoButtonLabel: 'Más información',
       info: {
         maxWeight: 'La serie más pesada que levantaste ese día, tal cual la registraste (sin ninguna fórmula).',
         estimated1RM:

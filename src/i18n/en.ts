@@ -447,6 +447,19 @@ export const en: Dictionary = {
       bodyFat: '% body fat',
       stepsToday: 'Steps today',
     },
+    sectionGrid: {
+      weightTrendSub: 'vs. 4 weeks ago',
+      measurementsCountSub: 'measurements logged',
+      noDataYet: 'No workouts yet',
+      disciplineAllTimeSub: 'your overall focus',
+      today: 'Today',
+      yesterday: 'Yesterday',
+      lastWorkoutSub: 'last logged',
+      caloriesSub: 'burned today',
+      activeMinutesSub: 'active today',
+      heartRateSub: 'resting HR today',
+      viewDetails: 'View details',
+    },
     measurementsSummary: {
       title: 'Your measurements',
       fields: {
@@ -475,6 +488,7 @@ export const en: Dictionary = {
       volume: 'Volume',
       maxWeight: 'Max weight',
       estimated1RM: 'Estimated 1RM',
+      infoButtonLabel: 'More information',
       info: {
         maxWeight: "The heaviest set you lifted that day, exactly as you logged it (no formula involved).",
         estimated1RM:

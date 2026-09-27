@@ -3,6 +3,8 @@ import { type ActivityOption } from '../ActivityPicker/ActivityPicker';
 import { fullActivityName, kmToMeters } from '../../../lib/activities';
 import { formatPace, groupCardioPRsByDiscipline, type CardioPR } from '../../../lib/prs';
 import type { Dictionary } from '../../../i18n/es';
+import GlowTile from '../Shared/GlowTile';
+import { TrophyIcon } from '../../../lib/progressIcons';
 
 interface Props {
   prs: CardioPR[];
@@ -38,20 +40,21 @@ export default function CardioPRGrid({
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {group.entries.map((pr) => (
               <Fragment key={pr.activityId}>
-                <button
-                  type="button"
+                <GlowTile
+                  icon={<TrophyIcon className="h-5 w-5" />}
+                  color="var(--color-acid)"
                   onClick={() => onSelectActivity(pr.activityId)}
-                  className="card-brutal card-brutal-tap flex flex-col gap-1 text-left transition-colors hover:border-acid"
-                >
-                  <span className="font-display text-xl text-paper">
-                    {nameById.get(pr.activityId) ?? pr.activityId}
-                  </span>
-                  <span className="font-mono text-sm text-acid">{formatPace(pr.paceMinPerKm)}</span>
-                  <span className="font-mono text-xs text-paper-dim">
-                    {kmToMeters(pr.distanceKm)} m · {pr.durationMin} min
-                  </span>
-                  <span className="font-mono text-xs text-paper-dim">{pr.date}</span>
-                </button>
+                  selected={pr.activityId === selectedActivityId}
+                  label={nameById.get(pr.activityId) ?? pr.activityId}
+                  value={formatPace(pr.paceMinPerKm)}
+                  sub={
+                    <>
+                      {kmToMeters(pr.distanceKm)} m · {pr.durationMin} min
+                      <br />
+                      {pr.date}
+                    </>
+                  }
+                />
                 {pr.activityId === selectedActivityId && (
                   <div className="sm:col-span-2 lg:col-span-3">{chart}</div>
                 )}
