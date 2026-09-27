@@ -1,6 +1,9 @@
+import type { ComponentType } from 'react';
 import type { Measurement } from '../../../types/db';
 import type { Dictionary } from '../../../i18n/es';
 import { estimateBodyFatPercent, estimateLeanMassKg } from '../../../lib/bodyComposition';
+import GlowTile from '../Shared/GlowTile';
+import { ScaleIcon, TapeMeasureIcon, DropletIcon, MuscleIcon, GLOW_PALETTE } from '../../../lib/progressIcons';
 
 type MeasurementFieldLabelKey = keyof Dictionary['progreso']['measurementsSummary']['fields'];
 
@@ -23,6 +26,17 @@ export const MEASUREMENT_DISPLAY_FIELDS: {
   { key: 'arm_cm', labelKey: 'arm', unit: 'cm' },
   { key: 'leg_cm', labelKey: 'leg', unit: 'cm' },
 ];
+
+// El peso usa ScaleIcon; el resto de los campos de cinta métrica comparten
+// TapeMeasureIcon — solo el color (GLOW_PALETTE, cíclico) los distingue.
+const FIELD_ICON: Record<string, ComponentType<{ className?: string }>> = {
+  weight_kg: ScaleIcon,
+  waist_cm: TapeMeasureIcon,
+  hip_cm: TapeMeasureIcon,
+  neck_cm: TapeMeasureIcon,
+  arm_cm: TapeMeasureIcon,
+  leg_cm: TapeMeasureIcon,
+};
 
 interface Props {
   latest: Measurement | null;
@@ -52,42 +66,49 @@ export default function MeasurementsSummary({ latest, sex, selected, onSelect, t
     <div className="flex flex-col gap-3">
       <p className="label-brutal text-acid">{t.title}</p>
       <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
-        {available.map(({ key, labelKey, unit }) => (
-          <button
-            key={key}
-            type="button"
-            onClick={() => onSelect(selected === key ? null : key)}
-            className={`card-brutal card-brutal-tap flex flex-col gap-1 text-left transition-colors hover:border-acid ${
-              selected === key ? 'border-acid' : ''
-            }`}
-          >
-            <span className="label-brutal">{t.fields[labelKey]}</span>
-            <span className="font-display text-2xl text-paper">
-              {latest[key]} <span className="text-sm text-paper-dim">{unit}</span>
-            </span>
-          </button>
-        ))}
+        {available.map(({ key, labelKey, unit }, index) => {
+          const Icon = FIELD_ICON[key];
+          return (
+            <GlowTile
+              key={key}
+              icon={<Icon className="h-5 w-5" />}
+              color={GLOW_PALETTE[index % GLOW_PALETTE.length]}
+              label={t.fields[labelKey]}
+              value={
+                <>
+                  {latest[key]} <span className="text-sm text-paper-dim">{unit}</span>
+                </>
+              }
+              selected={selected === key}
+              onClick={() => onSelect(selected === key ? null : key)}
+            />
+          );
+        })}
         {bodyFatPercent !== null && (
-          <button
-            type="button"
+          <GlowTile
+            icon={<DropletIcon className="h-5 w-5" />}
+            color={GLOW_PALETTE[4]}
+            label={t.fields.bodyFat}
+            value={
+              <>
+                {bodyFatPercent} <span className="text-sm text-paper-dim">%</span>
+              </>
+            }
+            selected={selected === 'body_fat_percent'}
             onClick={() => onSelect(selected === 'body_fat_percent' ? null : 'body_fat_percent')}
-            className={`card-brutal card-brutal-tap flex flex-col gap-1 text-left transition-colors hover:border-acid ${
-              selected === 'body_fat_percent' ? 'border-acid' : ''
-            }`}
-          >
-            <span className="label-brutal">{t.fields.bodyFat}</span>
-            <span className="font-display text-2xl text-paper">
-              {bodyFatPercent} <span className="text-sm text-paper-dim">%</span>
-            </span>
-          </button>
+          />
         )}
         {leanMassKg !== null && (
-          <div className="card-brutal flex flex-col gap-1">
-            <span className="label-brutal">{t.fields.leanMass}</span>
-            <span className="font-display text-2xl text-paper">
-              {leanMassKg} <span className="text-sm text-paper-dim">kg</span>
-            </span>
-          </div>
+          <GlowTile
+            icon={<MuscleIcon className="h-5 w-5" />}
+            color={GLOW_PALETTE[2]}
+            label={t.fields.leanMass}
+            value={
+              <>
+                {leanMassKg} <span className="text-sm text-paper-dim">kg</span>
+              </>
+            }
+          />
         )}
       </div>
     </div>
