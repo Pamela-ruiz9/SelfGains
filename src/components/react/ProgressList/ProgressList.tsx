@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { supabase } from '../../../lib/supabase';
 import { getWorkoutsForCurrentUser, getSetsForWorkout, getSessionsForWorkout } from '../../../lib/workouts';
 import { getMyMeasurements } from '../../../lib/measurements';
@@ -14,6 +14,8 @@ import {
   progressForMeasurement,
   summarizeByDiscipline,
   mostRecentPR,
+  weightTrend,
+  topDiscipline,
   type WorkoutWithSets,
   type WorkoutWithSessions,
 } from '../../../lib/prs';
@@ -23,15 +25,15 @@ import { getFitbitConnectionStatus, getFitbitDailyData, type FitbitDailyData } f
 import { localDateStr } from '../../../lib/weekdays';
 import type { ActivityOption } from '../ActivityPicker/ActivityPicker';
 import type { Measurement } from '../../../types/db';
-import CollapsibleSection from '../Shared/CollapsibleSection';
 import DisciplineSummary from './DisciplineSummary';
-import FitbitActivitySummary from './FitbitActivitySummary';
+import FitbitActivitySummary, { formatMinutes } from './FitbitActivitySummary';
 import MeasurementsSummary, { MEASUREMENT_DISPLAY_FIELDS } from './MeasurementsSummary';
 import MeasurementsChart from './MeasurementsChart';
 import PRGrid from './PRGrid';
 import ProgressChart from './ProgressChart';
 import CardioPRGrid from './CardioPRGrid';
 import CardioProgressChart from './CardioProgressChart';
+import ProgressSectionGrid, { type SectionKey } from './ProgressSectionGrid';
 import ProgressSummaryStrip from './ProgressSummaryStrip';
 import WorkoutHistory from './WorkoutHistory';
 import type { Dictionary } from '../../../i18n/es';
@@ -78,14 +80,12 @@ export default function ProgressList({
   const [fitbitConnected, setFitbitConnected] = useState(false);
   const [fitbitData, setFitbitData] = useState<FitbitDailyData | null>(null);
   const [fitbitError, setFitbitError] = useState<string | null>(null);
-  // Todas arrancan cerradas al entrar a la pestaña — el usuario elige qué
-  // abrir, nada se le impone expandido de entrada.
-  const [openSection, setOpenSection] = useState<
-    'medidas' | 'disciplina' | 'entrenamientos' | 'actividad' | null
-  >(null);
+  // Ninguna tarjeta arranca activa — el usuario elige cuál abrir, nada se
+  // le impone expandido de entrada. Tocar la misma tarjeta activa la cierra.
+  const [activeSection, setActiveSection] = useState<SectionKey | null>(null);
 
-  function toggleSection(section: 'medidas' | 'disciplina' | 'entrenamientos' | 'actividad') {
-    setOpenSection((prev) => (prev === section ? null : section));
+  function toggleSection(section: SectionKey) {
+    setActiveSection((prev) => (prev === section ? null : section));
   }
 
   async function loadWorkouts() {
@@ -243,26 +243,38 @@ export default function ProgressList({
     heightCm: latestMeasurement?.height_cm ?? null,
   });
 
-  return (
-    <div className="flex flex-col gap-6">
-      <ProgressSummaryStrip
-        daysTrained={adherence.daysTrained}
-        daysElapsed={adherence.daysElapsed}
-        lastWeightKg={latestMeasurement?.weight_kg ?? null}
-        weightUnit={weightUnit}
-        kgToDisplay={kgToDisplay}
-        recentPRLabel={recentPR ? `${recentPR.label} — ${recentPR.display}` : null}
-        totalWorkouts={workouts.length}
-        disciplineCount={disciplineCount}
-        bodyFatPercent={bodyFatPercent}
-        stepsToday={fitbitData?.steps ?? null}
-        t={t.summary}
-      />
-      <CollapsibleSection
-        title={t.list.sections.measurements}
-        open={openSection === 'medidas'}
-        onToggle={() => toggleSection('medidas')}
-      >
+  const weightTrendResult = weightTrend(measurements);
+  const weightTrendKg = weightTrendResult?.deltaKg ?? null;
+
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+  const sevenDaysAgoStr = localDateStr(sevenDaysAgo);
+  const recentWorkouts = workouts.filter((w) => w.date >= sevenDaysAgoStr);
+  const weekTopDiscipline = topDiscipline(summarizeByDiscipline(recentWorkouts, activities));
+  const allTimeTopDiscipline = topDiscipline(disciplineSummaries);
+  const leadingDisciplineInfo = weekTopDiscipline
+    ? { discipline: weekTopDiscipline.discipline, sessionCount: weekTopDiscipline.sessionCount, isThisWeek: true }
+    : allTimeTopDiscipline
+      ? { discipline: allTimeTopDiscipline.discipline, sessionCount: allTimeTopDiscipline.sessionCount, isThisWeek: false }
+      : null;
+
+  const mostRecentWorkoutDate =
+    workouts.length > 0 ? workouts.reduce((max, w) => (w.date > max ? w.date : max), workouts[0].date) : null;
+
+  const activityPreview =
+    !fitbitConnected || !fitbitData
+      ? null
+      : fitbitData.caloriesOut !== null
+        ? { value: `${Math.round(fitbitData.caloriesOut)} kcal`, sub: t.sectionGrid.caloriesSub }
+        : fitbitData.activeMinutes !== null
+          ? { value: formatMinutes(Math.round(fitbitData.activeMinutes)), sub: t.sectionGrid.activeMinutesSub }
+          : fitbitData.restingHeartRate !== null
+            ? { value: `${fitbitData.restingHeartRate} bpm`, sub: t.sectionGrid.heartRateSub }
+            : null;
+
+  const panels: Record<SectionKey, ReactNode> = {
+    medidas: (
+      <>
         <MeasurementsSummary
           latest={latestMeasurement}
           sex={sex}
@@ -296,13 +308,10 @@ export default function ProgressList({
             />
           )
         )}
-      </CollapsibleSection>
-
-      <CollapsibleSection
-        title={t.list.sections.discipline}
-        open={openSection === 'disciplina'}
-        onToggle={() => toggleSection('disciplina')}
-      >
+      </>
+    ),
+    disciplina: (
+      <>
         <DisciplineSummary
           summaries={disciplineSummaries}
           selected={selectedDiscipline}
@@ -358,40 +367,59 @@ export default function ProgressList({
         {selectedDiscipline === 'combate' && (
           <p className="font-mono text-sm text-paper-dim">{t.list.combateNoRecords}</p>
         )}
-      </CollapsibleSection>
+      </>
+    ),
+    entrenamientos: (
+      <WorkoutHistory
+        workouts={workouts}
+        exerciseNames={exerciseNames}
+        activities={activities}
+        onChanged={loadWorkouts}
+        filterDiscipline={selectedDiscipline}
+        t={t.workoutHistory}
+        registrarT={registrarT}
+        disciplinesT={disciplinesT}
+      />
+    ),
+    actividad: fitbitError ? (
+      <p className="border-l border-blood pl-3 font-mono text-sm text-blood">{fitbitError}</p>
+    ) : fitbitData ? (
+      <FitbitActivitySummary data={fitbitData} t={t.fitbitActivity} />
+    ) : (
+      <p className="font-mono text-sm text-paper-dim">{t.list.loading}</p>
+    ),
+  };
 
-      <CollapsibleSection
-        title={t.list.sections.workouts}
-        open={openSection === 'entrenamientos'}
-        onToggle={() => toggleSection('entrenamientos')}
-      >
-        <WorkoutHistory
-          workouts={workouts}
-          exerciseNames={exerciseNames}
-          activities={activities}
-          onChanged={loadWorkouts}
-          filterDiscipline={selectedDiscipline}
-          t={t.workoutHistory}
-          registrarT={registrarT}
-          disciplinesT={disciplinesT}
-        />
-      </CollapsibleSection>
-
-      {fitbitConnected && (
-        <CollapsibleSection
-          title={t.fitbitActivity.title}
-          open={openSection === 'actividad'}
-          onToggle={() => toggleSection('actividad')}
-        >
-          {fitbitError ? (
-            <p className="border-l border-blood pl-3 font-mono text-sm text-blood">{fitbitError}</p>
-          ) : fitbitData ? (
-            <FitbitActivitySummary data={fitbitData} t={t.fitbitActivity} />
-          ) : (
-            <p className="font-mono text-sm text-paper-dim">{t.list.loading}</p>
-          )}
-        </CollapsibleSection>
-      )}
+  return (
+    <div className="flex flex-col gap-6">
+      <ProgressSummaryStrip
+        daysTrained={adherence.daysTrained}
+        daysElapsed={adherence.daysElapsed}
+        lastWeightKg={latestMeasurement?.weight_kg ?? null}
+        weightUnit={weightUnit}
+        kgToDisplay={kgToDisplay}
+        recentPRLabel={recentPR ? `${recentPR.label} — ${recentPR.display}` : null}
+        totalWorkouts={workouts.length}
+        disciplineCount={disciplineCount}
+        bodyFatPercent={bodyFatPercent}
+        stepsToday={fitbitData?.steps ?? null}
+        t={t.summary}
+      />
+      <ProgressSectionGrid
+        active={activeSection}
+        onSelect={toggleSection}
+        weightTrendKg={weightTrendKg}
+        measurementsCount={measurements.length}
+        leadingDiscipline={leadingDisciplineInfo}
+        mostRecentWorkoutDate={mostRecentWorkoutDate}
+        activityPreview={activityPreview}
+        panels={panels}
+        disciplinesT={disciplinesT}
+        disciplineSummaryT={t.disciplineSummary}
+        sectionsT={t.list.sections}
+        activityTitle={t.fitbitActivity.title}
+        t={t.sectionGrid}
+      />
     </div>
   );
 }
