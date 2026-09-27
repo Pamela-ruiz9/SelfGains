@@ -1,4 +1,6 @@
 import AdherenceRing from './AdherenceRing';
+import GlowTile from '../Shared/GlowTile';
+import { ScaleIcon, TrophyIcon, CalendarIcon, LayersIcon, DropletIcon, FootstepsIcon, GLOW_PALETTE } from '../../../lib/progressIcons';
 import type { Dictionary } from '../../../i18n/es';
 
 interface Props {
@@ -13,15 +15,6 @@ interface Props {
   bodyFatPercent: number | null;
   stepsToday: number | null;
   t: Dictionary['progreso']['summary'];
-}
-
-function Tile({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="card-brutal flex flex-col gap-1">
-      <span className="label-brutal">{label}</span>
-      <span className="font-display text-xl text-paper">{value}</span>
-    </div>
-  );
 }
 
 export default function ProgressSummaryStrip({
@@ -42,13 +35,53 @@ export default function ProgressSummaryStrip({
       <AdherenceRing daysTrained={daysTrained} daysElapsed={daysElapsed} label={t.adherenceLabel} />
       <div className="grid flex-1 grid-cols-2 gap-3 sm:grid-cols-3">
         {lastWeightKg !== null && (
-          <Tile label={t.lastWeight} value={`${kgToDisplay(lastWeightKg, weightUnit)} ${weightUnit}`} />
+          <GlowTile
+            icon={<ScaleIcon className="h-5 w-5" />}
+            color={GLOW_PALETTE[0]}
+            label={t.lastWeight}
+            value={`${kgToDisplay(lastWeightKg, weightUnit)} ${weightUnit}`}
+          />
         )}
-        {recentPRLabel !== null && <Tile label={t.recentPR} value={recentPRLabel} />}
-        {totalWorkouts > 0 && <Tile label={t.totalWorkouts} value={String(totalWorkouts)} />}
-        {disciplineCount > 0 && <Tile label={t.disciplines} value={String(disciplineCount)} />}
-        {bodyFatPercent !== null && <Tile label={t.bodyFat} value={`${bodyFatPercent} %`} />}
-        {stepsToday !== null && <Tile label={t.stepsToday} value={stepsToday.toLocaleString()} />}
+        {recentPRLabel !== null && (
+          <GlowTile
+            icon={<TrophyIcon className="h-5 w-5" />}
+            color={GLOW_PALETTE[2]}
+            label={t.recentPR}
+            value={recentPRLabel}
+          />
+        )}
+        {totalWorkouts > 0 && (
+          <GlowTile
+            icon={<CalendarIcon className="h-5 w-5" />}
+            color={GLOW_PALETTE[1]}
+            label={t.totalWorkouts}
+            value={String(totalWorkouts)}
+          />
+        )}
+        {disciplineCount > 0 && (
+          <GlowTile
+            icon={<LayersIcon className="h-5 w-5" />}
+            color={GLOW_PALETTE[3]}
+            label={t.disciplines}
+            value={String(disciplineCount)}
+          />
+        )}
+        {bodyFatPercent !== null && (
+          <GlowTile
+            icon={<DropletIcon className="h-5 w-5" />}
+            color={GLOW_PALETTE[4]}
+            label={t.bodyFat}
+            value={`${bodyFatPercent} %`}
+          />
+        )}
+        {stepsToday !== null && (
+          <GlowTile
+            icon={<FootstepsIcon className="h-5 w-5" />}
+            color={GLOW_PALETTE[0]}
+            label={t.stepsToday}
+            value={stepsToday.toLocaleString()}
+          />
+        )}
       </div>
     </div>
   );
